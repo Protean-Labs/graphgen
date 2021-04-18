@@ -3,8 +3,6 @@
   exception ParsingError of string
 }
 
-
-
 let identifier = ['a'-'z' 'A'-'Z' '_' '$'] ['a'-'z' 'A'-'Z' '0'-'9' '_' '$']*
 
 let escape_sequence = "\\" (['\'' '\"' '\\' "\\nrt" "\\n" "\\r"] | 'u' ['a'-'f' 'A'-'F' '0'-'9'] ['a'-'f' 'A'-'F' '0'-'9'] ['a'-'f' 'A'-'F' '0'-'9'] ['a'-'f' 'A'-'F' '0'-'9'] |
@@ -106,18 +104,18 @@ rule token = parse
 
 
 (* Literals *)
-| string            { STRING (Lexing.lexeme lexbuf) }
+| bool_literal      { BOOL }
+| string_literal    { STRING (Lexing.lexeme lexbuf) }
 | identifier        { VARIABLE (Lexing.lexeme lexbuf) }
-| int               { INT (int_of_string (Lexing.lexeme lexbuf)) }
-| version           { VERSION (version_of_string (Lexing.lexeme lexbuf)) }
+| dec_num           { INT (int_of_string (Lexing.lexeme lexbuf)) }
 
 | "from"            { FROM }
 
 (* Symbols and operators *)
 | '.'               { DOT }
-| ">>>="
-| ">>="
-| "<<="
+| ">>>="            { TRIPARROW }
+| ">>="             { LSHIFTEQ }
+| "<<="             { RSHIFTEQ }
 | "++"              { INC }
 | "+="              { PLUSEQ }
 | "-="              { MINUSEQ }
@@ -129,9 +127,9 @@ rule token = parse
 | "||"              { BITOR }
 | "=<"              { LTE }
 | "<="              { GTE }
-| "|="
-| "^="
-| "&="
+| "|="              { OREQ }
+| "^="              { XOREQ }
+| "&="              { ANDEQ }
 | '>'               { GT }
 | '<'               { LT }
 | '='               { EQUAL }
