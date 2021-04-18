@@ -20,9 +20,9 @@ let bool_literal = "true" | "false"
 
 let version_literal = ['0' - '9']+ '.' ['0' - '9']+ '.' ['0' - '9']+ 
 
-let hex_num = "0x" ['a'-'f' 'A'-'F' '0'-'9']  (['_']? ['a'-'z' 'A'-'Z' '0'-'9'])*
+let hex_num_literal = "0x" ['a'-'f' 'A'-'F' '0'-'9']  (['_']? ['a'-'z' 'A'-'Z' '0'-'9'])*
 
-let hex_string = "hex" ('"' ['a'-'f' 'A'-'F' '0'-'9'] (['_']? ['a'-'f' 'A'-'F' '0'-'9'])*  '"' | '\'' ['a'-'f' 'A'-'F' '0'-'9'] (['_']? ['a'-'f' 'A'-'F' '0'-'9'])* '\'')
+let hex_string_literal = "hex" ('"' ['a'-'f' 'A'-'F' '0'-'9'] (['_']? ['a'-'f' 'A'-'F' '0'-'9'])*  '"' | '\'' ['a'-'f' 'A'-'F' '0'-'9'] (['_']? ['a'-'f' 'A'-'F' '0'-'9'])* '\'')
 
 let dec_num =  (['0'-'9'] ['_']?)+ ('.' ['0'-'9'] ['_']?)+?  ('E'|'e')? '-'? (['0'-'9'] ['_']?)+? 
 
@@ -38,9 +38,8 @@ let unsigned_int_type = "uint" | "uint8" | "uint16" | "uint24" | "uint32" | "uin
  "uint104" | "uint112" | "uint120" | "uint128" | "uint136" | "uint144" | "uint152" | "uint160" | "uint168" | "uint176" | "uint184" |  "uint192" | "uint200" | "uint208" | "uint216" |
   "uint224" | "uint232" | "uint240" | "uint248" | "uint256"
 
-let num_unit = "wei" | "gwei" | "ether" | "seconds" | "minutes" | "hours" | "days" | "weeks" | "years"
 
-
+(* TODO Scientific notation, yul blocks, semantic actions *)
 
 let white = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
@@ -89,25 +88,52 @@ rule token = parse
 | "continue"        { CONTINUE }
 | "return"          { RETURN }
 | "returns"         { RETURNS }
-| "address"         { ADDRESS }
 | "receive"         { RECEIVE }
 | "emit"            { EMIT }
+
+(* Data location *)
 | "memory"          { MEMORY }
 | "storage"         { STORAGE }
+| "calldata"        { CALLDATA }
+
+(* Exceptions *)
 | "try"             { TRY }
 | "catch"           { CATCH }
+
+(* Alias *)
 | "as"              { AS }
 
-(* Types *)
+(*Elementary Type names *)
 | "enum"            { ENUM }
-| "bytes"           { BYTES }
+| "address"         { ADDRESS }
+| "bytes"           { BYTEST }
+| "bool"            { BOOLT }
+| "string"          { STRINGT }
+| signed_int_type   { INTT }
+| unsigned_int_type { UINTT }
+| fixed_bytes_type  { FBYTEST}
+| "fixed"           { FIXEDT }
+| "ufixed"          { UFIXEDT }
 
+(* units *)
+| "wei"             { WEI }
+| "gwei"            { GWEI }
+| "ether"           { ETHER }
+| "seconds"         { SECONDS }
+| "minutes"         { MINUTES }
+| "hours"           { HOURS }
+| "days"            { DAYS }
+| "weeks"           { WEEKS }
+| "years"           { YEARS }
 
 (* Literals *)
-| bool_literal      { BOOL }
+| bool_literal      { BOOL (bool_of_string (Lexing.lexeme lexbuf))}
 | string_literal    { STRING (Lexing.lexeme lexbuf) }
+| hex_string_literal{ HEXS (Lexing.lexeme lexbuf)}
+| hex_num_literal   { HEXN (int_of_hex (Lexing.lexeme lexbuf))}
 | identifier        { VARIABLE (Lexing.lexeme lexbuf) }
-| dec_num           { INT (int_of_string (Lexing.lexeme lexbuf)) }
+| int_literal       { INT (int_of_string (Lexing.lexeme lexbuf))  }
+| dec_num_literal   { DECIMAL (int_of_string (Lexing.lexeme lexbuf)) }
 
 | "from"            { FROM }
 
