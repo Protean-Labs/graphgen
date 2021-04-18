@@ -54,6 +54,7 @@ rule token = parse
 
 (* Reserved key words *)
 | "pragma"          { PRAGMA }
+| "import"          { IMPORT }
 | "solidity"        { SOLIDITY }
 | "abstract"        { ABSTRACT }
 | "contract"        { CONTRACT }
@@ -70,7 +71,7 @@ rule token = parse
 | "pure"            { PURE }
 | "view"            { VIEW }
 | "payable"         { PAYABLE }
-| "constant"        { CONST }
+| "constant"        { CONSTANT }
 | "immutable"       { IMMUTABLE }
 | "anonymous"       { ANON }
 | "indexed"         { INDEXED }
@@ -97,6 +98,7 @@ rule token = parse
 | "try"             { TRY }
 | "catch"           { CATCH }
 | "as"              { AS }
+| "is"              { IS }
 
 (* Types *)
 | "enum"            { ENUM }
@@ -104,7 +106,7 @@ rule token = parse
 
 
 (* Literals *)
-| bool_literal      { BOOL }
+| bool_literal      { BOOL (bool_of_string (Lexing.lexeme lexbuf)) }
 | string_literal    { STRING (Lexing.lexeme lexbuf) }
 | identifier        { VARIABLE (Lexing.lexeme lexbuf) }
 | dec_num           { INT (int_of_string (Lexing.lexeme lexbuf)) }
@@ -116,6 +118,7 @@ rule token = parse
 | ">>>="            { TRIPARROW }
 | ">>="             { LSHIFTEQ }
 | "<<="             { RSHIFTEQ }
+| "=>"              { MAP }
 | "++"              { INC }
 | "+="              { PLUSEQ }
 | "-="              { MINUSEQ }
