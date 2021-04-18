@@ -22,8 +22,9 @@ let graphqltype_of_soltype = fun
   | AddressT => "Address"
 ;
 
-let transaction_entity = "
-type Transaction @entity {
+let transaction_entity = 
+  // Do not touch string format!
+"type Transaction @entity {
   id: ID!   # tx hash
   txIndex: Int!
   from: Address!
@@ -32,23 +33,22 @@ type Transaction @entity {
   blockTimestamp: BigInt!
   events: [Event!]! @derivedFrom(field: \"tx\")
   calls: [Call!]! @derivedFrom(field: \"tx\")
-}
-";
+}";
 
-let event_interface = "
-interface Event {
+let event_interface = 
+  // Do not touch string format!
+"interface Event {
   id: ID!   # CONTRACT_ADDR-PER_EVENT_COUNTER
   logIndex: BigInt!
   tx: Transaction!
-}
-";
+}";
 
-let call_interface = "
-interface Call {
+let call_interface = 
+  // Do not touch string format!
+"interface Call {
   id: ID!   # CONTRACT_ADDR-PER_CALL_COUNTER
   tx: Transaction!
-}
-";
+}";
 
 let entity_of_event = (contract: Subgraph.contract, {name, fields}: Subgraph.event) => {
   let fields = 
@@ -57,17 +57,17 @@ let entity_of_event = (contract: Subgraph.contract, {name, fields}: Subgraph.eve
     |> String.concat("\n  ")
   ;
 
-  Format.sprintf("
-type %s implements Event @entity {
+  Format.sprintf(
+  // Do not touch string format!
+"type %s implements Event @entity {
   id: ID!   # CONTRACT_ADDR-PER_EVENT_COUNTER
   logIndex: BigInt!
   tx: Transaction!
 
   %s
-  
+
   %s: %s!
-} 
-  ", 
+}", 
     name, 
     fields,
     String.uncapitalize_ascii(contract.name), 
@@ -88,8 +88,9 @@ let entity_of_call = (contract: Subgraph.contract, {name, inputs, outputs}: Subg
     |> String.concat("\n  ")
   ;
 
-  Format.sprintf("
-type %s @entity implements Call {
+  Format.sprintf(
+  // Do not touch string format!
+"type %s @entity implements Call {
   id: ID!   # CONTRACT_ADDR-PER_CALL_COUNTER
   tx: Transaction!
 
@@ -97,8 +98,7 @@ type %s @entity implements Call {
   %s
 
   %s: %s!
-} 
-  ", 
+}", 
     name, 
     inputs, 
     outputs,
@@ -108,11 +108,11 @@ type %s @entity implements Call {
 };
 
 let contract_fields_of_event = (contract: Subgraph.contract, event: Subgraph.event) => {
-  Format.sprintf("
-  num%ss: BigInt!
+  // Do not touch string format!
+  Format.sprintf(
+"  num%ss: BigInt!
   %ss: [%s!]! @derivedFrom(field: \"%s\")
-  latest%s: %s
-    ", 
+  latest%s: %s", 
     event.name, 
     String.uncapitalize_ascii(event.name), 
     event.name, 
@@ -123,11 +123,11 @@ let contract_fields_of_event = (contract: Subgraph.contract, event: Subgraph.eve
 };
 
 let contract_fields_of_call = (contract: Subgraph.contract, call: Subgraph.call) => {
-  Format.sprintf("
-  num%ss: BigInt!
+  Format.sprintf(
+  // Do not touch string format!
+"  num%ss: BigInt!
   %ss: [%s!]! @derivedFrom(field: \"%s\")
-  latest%s: %s
-  ", 
+  latest%s: %s", 
     call.name, 
     String.uncapitalize_ascii(call.name), 
     call.name, 
@@ -150,7 +150,6 @@ let entity_of_contract = (contract: Subgraph.contract) => {
     |> List.flatten
     |> List.filter_map(fun | StoreEvent(event) => Some(event) | _ => None)
     |> List.map(contract_fields_of_event(contract))
-    |> String.concat("")
   ;
 
   let calls_contract_fields = 
@@ -159,24 +158,28 @@ let entity_of_contract = (contract: Subgraph.contract) => {
     |> List.flatten
     |> List.filter_map(fun | StoreCall(call) => Some(call) | _ => None)
     |> List.map(contract_fields_of_call(contract))
-    |> String.concat("")
   ;
 
   let all_fields = 
     [
-      contract_fields,
+      [contract_fields],
       events_contract_fields,
       calls_contract_fields
     ]
-    |> String.concat("\n")
+    |> List.flatten
+    |> String.concat("\n\n")
   ;
 
-  Format.sprintf("
-type %s @entity {
+  Format.sprintf(
+  // Do not touch string format!
+"type %s @entity {
   id: ID!   # Address
+
   %s
-}
-  ", contract.name, all_fields)
+}", 
+    contract.name, 
+    all_fields
+  );
 };
 
 let of_subgraph = (subgraph: Subgraph.t) => {
@@ -199,7 +202,6 @@ let of_subgraph = (subgraph: Subgraph.t) => {
       | _ => None
     )
     |> List.map(((contract, event)) => entity_of_event(contract, event))
-    |> String.concat("")
   ;
 
   let call_entities = 
@@ -221,22 +223,21 @@ let of_subgraph = (subgraph: Subgraph.t) => {
       | _ => None
     )
     |> List.map(((contract, call)) => entity_of_call(contract, call))
-    |> String.concat("")
   ;
 
   let contract_entities = 
     subgraph
     |> List.map(entity_of_contract)
-    |> String.concat("")
   ;
 
   [
-    transaction_entity,
-    event_interface,
-    call_interface,
+    [transaction_entity],
+    event_entities == [] ? [] : [event_interface],
+    call_entities == [] ? [] : [call_interface],
     event_entities,
     call_entities,
     contract_entities
   ]
-  |> String.concat("")
+  |> List.flatten
+  |> String.concat("\n\n")
 };
