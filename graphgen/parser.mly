@@ -44,6 +44,10 @@
 %token ADDRESS
 %token RECEIVE
 %token USING
+%token TYPE
+%token MODIFIER
+%token ASSEMBLY
+%token EVMASM
 
 // Events
 %token EMIT EVENT
@@ -80,19 +84,28 @@
 %token WEEKS
 %token YEARS
 
+<<<<<<< HEAD
 %token LET LEAVE SWITCH CASE DEFAULT
 
 %token EVM_BUILTIN
 
+=======
+%token <string> VARIABLE
+
+// Literals
+>>>>>>> 670a826247d42312e75cac4360f981b78212bb49
 %token <bool> BOOL
-%token <string> VARIABLE STRING
+%token <string> STRING
 %token <string> NON_EMPTY_STRING
+%token <string> HEX_STRING
+%token <int> HEX_NUMBER
 %token <int> INT
+%token <int> DECIMAL
 %token FROM
 
 // Symbols and operators
 %token DOT
-%token TRIPARROW
+%token TRIARROWEQ
 %token LSHIFTEQ
 %token RSHIFTEQ
 %token MAP
@@ -103,17 +116,17 @@
 %token DIVEQ
 %token MODEQ
 %token DEC
-%token BITAND
-%token BITOR
-%token LTE
-%token GTE
-%token OREQ
-%token XOREQ
-%token ANDEQ
-%token GT
-%token LT
-%token EQUAL
+%token POW
+%token TRIARROW 
+%token LSHIFT RSHIFT
+%token BITAND BITOR
+%token LTE GTE
+%token EQUALITY NOTEQUAL
+%token OREQ XOREQ ANDEQ
+%token TILDE
+%token GT LT EQUAL
 %token NOT
+%token AND OR XOR
 %token COND
 %token COLON
 %token PLUS MINUS
@@ -121,6 +134,7 @@
 %token MOD
 %token LPAREN RPAREN
 %token LBRACK RBRACK
+%token LBRACE RBRACE
 %token COMMA
 %token SEMICOLON
 
@@ -140,7 +154,7 @@ source_unit:
   | interface_def = interface_definition; src = source_unit;                { 0 }
   | library_def = library_definition; src = source_unit;                    { 0 }
   | function_def = function_definition; src = source_unit;                  { 0 }
-  | const_var_def = const_var_definition; src = source_unit;                { 0 }
+  | const_var_def = constant_variable_declaration; src = source_unit;       { 0 }
   | struct_def = struct_definition; src = source_unit;                      { 0 }
   | enum_def = enum_definition; src = source_unit;                          { 0 }
   | EOF                                                                     { 0 }
@@ -252,24 +266,67 @@ override_specifier:
   | OVERRIDE; LPAREN; separated_nonempty_list(COMMA, identifier_path); RPAREN;    { 17 }
 ;
 
-// TODO: function_definition
-// function_definition:
-//   | FUNCTION; id = identifier; LPAREN; params = option(parameter_list); RPAREN;   { 18 }
-//   | FUNCTION; FALLBACK; LPAREN; params = option(parameter_list); RPAREN;          { 18 }
-//   | FUNCTION; RECEIVE; LPAREN; params = option(parameter_list); RPAREN;           { 18 }
-// ;
+function_definition:
+  | FUNCTION; fun_def_subrule1; 
+    LPAREN; option(parameter_list); RPAREN; list(fun_def_subrule2);  
+    option(fun_def_subrule3); fun_def_subrule4;                                   { 18 }
+%inline fun_def_subrule1:
+  | identifier;       { 18 }
+  | FALLBACK;         { 18 }
+  | RECEIVE;          { 18 }
+%inline fun_def_subrule2:
+  | visibility;           { 18 }
+  | state_mutability;     { 18 }
+  | modifier_invocation;  { 18 }
+  | VIRTUAL;              { 18 }
+  | override_specifier;   { 18 } 
+%inline fun_def_subrule3:
+  | RETURNS; LPAREN; parameter_list; RPAREN;    { 18 }
+%inline fun_def_subrule4:
+  | SEMICOLON;    { 18 }
+  | block;        { 18 }
+;
 
-// TODO: modifier_definition
-// modifier_definition:
-// ;
+modifier_definition:
+  | MODIFIER; identifier; option(mod_def_subrule1); list(mod_def_subrule2); mod_def_subrule3;   { 1 }  
+%inline mod_def_subrule1:
+  | LPAREN; option(parameter_list); RPAREN;   { 1 }
+%inline mod_def_subrule2:
+  | VIRTUAL;              { 1 }
+  | override_specifier;   { 1 }
+%inline mod_def_subrule3:
+  | SEMICOLON;      { 1 }
+  | block;          { 1 }
+;
 
-// TODO: fallback_function_definition
-// fallback_function_definition:
-// ;
+fallback_function_definition:
+  | FALLBACK; LPAREN; option(parameter_list); RPAREN; 
+    list(fb_fun_def_subrule1); option(fb_fun_def_subrule2); fb_fun_def_subrule3;      { 1 }
+%inline fb_fun_def_subrule1:
+  | EXTERNAL;               { 2 }
+  | state_mutability;       { 2 }
+  | modifier_invocation;    { 2 }
+  | VIRTUAL;                { 2 }
+  | override_specifier;     { 2 }
+%inline fb_fun_def_subrule2:
+  | RETURNS; LPAREN; parameter_list; RPAREN;    { 2 }
+%inline fb_fun_def_subrule3:
+  | SEMICOLON;    { 2 }
+  | block;        { 2 }
+;
 
-// TODO: receive_function_definition
-// receive_function_definition:
-// ;
+receive_function_definition:
+  | RECEIVE; LPAREN; RPAREN; list(receive_fun_def_subrule1); receive_fun_def_subrule2;  { 1 }
+%inline receive_fun_def_subrule1:
+  | EXTERNAL;                   { 1 }
+  | PAYABLE;                    { 1 }
+  | modifier_invocation;        { 1 }
+  | VIRTUAL;                    { 1 }
+  | override_specifier;         { 1 }
+%inline receive_fun_def_subrule2:
+  | SEMICOLON;    { 2 }
+  | block;        { 2 }
+;
 
 struct_definition:
   | STRUCT; id = identifier; LBRACE; list(struct_member); RBRACE;    { 1 }
@@ -355,9 +412,83 @@ data_location:
 ;
 
 // TODO: expression
-// expression:
-//   | 
-// ;
+expression:
+  | expression; LBRACK; option(expression); RBRACK;                                   { 1 }
+  | expression; LBRACK; option(expression); COLON; option(expression); RBRACK;        { 1 }
+  | expression; DOT; expr_subrule1;                                                   { 1 }
+  | expression; LBRACE; separated_list(COMMA, expr_subrule2); RBRACE;                 { 1 }
+  | expression; call_argument_list;                                                   { 1 }
+  | PAYABLE; call_argument_list;                                                      { 1 }
+  | TYPE; LPAREN; type_name; RPAREN;                                                  { 1 }
+  | expr_subrule3; expression;                                                        { 1 }
+  | expression; expr_subrule4;                                                        { 1 }
+  | expression; POW; expression;                                                      { 1 }
+  | expression; expr_subrule5; expression;                                            { 1 }
+  | expression; expr_subrule6; expression;                                            { 1 }
+  | expression; expr_subrule7; expression;                                            { 1 }
+  | expression; AND; expression;                                                      { 1 }
+  | expression; XOR; expression;                                                      { 1 }
+  | expression; OR; expression;                                                       { 1 }
+  | expression; expr_subrule8; expression;                                            { 1 }
+  | expression; expr_subrule9; expression;                                            { 1 }
+  | expression; BITAND; expression;                                                   { 1 }
+  | expression; BITOR; expression;                                                    { 1 }
+  | expression; COND; expression; COLON; expression;                                  { 1 }
+  | expression; expr_subrule10; expression;                                           { 1 }
+  | NEW; type_name;                                                                   { 1 }
+  | tuple_expression;                                                                 { 1 }
+  | inline_array_expression;                                                          { 1 }
+  | identifier;                                                                       { 1 }
+  | literal;                                                                          { 1 }
+  | elementary_type_name;                                                             { 1 }
+%inline expr_subrule1:
+  | identifier;   { 1 }
+  | ADDRESS;      { 1 }
+%inline expr_subrule2:
+  | identifier; COLON; expression;    { 1 }
+%inline expr_subrule3:
+  | INC;      { 1 }
+  | DEC;      { 1 }
+  | NOT;      { 1 }
+  | TILDE;    { 1 }
+  | DELETE;   { 1 }
+  | MINUS;    { 1 }
+%inline expr_subrule4:
+  | INC;  { 1 }
+  | DEC;  { 1 }
+%inline expr_subrule5:
+  | TIMES;  { 1 }
+  | DIV;    { 1 }
+  | MOD;    { 1 }
+%inline expr_subrule6:
+  | PLUS;   { 1 }
+  | MINUS;  { 1 }
+%inline expr_subrule7:
+  | LSHIFT;       { 1 }
+  | RSHIFT;       { 1 }
+  | TRIARROW;     { 1 }
+%inline expr_subrule8:
+  | LT;     { 1 }
+  | GT;     { 1 }
+  | LTE;    { 1 }
+  | GTE;    { 1 }
+%inline expr_subrule9:
+  | EQUALITY;   { 1 }
+  | NOTEQUAL;   { 1 }
+%inline expr_subrule10:
+  | EQUAL;          { 1 }
+  | OREQ;           { 1 }
+  | XOREQ;          { 1 }
+  | ANDEQ;          { 1 }
+  | LSHIFTEQ;       { 1 }
+  | RSHIFTEQ;       { 1 }
+  | TRIARROWEQ;     { 1 }
+  | PLUSEQ;         { 1 }
+  | MINUSEQ;        { 1 }
+  | TIMESEQ;        { 1 }
+  | DIVEQ;          { 1 }
+  | MODEQ;          { 1 }
+;
 
 tuple_expression:
   | LPAREN; separated_list(COMMA, expression); RPAREN;   { 1 }
@@ -386,11 +517,11 @@ literal:
 // ;
 
 string_literal:
-  | strs = nonempty_list(STRING_LITERAL);             { String.concat "" strs }
+  | strs = nonempty_list(STRING);             { String.concat "" strs }
 ;
 
 hex_string_literal:
-  | strs = nonempty_list(HEX_STRING_LITERAL);         { String.concat "" strs }
+  | strs = nonempty_list(HEX_STRING);         { String.concat "" strs }
 ;
 
 // unicode_string_literal:
@@ -398,7 +529,7 @@ hex_string_literal:
 // ;
 
 number_literal:
-  | DECIMAL_NUMBER; option(NUMBER_UNIT);      { 1 }
+  | DECIMAL; option(NUMBER_UNIT);      { 1 }
   | HEX_NUMBER; option(NUMBER_UNIT);          { 1 }
 ;
 
@@ -488,10 +619,9 @@ emit_statement:
   | EMIT; expression; call_argument_list; SEMICOLON;    { 1 }
 ;
 
-// TODO: assembly_statement
-// assembly_statement:
-//   | ASSEMBLY; option()
-// ;
+assembly_statement:
+  | ASSEMBLY; option(EVMASM); LBRACE; list(yul_statement); RBRACE; { 1 }
+;
 
 variable_declaration_tuple:
   | LPAREN; option(list(COMMA)); variable_declaration; list(variable_declaration_tuple_subrule); RPAREN;   { 1 }
