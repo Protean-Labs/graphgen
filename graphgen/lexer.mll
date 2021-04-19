@@ -102,6 +102,10 @@ rule token = parse
 | "event"           { EVENT }
 | "emit"            { EMIT }
 | "using"           { USING }
+| "type"            { TYPE }
+| "modifier"        { MODIFIER }
+| "assembly"        { ASSEMBLY }
+| "'evmasm'"        { EVMASM }
 
 (* Data location *)
 | "memory"          { MEMORY }
@@ -156,8 +160,8 @@ rule token = parse
 (* Literals *)
 | bool_literal      { BOOL (bool_of_string (Lexing.lexeme lexbuf)) }
 | string_literal    { STRING (Lexing.lexeme lexbuf) }
-| hex_string_literal{ HEXS (Lexing.lexeme lexbuf)}
-| hex_num_literal   { HEXN (int_of_hex (Lexing.lexeme lexbuf))}
+| hex_string_literal{ HEX_STRING (Lexing.lexeme lexbuf)}
+| hex_num_literal   { HEX_NUMBER (int_of_hex (Lexing.lexeme lexbuf))}
 | identifier        { VARIABLE (Lexing.lexeme lexbuf) }
 | int_literal       { INT (int_of_string (Lexing.lexeme lexbuf))  }
 | dec_num_literal   { DECIMAL (int_of_string (Lexing.lexeme lexbuf)) }
@@ -166,7 +170,7 @@ rule token = parse
 
 (* Symbols and operators *)
 | '.'               { DOT }
-| ">>>="            { TRIPARROW }
+| ">>>="            { TRIARROWEQ }
 | ">>="             { LSHIFTEQ }
 | "<<="             { RSHIFTEQ }
 | "=>"              { MAP }
@@ -177,17 +181,27 @@ rule token = parse
 | "/="              { DIVEQ }
 | "%="              { MODEQ }
 | "--"              { DEC }
+| "**"              { POW }
+| ">>>"             { TRIARROW }
+| "<<"              { LSHIFT }
+| ">>"              { RSHIFT }
 | "&&"              { BITAND }
 | "||"              { BITOR }
-| "=<"              { LTE }
-| "<="              { GTE }
+| "<="              { LTE }
+| ">="              { GTE }
+| "=="              { EQUALITY }
+| "!="              { NOTEQUAL }
 | "|="              { OREQ }
 | "^="              { XOREQ }
 | "&="              { ANDEQ }
+| '~'               { TILDE }
 | '>'               { GT }
 | '<'               { LT }
 | '='               { EQUAL }
 | '!'               { NOT }
+| '&'               { AND }
+| '|'               { OR }
+| '^'               { XOR }
 | '?'               { COND }
 | ':'               { COLON }
 | '+'               { PLUS }
@@ -199,6 +213,8 @@ rule token = parse
 | ')'               { RPAREN }
 | '['               { LBRACK }
 | ']'               { RBRACK }
+| '{'               { LBRACE }
+| '}'               { RBRACE }
 | ','               { COMMA }
 | ';'               { SEMICOLON }
 

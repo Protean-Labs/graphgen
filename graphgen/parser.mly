@@ -6,6 +6,7 @@
 %token INTERFACE
 %token LIBRARY
 %token CONSTRUCTOR
+%token STRUCT
 %token NEW
 %token FUNCTION
 %token MAPPING
@@ -84,16 +85,13 @@
 %token WEEKS
 %token YEARS
 
-<<<<<<< HEAD
 %token LET LEAVE SWITCH CASE DEFAULT
 
 %token EVM_BUILTIN
 
-=======
 %token <string> VARIABLE
 
 // Literals
->>>>>>> 670a826247d42312e75cac4360f981b78212bb49
 %token <bool> BOOL
 %token <string> STRING
 %token <string> NON_EMPTY_STRING
@@ -144,7 +142,7 @@
 %token EOF
 %token CATCHALL
 
-%start <int> prog
+%start <int> source_unit
 %%
 
 source_unit:
@@ -529,8 +527,18 @@ hex_string_literal:
 // ;
 
 number_literal:
-  | DECIMAL; option(NUMBER_UNIT);      { 1 }
-  | HEX_NUMBER; option(NUMBER_UNIT);          { 1 }
+  | DECIMAL; option(number_unit);      { 1 }
+  | HEX_NUMBER; option(number_unit);   { 1 }
+  %inline number_unit:
+  | WEI;                               { 1 }
+  | GWEI;                              { 1 }
+  | ETHER;                             { 1 }
+  | SECONDS;                           { 1 }
+  | MINUTES;                           { 1 }
+  | HOURS;                             { 1 }
+  | DAYS;                              { 1 }
+  | WEEKS;                             { 1 }
+  | YEARS;                             { 1 }
 ;
 
 // block:
@@ -652,78 +660,78 @@ mapping_key_type:
 
 // TODO: yul_statement
 yul_statement:
-  | yul_block
-  | yul_variable_declaration
-  | yul_assignment
-  | yul_function_call
-  | yul_if_statement
-  | yul_for_statement
-  | yul_switch_statement
-  | LEAVE
-  | BREAK
-  | CONTINUE
-  | yul_function_definition
+  | yul_block;                 { 1 }
+  | yul_variable_declaration;  { 1 }
+  | yul_assignment;            { 1 }
+  | yul_function_call;         { 1 }
+  | yul_if_statement;          { 1 }
+  | yul_for_statement;         { 1 }
+  | yul_switch_statement;      { 1 }
+  | LEAVE;                     { 1 }
+  | BREAK;                     { 1 }
+  | CONTINUE;                  { 1 }
+  | yul_function_definition;   { 1 }
 ;
 
 // TODO: yul_block
 yul_block:
-  | yul_statement
+  | RBRACE; list(yul_statement); LBRACE;   { 1 }
 ;
 
 // TODO: yul_variable_declaration
 yul_variable_declaration:
-  | LET; id = IDENTIFIER; ASSIGN; 
+  | LET; id = IDENTIFIER; ASSIGN;  { 1 }
 ;
 
 // TODO: yul_assignment
 yul_assignment:
-  | yul_path; ASSIGN; yul_expression;
-  | separated_nonempty_list(COMMA,yul_path); ASSIGN; yul_function_call;
+  | yul_path; ASSIGN; yul_expression;                                       { 1 }
+  | separated_nonempty_list(COMMA,yul_path); ASSIGN; yul_function_call;     { 1 }
 ;
 
 // TODO: yul_if_statement
-yul_if_statement:
-  | IF; yul_expression; yul_block
+yul_if_statement: 
+  | IF; yul_expression; yul_block;    { 1 }
 ;
 
 // TODO: yul_for_statement
 yul_for_statement:
-  | FOR; yul_block; yul_expression; yul_block; yul_block;
+  | FOR; yul_block; yul_expression; yul_block; yul_block;     { 1 }
 ;
 
 // TODO: yul_switch_statement
 yul_switch_statement:
-  | SWITCH; yul_expression; case_subrule;
-  %inline case_subrule:
-  | CASE; literal; yul_block; DEFAULT; yul_block;
-  | DEFAULT; yul_block
+  | SWITCH; yul_expression; case_subrule;             { 1 }
+  %inline case_subrule:                               { 1 }
+  | CASE; literal; yul_block; DEFAULT; yul_block;     { 1 }
+  | DEFAULT; yul_block                                { 1 }
 ;
 
 // TODO: yul_function_definition
 yul_function_definition:
-  | FUNCTION; IDENTIFIER; parameter_subrule; option(return_subrule) ; yul_block;
+  | FUNCTION; IDENTIFIER; parameter_subrule; option(return_subrule) ; yul_block; { 1 }
   %inline return_subrule:
-  | ARROW; parameter_subrule;
+  | ARROW; parameter_subrule;                                                    { 1 }
   %inline parameter_subrule:
-  | separated_list(COMMA,yul_expression)
+  | separated_list(COMMA,yul_expression)                                         { 1 }
 ;
 
 // TODO: yul_path
 yul_path:
-  | separated_nonempty_list(DOT,IDENTIFIER)
+  | separated_nonempty_list(DOT,IDENTIFIER)                                      { 1 }
 ;
 
 // TODO: yul_function_call
 yul_function_call:
-  | IDENTIFIER; parameter_subrule;
-  | EVM_BUILTIN; parameter_subrule;
-  %inline parameter_subrule:
-  | LPAREN; option(separated_list(COMMA,yul_expression)); RPAREN;
+  | IDENTIFIER; parameter_subrule_option;                                        { 1 }
+  | EVM_BUILTIN; parameter_subrule_option;                                       { 1 }
+  %inline parameter_subrule_option:
+  | LPAREN; option(separated_list(COMMA,yul_expression)); RPAREN;                { 1 }
 ;
 
 // TODO: yul_expression
 yul_expression:
-  | yul_path
-  | yul_function_call
-  | literal
+  | yul_path;                                                                    { 1 }
+  | yul_function_call;                                                           { 1 }
+  | literal;                                                                     { 1 }
 ;
