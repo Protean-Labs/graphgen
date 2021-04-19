@@ -67,9 +67,6 @@ rule token = parse
 | "as"              { logger#debug "as"; AS }
 | "is"              { logger#debug "is"; IS }
 
-| pragma_token      { PRAGMA_TOKEN (Lexing.lexeme lexbuf) }
-| identifier        { IDENTIFIER (Lexing.lexeme lexbuf) }
-
 (*Elementary Type names *)
 | "address"         { logger#debug "address"; ADDRESS_T }
 | "bool"            { logger#debug "bool"; BOOL_T }
