@@ -6,6 +6,7 @@
 let pragma_token = ['a'-'z' 'A'-'Z' '0'-'9' '_' '$' '.' ':']+
 
 let identifier = ['a'-'z' 'A'-'Z' '_' '$'] ['a'-'z' 'A'-'Z' '0'-'9' '_' '$']*
+let yul_identifier = ['a'-'z' 'A'-'Z' '_' '$'] ['a'-'z' 'A'-'Z' '0'-'9' '_' '$']*
 
 let escape_sequence = "\\" (['\'' '\"' '\\' "\\nrt" "\\n" "\\r"] | 'u' ['a'-'f' 'A'-'F' '0'-'9'] ['a'-'f' 'A'-'F' '0'-'9'] ['a'-'f' 'A'-'F' '0'-'9'] ['a'-'f' 'A'-'F' '0'-'9'] |
 'x' ['a'-'f' 'A'-'F' '0'-'9'] ['a'-'f' 'A'-'F' '0'-'9'])
@@ -133,6 +134,7 @@ rule token = parse
 (* Identifiers *)
 | pragma_token      { PRAGMA_TOKEN (Lexing.lexeme lexbuf) }
 | identifier        { IDENTIFIER (Lexing.lexeme lexbuf) }
+(* | yul_identifier    { YUL_IDENTIFIER (Lexing.lexeme lexbuf) } *)
 
 (*Elementary Type names *)
 | "enum"            { ENUM }

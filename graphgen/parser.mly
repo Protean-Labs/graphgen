@@ -1,6 +1,6 @@
 %token PRAGMA PRAGMA_TOKEN
 %token IMPORT
-%token SOLIDITY
+// %token SOLIDITY
 %token ABSTRACT
 %token CONTRACT
 %token INTERFACE
@@ -24,11 +24,11 @@
 %token VIRTUAL
 %token OVERRIDE
 %token FALLBACK
-%token ASSERT
-%token REQUIRE
+// %token ASSERT
+// %token REQUIRE
 %token DELETE
 
-%token <string> IDENTIFIER
+// %token <string> YUL_IDENTIFIER
 
 // If-else
 %token IF ELSE
@@ -89,15 +89,13 @@
 
 %token EVM_BUILTIN
 
-%token <string> VARIABLE
-
 // Literals
 %token <bool> BOOL
 %token <string> STRING
 %token <string> NON_EMPTY_STRING
 %token <string> HEX_STRING
 %token <int> HEX_NUMBER
-%token <int> INT
+// %token <int> INT
 %token <int> DECIMAL
 %token FROM
 
@@ -136,11 +134,14 @@
 %token COMMA
 %token SEMICOLON
 
+
+%token <string> IDENTIFIER
+
 // yul operator
 %token ASSIGN ARROW
 
 %token EOF
-%token CATCHALL
+// %token CATCHALL
 
 %start <int> source_unit
 %%
@@ -409,7 +410,6 @@ data_location:
   | CALLDATA;     { 2 }
 ;
 
-// TODO: expression
 expression:
   | expression; LBRACK; option(expression); RBRACK;                                   { 1 }
   | expression; LBRACK; option(expression); COLON; option(expression); RBRACK;        { 1 }
@@ -608,9 +608,10 @@ break_statement:
 ;
 
 try_statement:
-  | TRY; expression; option(try_statement_subrule); block; nonempty_list(catch_clause);   { 1 }
+  | TRY; expression; try_statement_subrule; block; nonempty_list(catch_clause);   { 1 }
+  | TRY; expression; block; nonempty_list(catch_clause);                          { 1 }
 %inline try_statement_subrule:
-  | RETURNS; LPAREN; parameter_list; RPAREN;    { 1 }
+  | RETURNS; LPAREN; parameter_list; RPAREN;                { 1 }
 ;
 
 catch_clause:
@@ -686,7 +687,7 @@ yul_variable_declaration:
 // TODO: yul_assignment
 yul_assignment:
   | yul_path; ASSIGN; yul_expression;                                       { 1 }
-  | separated_nonempty_list(COMMA,yul_path); ASSIGN; yul_function_call;     { 1 }
+  | separated_nonempty_list(COMMA, yul_path); ASSIGN; yul_function_call;    { 1 }
 ;
 
 // TODO: yul_if_statement
@@ -717,8 +718,8 @@ yul_function_definition:
 ;
 
 // TODO: yul_path
-yul_path:
-  | separated_nonempty_list(DOT,IDENTIFIER)                                      { 1 }
+%inline yul_path:
+  | separated_nonempty_list(DOT, IDENTIFIER);                                  { 1 }
 ;
 
 // TODO: yul_function_call
@@ -726,7 +727,7 @@ yul_function_call:
   | IDENTIFIER; parameter_subrule_option;                                        { 1 }
   | EVM_BUILTIN; parameter_subrule_option;                                       { 1 }
   %inline parameter_subrule_option:
-  | LPAREN; option(separated_list(COMMA,yul_expression)); RPAREN;                { 1 }
+  | LPAREN; option(separated_list(COMMA, yul_expression)); RPAREN;                { 1 }
 ;
 
 // TODO: yul_expression
