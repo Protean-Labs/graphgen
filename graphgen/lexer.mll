@@ -3,6 +3,8 @@
   exception ParsingError of string
 }
 
+let pragma_token = ['a'-'z' 'A'-'Z' '0'-'9' '_' '$' '.' ':']+
+
 let identifier = ['a'-'z' 'A'-'Z' '_' '$'] ['a'-'z' 'A'-'Z' '0'-'9' '_' '$']*
 
 let escape_sequence = "\\" (['\'' '\"' '\\' "\\nrt" "\\n" "\\r"] | 'u' ['a'-'f' 'A'-'F' '0'-'9'] ['a'-'f' 'A'-'F' '0'-'9'] ['a'-'f' 'A'-'F' '0'-'9'] ['a'-'f' 'A'-'F' '0'-'9'] |
@@ -90,7 +92,9 @@ rule token = parse
 | "return"          { RETURN }
 | "returns"         { RETURNS }
 | "receive"         { RECEIVE }
+| "event"           { EVENT }
 | "emit"            { EMIT }
+| "using"           { USING }
 
 (* Data location *)
 | "memory"          { MEMORY }
@@ -105,17 +109,20 @@ rule token = parse
 | "as"              { AS }
 | "is"              { IS }
 
+| pragma_token      { PRAGMA_TOKEN (Lexing.lexeme lexbuf) }
+| identifier        { IDENTIFIER (Lexing.lexeme lexbuf) }
+
 (*Elementary Type names *)
 | "enum"            { ENUM }
-| "address"         { ADDRESS }
-| "bytes"           { BYTEST }
-| "bool"            { BOOLT }
-| "string"          { STRINGT }
-| signed_int_type   { INTT }
-| unsigned_int_type { UINTT }
-| fixed_bytes_type  { FBYTEST}
-| "fixed"           { FIXEDT }
-| "ufixed"          { UFIXEDT }
+| "address"         { ADDRESS_T }
+| "bytes"           { BYTES_T }
+| "bool"            { BOOL_T }
+| "string"          { STRING_T }
+| signed_int_type   { INT_T }
+| unsigned_int_type { UINT_T }
+| fixed_bytes_type  { FBYTES_T}
+| "fixed"           { FIXED_T }
+| "ufixed"          { UFIXED_T }
 
 (* units *)
 | "wei"             { WEI }

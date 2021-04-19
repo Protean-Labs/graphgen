@@ -1,4 +1,4 @@
-%token PRAGMA
+%token PRAGMA PRAGMA_TOKEN
 %token IMPORT
 %token SOLIDITY
 %token ABSTRACT
@@ -26,26 +26,59 @@
 %token ASSERT
 %token REQUIRE
 %token DELETE
-%token IF
-%token ELSE
+
+%token <string> IDENTIFIER
+
+// If-else
+%token IF ELSE
+
+// Loop
 %token WHILE
 %token DO
 %token FOR
 %token BREAK
 %token CONTINUE
-%token RETURN
-%token RETURNS
+
+%token RETURN RETURNS
+
 %token ADDRESS
 %token RECEIVE
-%token EMIT
-%token MEMORY
-%token STORAGE
-%token TRY
-%token CATCH
+%token USING
+
+// Events
+%token EMIT EVENT
+
+// Data location
+%token MEMORY STORAGE CALLDATA
+
+// Exceptions
+%token TRY CATCH
+
+// Alias
 %token AS IS
 
+// Elementary Type names
 %token ENUM
-%token BYTES
+%token ADDRESS_T
+%token BYTES_T
+%token BOOL_T
+%token STRING_T
+%token INT_T
+%token UINT_T
+%token FBYTES_T
+%token FIXED_T
+%token UFIXED_T
+
+// Units
+%token WEI
+%token GWEI
+%token ETHER
+%token SECONDS
+%token MINUTES
+%token HOURS
+%token DAYS
+%token WEEKS
+%token YEARS
 
 %token <bool> BOOL
 %token <string> VARIABLE STRING
@@ -53,6 +86,7 @@
 %token <int> INT
 %token FROM
 
+// Symbols and operators
 %token DOT
 %token TRIPARROW
 %token LSHIFTEQ
@@ -93,7 +127,7 @@
 %%
 
 source_unit:
-  | PRAGMA; ptoken = list(pragma_token); SEMICOLON; src = source_unit;      { 0 }
+  | PRAGMA; ptoken = list(PRAGMA_TOKEN); SEMICOLON; src = source_unit;      { 0 }
   | import_dir = import_directive; SEMICOLON; src = source_unit;            { 0 }
   | contract_def = contract_definition; src = source_unit;                  { 0 }
   | interface_def = interface_definition; src = source_unit;                { 0 }
@@ -271,11 +305,11 @@ using_directive:
   | USING; identifier_path; FOR; using_directive_subrule; SEMICOLON;    { 1 }
 %inline using_directive_subrule:
   | TIMES;        { 1 }
-  | TYPE_NAME;    { 1 }
+  | type_name;    { 1 }
 ;
 
 type_name:
-  | elementary_type;                                  { 1 }
+  | elementary_type_name;                             { 1 }
   | function_type_name;                               { 1 }
   | mapping_type;                                     { 1 }
   | identifier_path;                                  { 1 }
