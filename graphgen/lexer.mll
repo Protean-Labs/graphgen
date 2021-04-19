@@ -40,8 +40,15 @@ let unsigned_int_type = "uint" | "uint8" | "uint16" | "uint24" | "uint32" | "uin
  "uint104" | "uint112" | "uint120" | "uint128" | "uint136" | "uint144" | "uint152" | "uint160" | "uint168" | "uint176" | "uint184" |  "uint192" | "uint200" | "uint208" | "uint216" |
   "uint224" | "uint232" | "uint240" | "uint248" | "uint256"
 
+let evm_builtin =  "stop" | "add"  | "sub"  | "mul"  | "div" | "sdiv" | "mod" | "smod" | "exp" | "not" | "lt" | "gt" | "slt" | "sgt" | "eq" | "iszero" | "and" 
+| "or" | "xor" | "byte" | "shl" | "shr" | "sar" | "addmod" | "mulmod" | "signextend" | "keccack256" | "pop" | "mload" | "mstore" | "mstore8" | "sload" 
+| "sstore" | "msize" | "gas" | "balance" | "selfbalance"  | "caller" | "callvalue" | "calldataload" | "calldatasize" | "calldatacopy" | "extcodesize" 
+| "extcodecopy"  | "returndatasize" | "returndatacopy" | "extcodehash"  | "create" | "create2" | "call" | "callcode" | "delegatecall" | "staticcall"   | "revert" 
+| "selfdestruct" | "invalid" | "log0" | "log1" | "log2" | "log3" | "log4"  | "chainid" | "origin" | "gasprice" | "blockhash" | "coinbase" 
+| "timestamp" | "number" | "difficulty" | "gaslimit"
 
-(* TODO Scientific notation, yul blocks, semantic actions *)
+
+(* TODO semantic actions *)
 
 let white = [' ' '\t']+
 let newline = '\r' | '\n' | "\r\n"
@@ -109,6 +116,17 @@ rule token = parse
 | "as"              { AS }
 | "is"              { IS }
 
+(* Yul keywords*)
+| "let"             { LET }
+| "leave"           { LEAVE }
+| "switch"          { SWITCH }
+| "case"            { CASE }
+| "default"         { DEFAULT }
+
+(* Yul EVM Builtin *)
+| evm_builtin       { EVM_BUILTIN }
+
+(* Identifiers *)
 | pragma_token      { PRAGMA_TOKEN (Lexing.lexeme lexbuf) }
 | identifier        { IDENTIFIER (Lexing.lexeme lexbuf) }
 
@@ -183,6 +201,10 @@ rule token = parse
 | ']'               { RBRACK }
 | ','               { COMMA }
 | ';'               { SEMICOLON }
+
+(* Yul operators *)
+| ":="              { ASSIGN }
+| "->"              { ARROW }
 
 (* End *)
 | eof               { EOF }
