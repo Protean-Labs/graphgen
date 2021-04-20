@@ -18,10 +18,6 @@
   },
   "buildDirs": {
     "graphgen": {
-      "rawBuildConfigFooter": [
-        "(ocamllex (modules lexer))",
-        "(menhir (modules parser) (infer false))"
-      ],
       "bin": { 
         "graphgen.exe": "main.re"
       }  
@@ -39,6 +35,8 @@
     "@opam/ocamlfind": "1.8.1",
     "@opam/ppx_deriving": "^4.5",
     "@opam/ppx_deriving_yojson": "^3.5.3",
+    "@opam/yaml":"*",
+    "@opam/ppx_deriving_yaml": "*",
     "@opam/yojson": "*",
     "@pesy/esy-pesy": "0.1.0-alpha.11",
     "@reason-native/console": "*",
