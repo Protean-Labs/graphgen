@@ -3,7 +3,7 @@
   open Easy_logging
   exception ParsingError of string
 
-  let logger = Logging.make_logger "Lexer" Debug [Cli Debug]
+  let logger = Logging.make_logger "Lexer" Info [Cli Debug]
 }
 
 (* let pragma_token = ['a'-'z' 'A'-'Z' '0'-'9' '_' '$' '.' ':' '^']+ *)
@@ -105,5 +105,5 @@ and gg_tag = parse
 | _                 { logger#debug "Not a GG_TAG"; COMMENT_BLOCK (comment_block "" lexbuf)}
 and comment_block acc = parse
 (* GraphGen tags *)
-|  "*/"             { print_endline(acc); logger#debug "Comment block end"; acc }
+|  "*/"             { logger#debug "Comment block end"; acc }
 | _ as c            { comment_block (acc ^ Char.escaped c) lexbuf }
