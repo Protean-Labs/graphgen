@@ -124,9 +124,5 @@ and gg_tag = parse
 | _                 { logger#debug "Not a GG_TAG"; COMMENT_BLOCK (comment_block "" lexbuf)}
 and comment_block acc = parse
 (* GraphGen tags *)
-<<<<<<< HEAD
 |  "*/"             { logger#debug "Comment block end"; acc }
-=======
-|  "*/"             { print_endline(acc); logger#debug "Comment block end"; acc }
->>>>>>> 6ee6a22 (Buildable restricted solidity grammar)
 | _ as c            { comment_block (acc ^ Char.escaped c) lexbuf }
