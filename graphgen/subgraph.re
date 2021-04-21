@@ -1,12 +1,12 @@
 type event = {
   name: string,
-  fields: list((string, Solidity.typ))
+  fields: list((string, Ast.typ))
 };
 
 type call = {
   name: string,
-  inputs: list((string, Solidity.typ)),
-  outputs: list((string, Solidity.typ))
+  inputs: list((string, Ast.typ)),
+  outputs: list((string, Ast.typ))
 };
 
 type action = 
@@ -23,7 +23,7 @@ type trigger =
 
 type contract = {
   name: string,
-  fields: list((string, Solidity.typ)),
+  fields: list((string, Ast.typ)),
   triggers: list(trigger)
 };
 

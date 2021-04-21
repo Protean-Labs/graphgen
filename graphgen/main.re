@@ -71,5 +71,5 @@ let () = {
   }
   |> fun
     | Error(msg) => print_endline(msg)
-    | Ok(i) => print_endline(Format.sprintf("%d", i))
+    | Ok(ast) => Format.asprintf("%a", Ast.pp_subgraph, ast) |> print_endline;
 };

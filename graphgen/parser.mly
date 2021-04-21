@@ -1,7 +1,8 @@
 %{
   open Easy_logging
+  open Ast
 
-  let logger = Logging.make_logger "Parser" Debug [Cli Debug]
+  let logger = Logging.make_logger "Parser" Info [Cli Debug]
 %}
 
 
@@ -87,18 +88,18 @@
 
 %token EOF
 
-%start <int> source_unit
+%start <Ast.subgraph> source_unit
 %%
 
 source_unit:
-  | pragma; SEMICOLON; source_unit;                   { logger#debug "Pragma"; 0 }
-  | import_directive; SEMICOLON; source_unit;         { logger#debug "Import"; 0 }
-  | gg_tag; source_unit;                              { logger#debug "GG_tag"; 0 }
-  | comments; source_unit;                            { logger#debug "Comment block"; 0 }
-  | interface_definition; source_unit;                { logger#debug "Interface definition"; 0 }
-  | struct_definition; source_unit;                   { logger#debug "Struct definition"; 0 }
-  | enum_definition; source_unit;                     { logger#debug "Enum definition"; 0 }
-  | EOF                                               { logger#debug "EOF"; 0 }
+  | pragma; SEMICOLON; src = source_unit;                                       { logger#debug "Pragma"; src }
+  | import_directive; SEMICOLON; src = source_unit;                             { logger#debug "Import"; src }
+  | gg_params = gg_tag; intf = interface_definition; src = source_unit;         { logger#debug "GG_tag"; (gg_params, intf)::src }
+  | comments; src = source_unit;                                                { logger#debug "Comment block"; src }
+  | interface_definition; src = source_unit;                                    { logger#debug "Interface definition"; src }
+  | struct_definition; src = source_unit;                                       { logger#debug "Struct definition"; src }
+  | enum_definition; src = source_unit;                                         { logger#debug "Enum definition"; src }
+  | EOF                                                                         { logger#debug "EOF"; [] }
 ;
 
 pragma:
@@ -110,9 +111,9 @@ comments:
 ;
 
 gg_tag:
-  | gg_params = GG_SOURCE;        { 1 }
-  | gg_params = GG_HANDLER;       { 1 }
-  | gg_params = GG_FIELD;         { 1 }
+  | gg_params = GG_SOURCE;        { (GGSource gg_params) }
+  | gg_params = GG_HANDLER;       { (GGHandler gg_params) }
+  | gg_params = GG_FIELD;         { (GGField gg_params) }
 ;
 
 import_directive:
@@ -129,16 +130,16 @@ path:
 symbol_aliases:
   | LBRACE; separated_nonempty_list(COMMA, subrule); RBRACE;          { 3 }
 %inline subrule:
-  | identifier; AS; identifier;                                 { 3 }
+  | identifier; AS; identifier;                                         { 3 }
   | identifier;                                                        { 3 }
 ;
 
 interface_definition:
   | INTERFACE; id = identifier; 
     IS; inheritance = separated_nonempty_list(COMMA, inheritance_specifier); 
-    LBRACE; body = option(list(contract_body_element)); RBRACE;                   { 5 }
+    LBRACE; body = list(contract_body_element); RBRACE;                   { (Ast.make_interface id (List.filter_map (function x -> x) body)) }
   | INTERFACE; id = identifier; 
-    LBRACE; body = option(list(contract_body_element)); RBRACE;                   { 5 }
+    LBRACE; body = list(contract_body_element); RBRACE;                   { (Ast.make_interface id (List.filter_map (function x -> x) body)) }
 ;
 
 inheritance_specifier:
@@ -146,14 +147,17 @@ inheritance_specifier:
 ;
 
 contract_body_element:
-  | gg_tag; contract_body_element;                                                { 8 }
-  | COMMENT_BLOCK; contract_body_element;                                         { 8 }
-  | fun_def = function_definition;                                                { 8 }
-  | fallback_def = fallback_function_definition;                                  { 8 }
-  | receive_def = receive_function_definition;                                    { 8 }
-  | struct_def = struct_definition;                                               { 8 }
-  | enum_def = enum_definition;                                                   { 8 }
-  | event_def = event_definition;                                                 { 8 }
+  | tag = gg_tag; ele = element_subrule;                                      { Some (tag, ele) }
+  | COMMENT_BLOCK;       element_subrule;                                     { None }
+  | element_subrule;                                                          { None }
+%inline element_subrule:
+  // | COMMENT_BLOCK; def = element_subrule;                                     { def }
+  | def = function_definition;                                                { def }
+  | def = fallback_function_definition;                                       { def }
+  | def = receive_function_definition;                                        { def }
+  | def = struct_definition;                                                  { def }
+  | def = enum_definition;                                                    { def }
+  | def = event_definition;                                                   { def }
 ;
 
 identifier_path:
@@ -187,7 +191,7 @@ override_specifier:
 function_definition:
   | FUNCTION; fun_def_subrule1; 
     LPAREN; option(parameter_list); RPAREN; list(fun_def_subrule2);  
-    option(fun_def_subrule3); fun_def_subrule4;                                   { 18 }
+    option(fun_def_subrule3); fun_def_subrule4;                                   { FunctionDef }
 %inline fun_def_subrule1:
   | identifier;       { 18 }
   | FALLBACK;         { 18 }
@@ -207,7 +211,7 @@ function_definition:
 
 fallback_function_definition:
   | FALLBACK; LPAREN; option(parameter_list); RPAREN; 
-    list(fb_fun_def_subrule1); option(fb_fun_def_subrule2); fb_fun_def_subrule3;      { 1 }
+    list(fb_fun_def_subrule1); option(fb_fun_def_subrule2); fb_fun_def_subrule3;      { FallbackDef }
 %inline fb_fun_def_subrule1:
   | EXTERNAL;               { 2 }
   | state_mutability;       { 2 }
@@ -222,7 +226,7 @@ fallback_function_definition:
 ;
 
 receive_function_definition:
-  | RECEIVE; LPAREN; RPAREN; list(receive_fun_def_subrule1); receive_fun_def_subrule2;  { 1 }
+  | RECEIVE; LPAREN; RPAREN; list(receive_fun_def_subrule1); receive_fun_def_subrule2;  { ReceiveDef }
 %inline receive_fun_def_subrule1:
   | EXTERNAL;                   { 1 }
   | PAYABLE;                    { 1 }
@@ -235,7 +239,7 @@ receive_function_definition:
 ;
 
 struct_definition:
-  | STRUCT; id = identifier; LBRACE; list(struct_member); RBRACE;    { 1 }
+  | STRUCT; id = identifier; LBRACE; list(struct_member); RBRACE;    { StructDef }
 ;
 
 struct_member:
@@ -243,35 +247,35 @@ struct_member:
 ;
 
 enum_definition:
-  | ENUM; identifier; LBRACE; separated_list(COMMA, identifier); RBRACE;  { 2 }
+  | ENUM; identifier; LBRACE; separated_list(COMMA, identifier); RBRACE;  { EnumDef }
 ;
 
 event_parameter:
-  | type_name; option(INDEXED); option(identifier);   { 1 }
+  | typ = type_name; indexed = boption(INDEXED); id = option(identifier);   { (Ast.make_event_param typ indexed id) }
 ;
 
 event_definition:
-  | EVENT; identifier; LPAREN; separated_list(COMMA, event_parameter); RPAREN; option(ANON); SEMICOLON;   { 1 }
+  | EVENT; id = identifier; LPAREN; params = separated_list(COMMA, event_parameter); RPAREN; option(ANON); SEMICOLON;   { EventDef (id, params) }
 ;
 
 type_name:
-  | elementary_type_name;                             { 1 }
+  | typ = elementary_type_name;              { typ }
   // | function_type_name;                               { 1 }
   // | mapping_type;                                     { 1 }
   // | identifier_path;                                  { 1 }
-  | type_name; LBRACK; RBRACK;                        { 1 }
+  | typ = type_name; LBRACK; RBRACK;         { ArrayT (typ) }
 ;
 
 elementary_type_name:
-  | ADDRESS_T;                      { 1 }
-  | BOOL_T;                         { 1 }
-  | STRING_T;                       { 1 }
-  | FIXED_T;                        { 1 }
-  | UFIXED_T;                       { 1 }
-  | BYTES_T;                        { 1 }
-  | FBYTES_T;                       { 1 }
-  | INT_T;                          { 1 }
-  | UINT_T;                         { 1 }
+  | ADDRESS_T;                      { AddressT }
+  | BOOL_T;                         { BoolT }
+  | STRING_T;                       { StringT }
+  | FIXED_T;                        { FixedT }
+  | UFIXED_T;                       { UfixedT }
+  | BYTES_T;                        { BytesT }
+  | FBYTES_T;                       { FbytesT }
+  | INT_T;                          { IntT }
+  | UINT_T;                         { UintT }
 ;
 
 function_type_name:
@@ -290,8 +294,8 @@ data_location:
 ;
 
 identifier:
-  | IDENTIFIER;   { 1 }
-  | FROM;         { 1 }
+  | id = IDENTIFIER;   { id }
+  | FROM;              { "from" }
 ;
 
 mapping_type:
