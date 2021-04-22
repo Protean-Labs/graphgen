@@ -20,7 +20,12 @@
     "graphgen": {
       "bin": { 
         "graphgen.exe": "main.re"
-      }  
+      },
+      "imports": [
+        "Yaml_unix = require('yaml.unix')",
+        "Fpath = require('fpath')"
+      ],
+      "preprocess": ["pps", "ppx_deriving_yaml", "ppx_deriving_yojson"]
     }
   },
   "scripts": {
@@ -38,6 +43,7 @@
     "@opam/yaml":"*",
     "@opam/ppx_deriving_yaml": "*",
     "@opam/yojson": "*",
+    "@opam/fpath":"*",
     "@pesy/esy-pesy": "0.1.0-alpha.11",
     "@reason-native/console": "*",
     "fmt": "^2.0.0",

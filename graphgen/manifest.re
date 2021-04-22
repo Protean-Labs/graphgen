@@ -1,6 +1,13 @@
-open Subgraph
-open Yaml
+open Subgraph;
+open Solidity;
 
+let field_to_string = fun
+  | (_,AddressT) => "address"
+  | (_,UintT(n)) => "uint" ++ string_of_int(n)
+  | (_,IntT(n)) => "int" ++ string_of_int(n)
+  | (_,StringT) => "string"
+  | (_,BoolT) => "bool"
+;
 module CallHandler = {
   [@deriving yaml]
   type t = {
@@ -8,8 +15,9 @@ module CallHandler = {
     handler: string
   };
 
-  let make = ((call, actions)) => {
-    let call_fields = List.map(Solidty.Typ.to_string, call.fields) |> String.concat(",");
+  let make = (call: call) => {
+    let call_fields = List.map(field_to_string, call.inputs) |> String.concat(", ");
+
     {
       func: Format.sprintf("%s(%s)", call.name, call_fields),
       handler:Format.sprintf("handle%s", call.name)
@@ -24,10 +32,10 @@ module EventHandler = {
     handler: string
   };
 
-  let make = ((event, actions)) => {
-    let event_fields = List.map(Solidty.Typ.to_string, event.fields) |> String.concat(",");
+  let make = (event:event) => {
+    let event_fields = List.map(field_to_string, event.fields) |> String.concat(", ");
     {
-      event: Format.sprintf("%s()", event.name),
+      event: Format.sprintf("%s(%s)", event.name, event_fields),
       handler:Format.sprintf("handle%s", event.name)
     }
   };
@@ -65,14 +73,14 @@ module Mapping = {
     eventHandlers: {
       contract.triggers 
       |> List.filter_map(fun 
-      | Event(event, actions) => Some(EventHandler.make(event, actions))
+      | Event(event, actions) => Some(EventHandler.make(event))
       | _ => None
       )
     },
     callHandlers: {
       contract.triggers 
       |> List.filter_map(fun 
-      | Call(call, actions) => Some(CallHandler.make(call, actions))
+      | Call(call, actions) => Some(CallHandler.make(call))
       | _ => None
       )
     }
@@ -142,10 +150,10 @@ let make = (subg: Subgraph.t) => {
     schema: Schema.make("./schema.graphql"),
     dataSources: List.map(DataSource.make,subg)
   }
-}
+};
 
-let to_file = (manifest: Manifest.t) => {
+let to_file = (manifest) => {
   manifest 
-  |> Manifest.to_yaml
-  |> Unix.to_file(_, "subgraph.yaml")
+  |> to_yaml
+  |> Yaml_unix.to_file(Fpath.v("subgraph.yaml"));
 }
