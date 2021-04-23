@@ -39,7 +39,7 @@ let () = {
         ("token0", AddressT),
         ("token1", AddressT),
       ],
-      triggers: [
+      handlers: [
         Event(swap_event, [StoreEvent(swap_event)]),
         Event(mint_event, [StoreEvent(mint_event)]),
         Event(burn_event, [StoreEvent(burn_event)]),

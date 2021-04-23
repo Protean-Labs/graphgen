@@ -149,7 +149,7 @@ let entity_of_contract = (contract: Subgraph.contract) => {
   ;
 
   let events_contract_fields = 
-    contract.triggers
+    contract.handlers
     |> List.map(fun | Event(_, actions) => actions | _ => [])
     |> List.flatten
     |> List.filter_map(fun | StoreEvent(event) => Some(event) | _ => None)
@@ -157,7 +157,7 @@ let entity_of_contract = (contract: Subgraph.contract) => {
   ;
 
   let calls_contract_fields = 
-    contract.triggers
+    contract.handlers
     |> List.map(fun | Call(_, actions) => actions | _ => [])
     |> List.flatten
     |> List.filter_map(fun | StoreCall(call) => Some(call) | _ => None)
@@ -190,7 +190,7 @@ let of_subgraph = (subgraph: Subgraph.t) => {
   let event_entities = 
     subgraph
     |> List.map(contract => 
-      contract.triggers 
+      contract.handlers 
       |> List.map(t => (contract, t))
     )
     |> List.flatten
@@ -211,7 +211,7 @@ let of_subgraph = (subgraph: Subgraph.t) => {
   let call_entities = 
     subgraph
     |> List.map(contract => 
-      contract.triggers 
+      contract.handlers 
       |> List.map(t => (contract, t))
     )
     |> List.flatten

@@ -16,7 +16,7 @@ type action =
   // | CreateEntity(...)
 ;
 
-type trigger = 
+type handler = 
   | Event(event, list(action))
   | Call(call, list(action))
 ;
@@ -24,7 +24,7 @@ type trigger =
 type contract = {
   name: string,
   fields: list((string, Ast.typ)),
-  triggers: list(trigger)
+  handlers: list(handler)
 };
 
 type t = list(contract);
