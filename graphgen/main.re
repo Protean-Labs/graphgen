@@ -1,4 +1,4 @@
-open Solidity;
+open Ast;
 open Subgraph;
 
 let () = {

@@ -67,21 +67,6 @@ rule token = parse
 | "as"              { logger#debug "as"; AS }
 | "is"              { logger#debug "is"; IS }
 
-(* Yul keywords*)
-| "let"             { LET }
-| "leave"           { LEAVE }
-| "switch"          { SWITCH }
-| "case"            { CASE }
-| "default"         { DEFAULT }
-
-(* Yul EVM Builtin *)
-| evm_builtin       { EVM_BUILTIN }
-
-(* Identifiers *)
-| pragma_token      { PRAGMA_TOKEN (Lexing.lexeme lexbuf) }
-| identifier        { IDENTIFIER (Lexing.lexeme lexbuf) }
-(* | yul_identifier    { YUL_IDENTIFIER (Lexing.lexeme lexbuf) } *)
-
 (*Elementary Type names *)
 | "address"         { logger#debug "address"; ADDRESS_T }
 | "bool"            { logger#debug "bool"; BOOL_T }
@@ -106,10 +91,6 @@ rule token = parse
 (* Identifiers *)
 | identifier as id  { logger#debug "identifier: %s" id; IDENTIFIER (id) }
 | version as ver    { logger#debug "version: %s" ver; VERSION }
-
-(* Yul operators *)
-| ":="              { ASSIGN }
-| "->"              { ARROW }
 
 (* End *)
 | eof               { EOF }

@@ -1,4 +1,4 @@
-open Solidity;
+open Ast;
 open Subgraph;
 
 type graphql_type =
@@ -12,7 +12,7 @@ type graphql_type =
 ;
 
 let graphqltype_of_soltype = fun
-  | FixedSizeBytesT(_) => "Bytes"
+  | FbytesT(_) => "Bytes"
   | UintT(n) when n <= 32 => "Int"
   | UintT(_) => "BigInt"
   | IntT(n) when n <= 32 => "Int"
@@ -20,6 +20,8 @@ let graphqltype_of_soltype = fun
   | StringT => "String"
   | BoolT => "Bool"
   | AddressT => "Address"
+  | FixedT => "Float"
+  | UfixedT => "Float"
 ;
 
 let transaction_entity = 

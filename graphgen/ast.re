@@ -6,9 +6,9 @@ type typ =
   | FixedT
   | UfixedT
   | BytesT
-  | FbytesT
-  | IntT
-  | UintT
+  | FbytesT(int)
+  | IntT(int)
+  | UintT(int)
   | ArrayT(typ)
 ;
 

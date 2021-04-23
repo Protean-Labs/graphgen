@@ -276,9 +276,9 @@ elementary_type_name:
   | FIXED_T;                        { FixedT }
   | UFIXED_T;                       { UfixedT }
   | BYTES_T;                        { BytesT }
-  | FBYTES_T;                       { FbytesT }
-  | INT_T;                          { IntT }
-  | UINT_T;                         { UintT }
+  | FBYTES_T;                       { FbytesT(32) }
+  | INT_T;                          { IntT(256) }
+  | UINT_T;                         { UintT(256) }
 ;
 
 function_type_name:
