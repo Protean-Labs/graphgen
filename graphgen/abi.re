@@ -34,6 +34,7 @@ module Mutability = {
 };
 
 module SolTypes = {
+  [@deriving yojson]
   type t = 
   | UintT(int)
   | IntT(int)
@@ -90,6 +91,7 @@ module Event = {
 
 type description =  [ `Event(Event.t) | `Function(Function) ]
 
+[@deriving yojson]
 type t = {
   contractName: string,
   sha1: string,
