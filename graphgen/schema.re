@@ -11,7 +11,8 @@ type graphql_type =
   | Bytes
 ;
 
-let graphqltype_of_soltype = fun
+let rec graphqltype_of_soltype = fun
+  | BytesT => "Bytes"
   | FbytesT(_) => "Bytes"
   | UintT(n) when n <= 32 => "Int"
   | UintT(_) => "BigInt"
@@ -22,6 +23,7 @@ let graphqltype_of_soltype = fun
   | AddressT => "Address"
   | FixedT => "Float"
   | UfixedT => "Float"
+  | ArrayT(t') => Format.sprintf("[%s!]", graphqltype_of_soltype(t'))
 ;
 
 let transaction_entity = 
