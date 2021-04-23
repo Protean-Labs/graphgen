@@ -1,38 +1,3 @@
-// type toplevel = 
-//   | Pragma(pragma_token, expr)
-//   | Import(import, expr)
-//   | Interface(interface, expr)
-//   | Library(library, expr)
-//   | Function(function_t, expr)
-//   | Tag(args, expr)
-//   | Const(const, expr)
-//   | Struct(struct_t, expr)
-//   | Enum(enum, expr)
-//   | End
-// ;
-
-// let parse_dir: list(string) => list((string, toplevel));
-
-// let expand_imports = (files) = fun
-//   | Import(import, expr) => List.assoc(import, files) |> replace_end_node(_, expr)
-//   | 
-// ;
-
-// foo.sol
-//  
-// function f(uint x) returns (unint);
-// 
-// => toplevel
-
-// bar.sol
-// 
-// import foo.sol
-// 
-// 
-// => toplevel
-
-// expand_imports 
-
 [@deriving show]
 type typ = 
   | AddressT
@@ -54,11 +19,23 @@ type event_param = {
   name: option(string)
 };
 
-let make_event_param = (typ, indexed, name) => {typ, indexed, name};
+[@deriving show]
+type data_location = 
+  | Memory
+  | Storage
+  | Calldata
+;
+
+[@deriving show]
+type fun_param = {
+  typ: typ,
+  data_loc: option(data_location),
+  name: option(string)
+};
 
 [@deriving show]
 type interface_element =
-  | FunctionDef
+  | FunctionDef(string, list(fun_param), list(fun_param))
   | FallbackDef
   | ReceiveDef
   | StructDef
@@ -78,8 +55,6 @@ type interface = {
   name: string,
   tags: list((gg_tag, interface_element))
 };
-
-let make_interface = (name, tags) => {name, tags};
 
 [@deriving show]
 type subgraph = list((gg_tag, interface));

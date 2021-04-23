@@ -3,6 +3,9 @@
   open Ast
 
   let logger = Logging.make_logger "Parser" Info [Cli Debug]
+  let make_interface name tags = {name; tags}
+  let make_event_param typ indexed name = {typ; indexed; name}
+  let make_fun_param typ data_loc name = {typ; data_loc; name}  
 %}
 
 
@@ -137,9 +140,9 @@ symbol_aliases:
 interface_definition:
   | INTERFACE; id = identifier; 
     IS; inheritance = separated_nonempty_list(COMMA, inheritance_specifier); 
-    LBRACE; body = list(contract_body_element); RBRACE;                   { (Ast.make_interface id (List.filter_map (function x -> x) body)) }
+    LBRACE; body = list(contract_body_element); RBRACE;                   { (make_interface id (List.filter_map (function x -> x) body)) }
   | INTERFACE; id = identifier; 
-    LBRACE; body = list(contract_body_element); RBRACE;                   { (Ast.make_interface id (List.filter_map (function x -> x) body)) }
+    LBRACE; body = list(contract_body_element); RBRACE;                   { (make_interface id (List.filter_map (function x -> x) body)) }
 ;
 
 inheritance_specifier:
@@ -172,9 +175,9 @@ visibility:
 ;
 
 parameter_list:
-  | separated_nonempty_list(COMMA, parameter_list_subrule);              { 13 }
+  | params = separated_nonempty_list(COMMA, parameter_list_subrule);              { params }
 %inline parameter_list_subrule:
-  | type_name; option(data_location); option(identifier);   { 13 }
+  | typ = type_name; data_loc = option(data_location); id = option(identifier);   { make_fun_param typ data_loc id }
 ;
 
 state_mutability:
@@ -189,13 +192,13 @@ override_specifier:
 ;
 
 function_definition:
-  | FUNCTION; fun_def_subrule1; 
-    LPAREN; option(parameter_list); RPAREN; list(fun_def_subrule2);  
-    option(fun_def_subrule3); fun_def_subrule4;                                   { FunctionDef }
+  | FUNCTION; id = fun_def_subrule1; 
+    LPAREN; inputs = loption(parameter_list); RPAREN; list(fun_def_subrule2);  
+    outputs = loption(fun_def_subrule3); fun_def_subrule4;                                   { FunctionDef (id, inputs, outputs) }
 %inline fun_def_subrule1:
-  | identifier;       { 18 }
-  | FALLBACK;         { 18 }
-  | RECEIVE;          { 18 }
+  | id = identifier;       { id }
+  | FALLBACK;              { "fallback" }
+  | RECEIVE;               { "receive" }
 %inline fun_def_subrule2:
   | visibility;           { 18 }
   | state_mutability;     { 18 }
@@ -203,7 +206,7 @@ function_definition:
   // | VIRTUAL;              { 18 }
   | override_specifier;   { 18 } 
 %inline fun_def_subrule3:
-  | RETURNS; LPAREN; parameter_list; RPAREN;    { 18 }
+  | RETURNS; LPAREN; params = parameter_list; RPAREN;    { params }
 %inline fun_def_subrule4:
   | SEMICOLON;    { 18 }
   // | block;        { 18 }
@@ -251,7 +254,7 @@ enum_definition:
 ;
 
 event_parameter:
-  | typ = type_name; indexed = boption(INDEXED); id = option(identifier);   { (Ast.make_event_param typ indexed id) }
+  | typ = type_name; indexed = boption(INDEXED); id = option(identifier);   { (make_event_param typ indexed id) }
 ;
 
 event_definition:
@@ -288,9 +291,9 @@ function_type_name:
 ;
 
 data_location:
-  | MEMORY;       { 2 }
-  | STORAGE;      { 2 }
-  | CALLDATA;     { 2 }
+  | MEMORY;       { Memory }
+  | STORAGE;      { Storage }
+  | CALLDATA;     { Calldata }
 ;
 
 identifier:
