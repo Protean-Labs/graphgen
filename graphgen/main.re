@@ -47,6 +47,12 @@ let () = {
     }
   ];
 
-  Schema.of_subgraph(subgraph)
-  |> print_endline
+  // Schema.of_subgraph(subgraph)
+  // |> print_endline
+
+  Manifest.make(subgraph) 
+  |> Manifest.to_file
+  |> fun
+    | Ok(_) => print_endline("Manifest generated")
+    | Error(_) => print_endline("Error")
 }
