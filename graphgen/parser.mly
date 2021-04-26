@@ -1,11 +1,37 @@
 %{
   open Easy_logging
   open Ast
+  open Rresult
 
-  let logger = Logging.make_logger "Parser" Info [Cli Debug]
+  let logger = Logging.make_logger "Parser" Debug [Cli Debug]
   let make_interface name tags = {name; tags}
   let make_event_param typ indexed name = {typ; indexed; name}
-  let make_fun_param typ data_loc name = {typ; data_loc; name}  
+  let make_fun_param typ data_loc name = {typ; data_loc; name}
+  
+  let regexp = Str.regexp {|\\n|}
+
+  let parse_gg_source_params params =
+    Str.global_replace regexp "\n" params
+    |> function x -> let _ = print_endline (Format.sprintf "TagBlock:\n%s" x) in x    
+    |> Yaml.of_string 
+    |> function x -> R.bind x Ast.gg_source_params_of_yaml
+    |> function | Ok(params) -> params | Error(`Msg err) -> failwith(err)
+
+  let parse_gg_handler_params params =
+    Str.global_replace regexp "\n" params
+    |> function x -> let _ = print_endline (Format.sprintf "TagBlock:\n%s" x) in x    
+    |> Yaml.of_string 
+    |> function x -> R.bind x Ast.gg_handler_params_of_yaml
+    |> function | Ok(params) -> params | Error(`Msg err) -> failwith(err)
+
+  let parse_gg_field_params params =
+    Str.global_replace regexp "\n" params
+    |> function x -> let _ = print_endline (Format.sprintf "TagBlock:\n%s" x) in x    
+    |> function | "" | " " | "\n" -> {name = None; default = None}
+      | s -> 
+        Yaml.of_string s 
+        |> function x -> R.bind x Ast.gg_field_params_of_yaml
+        |> function | Ok(params) -> params | Error(`Msg err) -> failwith(err)
 %}
 
 
@@ -114,9 +140,9 @@ comments:
 ;
 
 gg_tag:
-  | gg_params = GG_SOURCE;        { (GGSource gg_params) }
-  | gg_params = GG_HANDLER;       { (GGHandler gg_params) }
-  | gg_params = GG_FIELD;         { (GGField gg_params) }
+  | gg_params = GG_SOURCE;        { (GGSource (parse_gg_source_params gg_params)) }
+  | gg_params = GG_HANDLER;       { (GGHandler (parse_gg_handler_params  gg_params)) }
+  | gg_params = GG_FIELD;         { (GGField (parse_gg_field_params gg_params)) }
 ;
 
 import_directive:

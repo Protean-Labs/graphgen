@@ -3,11 +3,11 @@
   open Easy_logging
   exception ParsingError of string
 
-  let logger = Logging.make_logger "Lexer" Info [Cli Debug]
+  let logger = Logging.make_logger "Lexer" Debug [Cli Debug]
 }
 
 (* let pragma_token = ['a'-'z' 'A'-'Z' '0'-'9' '_' '$' '.' ':' '^']+ *)
-let version = '^'? ['0' - '9']+ '.' ['0' - '9']+ '.' ['0' - '9']+ 
+let version = ('^'| ">=" | '>')? ['0' - '9']+ '.' ['0' - '9']+ '.' ['0' - '9']+ 
 
 let identifier = ['a'-'z' 'A'-'Z' '_' '$'] ['a'-'z' 'A'-'Z' '0'-'9' '_' '$']*
 

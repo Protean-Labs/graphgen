@@ -43,11 +43,38 @@ type interface_element =
   | EventDef(string, list(event_param))
 ;
 
+[@deriving (show, yaml)]
+type instance = {
+  address: string,
+  startBlock: int
+};
+
+[@deriving (show, yaml)]
+type gg_source_params = {
+  name: option(string),
+  instances: option(list(instance)),
+  onInit: option(list(string))
+};
+
+[@deriving (show, yaml)]
+type gg_handler_params = {
+  name: option(string),
+  actions: list(string)
+};
+
+[@deriving (show, yaml)]
+type gg_field_params = {
+  name: option(string),
+  
+  [@printer (fmt, v) => Option.value(v, ~default=Yaml.(`Null)) |> Yaml.pp(fmt)]
+  default: option(Yaml.value)
+};
+
 [@deriving show]
 type gg_tag = 
-  | GGSource(string)
-  | GGHandler(string)
-  | GGField(string)
+  | GGSource(gg_source_params)
+  | GGHandler(gg_handler_params)
+  | GGField(gg_field_params)
 ;
 
 [@deriving show]
