@@ -72,7 +72,10 @@ let () = {
   }
   |> fun
     | Error(msg) => print_endline(msg)
-    | Ok(ast) => Format.asprintf("%a", Ast.pp_subgraph, ast) |> print_endline;
+    | Ok(ast) => 
+      Subgraph.of_ast(ast)
+      |> Schema.of_subgraph 
+      |> print_endline
 };
 
 // let () = {

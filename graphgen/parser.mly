@@ -3,8 +3,8 @@
   open Ast
   open Rresult
 
-  let logger = Logging.make_logger "Parser" Debug [Cli Debug]
-  let make_interface name tags = {name; tags}
+  let logger = Logging.make_logger "Parser" Info [Cli Debug]
+  let make_interface (name, elements) tag = {name; elements; tag}
   let make_event_param typ indexed name = {typ; indexed; name}
   let make_fun_param typ data_loc name = {typ; data_loc; name}
   
@@ -12,21 +12,18 @@
 
   let parse_gg_source_params params =
     Str.global_replace regexp "\n" params
-    |> function x -> let _ = print_endline (Format.sprintf "TagBlock:\n%s" x) in x    
     |> Yaml.of_string 
     |> function x -> R.bind x Ast.gg_source_params_of_yaml
     |> function | Ok(params) -> params | Error(`Msg err) -> failwith(err)
 
   let parse_gg_handler_params params =
     Str.global_replace regexp "\n" params
-    |> function x -> let _ = print_endline (Format.sprintf "TagBlock:\n%s" x) in x    
     |> Yaml.of_string 
     |> function x -> R.bind x Ast.gg_handler_params_of_yaml
     |> function | Ok(params) -> params | Error(`Msg err) -> failwith(err)
 
   let parse_gg_field_params params =
     Str.global_replace regexp "\n" params
-    |> function x -> let _ = print_endline (Format.sprintf "TagBlock:\n%s" x) in x    
     |> function | "" | " " | "\n" -> {name = None; default = None}
       | s -> 
         Yaml.of_string s 
@@ -117,15 +114,15 @@
 
 %token EOF
 
-%start <Ast.subgraph> source_unit
+%start <Ast.t> source_unit
 %%
 
 source_unit:
   | pragma; SEMICOLON; src = source_unit;                                       { logger#debug "Pragma"; src }
   | import_directive; SEMICOLON; src = source_unit;                             { logger#debug "Import"; src }
-  | gg_params = gg_tag; intf = interface_definition; src = source_unit;         { logger#debug "GG_tag"; (gg_params, intf)::src }
+  | tag = gg_tag; intf = interface_definition; src = source_unit;               { logger#debug "GG_tag"; (make_interface intf (Some tag))::src }
   | comments; src = source_unit;                                                { logger#debug "Comment block"; src }
-  | interface_definition; src = source_unit;                                    { logger#debug "Interface definition"; src }
+  | intf = interface_definition; src = source_unit;                             { logger#debug "Interface definition"; (make_interface intf None)::src }
   | struct_definition; src = source_unit;                                       { logger#debug "Struct definition"; src }
   | enum_definition; src = source_unit;                                         { logger#debug "Enum definition"; src }
   | EOF                                                                         { logger#debug "EOF"; [] }
@@ -166,9 +163,9 @@ symbol_aliases:
 interface_definition:
   | INTERFACE; id = identifier; 
     IS; inheritance = separated_nonempty_list(COMMA, inheritance_specifier); 
-    LBRACE; body = list(contract_body_element); RBRACE;                   { (make_interface id (List.filter_map (function x -> x) body)) }
+    LBRACE; body = list(contract_body_element); RBRACE;                   { id, body }
   | INTERFACE; id = identifier; 
-    LBRACE; body = list(contract_body_element); RBRACE;                   { (make_interface id (List.filter_map (function x -> x) body)) }
+    LBRACE; body = list(contract_body_element); RBRACE;                   { id, body }
 ;
 
 inheritance_specifier:
@@ -176,9 +173,9 @@ inheritance_specifier:
 ;
 
 contract_body_element:
-  | tag = gg_tag; ele = element_subrule;                                      { Some (tag, ele) }
-  | COMMENT_BLOCK;       element_subrule;                                     { None }
-  | element_subrule;                                                          { None }
+  | tag = gg_tag; ele = element_subrule;                                      { ele (Some tag) }
+  | COMMENT_BLOCK; ele = element_subrule;                                     { ele None }
+  | ele = element_subrule;                                                    { ele None }
 %inline element_subrule:
   // | COMMENT_BLOCK; def = element_subrule;                                     { def }
   | def = function_definition;                                                { def }
@@ -220,7 +217,7 @@ override_specifier:
 function_definition:
   | FUNCTION; id = fun_def_subrule1; 
     LPAREN; inputs = loption(parameter_list); RPAREN; list(fun_def_subrule2);  
-    outputs = loption(fun_def_subrule3); fun_def_subrule4;                                   { FunctionDef (id, inputs, outputs) }
+    outputs = loption(fun_def_subrule3); fun_def_subrule4;                                   { function tag -> FunctionDef (id, inputs, outputs, tag) }
 %inline fun_def_subrule1:
   | id = identifier;       { id }
   | FALLBACK;              { "fallback" }
@@ -239,28 +236,28 @@ function_definition:
 ;
 
 fallback_function_definition:
-  | FALLBACK; LPAREN; option(parameter_list); RPAREN; 
-    list(fb_fun_def_subrule1); option(fb_fun_def_subrule2); fb_fun_def_subrule3;      { FallbackDef }
+  | FALLBACK; LPAREN; inputs = loption(parameter_list); RPAREN; 
+    list(fb_fun_def_subrule1); outputs = loption(fb_fun_def_subrule2); fb_fun_def_subrule3;   { function tag -> FunctionDef ("fallback", inputs, outputs, tag) }
 %inline fb_fun_def_subrule1:
   | EXTERNAL;               { 2 }
   | state_mutability;       { 2 }
   // | modifier_invocation;    { 2 }
-  | VIRTUAL;                { 2 }
+  // | VIRTUAL;                { 2 }
   | override_specifier;     { 2 }
 %inline fb_fun_def_subrule2:
-  | RETURNS; LPAREN; parameter_list; RPAREN;    { 2 }
+  | RETURNS; LPAREN; params = parameter_list; RPAREN;    { params }
 %inline fb_fun_def_subrule3:
   | SEMICOLON;    { 2 }
   // | block;        { 2 }
 ;
 
 receive_function_definition:
-  | RECEIVE; LPAREN; RPAREN; list(receive_fun_def_subrule1); receive_fun_def_subrule2;  { ReceiveDef }
+  | RECEIVE; LPAREN; RPAREN; list(receive_fun_def_subrule1); receive_fun_def_subrule2;  { function tag -> FunctionDef ("receive", [], [], tag) }
 %inline receive_fun_def_subrule1:
   | EXTERNAL;                   { 1 }
-  | PAYABLE;                    { 1 }
+  // | PAYABLE;                    { 1 }
   // | modifier_invocation;        { 1 }
-  | VIRTUAL;                    { 1 }
+  // | VIRTUAL;                    { 1 }
   | override_specifier;         { 1 }
 %inline receive_fun_def_subrule2:
   | SEMICOLON;    { 2 }
@@ -268,7 +265,7 @@ receive_function_definition:
 ;
 
 struct_definition:
-  | STRUCT; id = identifier; LBRACE; list(struct_member); RBRACE;    { StructDef }
+  | STRUCT; id = identifier; LBRACE; list(struct_member); RBRACE;    { function _ -> StructDef }
 ;
 
 struct_member:
@@ -276,7 +273,7 @@ struct_member:
 ;
 
 enum_definition:
-  | ENUM; identifier; LBRACE; separated_list(COMMA, identifier); RBRACE;  { EnumDef }
+  | ENUM; identifier; LBRACE; separated_list(COMMA, identifier); RBRACE;  { function _ -> EnumDef }
 ;
 
 event_parameter:
@@ -284,7 +281,7 @@ event_parameter:
 ;
 
 event_definition:
-  | EVENT; id = identifier; LPAREN; params = separated_list(COMMA, event_parameter); RPAREN; option(ANON); SEMICOLON;   { EventDef (id, params) }
+  | EVENT; id = identifier; LPAREN; params = separated_list(COMMA, event_parameter); RPAREN; option(ANON); SEMICOLON;   { function x -> EventDef (id, params, x) }
 ;
 
 type_name:
