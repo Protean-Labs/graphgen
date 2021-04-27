@@ -28,7 +28,7 @@
         "(ocamllex (modules lexer))",
         "(menhir (modules parser) (infer false))"
       ],
-      "preprocess": [ "pps", "ppx_deriving.show", "ppx_deriving_yaml", "ppx_deriving_yojson"],
+      "preprocess": [ "pps", "ppx_deriving.show", "ppx_deriving_yaml", "ppx_deriving_yojson", "ppx_string"],
       "bin": { 
         "graphgen.exe": "main.re"
       }
@@ -47,8 +47,8 @@
     "@opam/ocamlfind": "1.8.1",
     "@opam/ppx_deriving": "^4.5",
     "@opam/ppx_deriving_yojson": "^3.5.3",
+    "@opam/ppx_string": "*",
     "@opam/yaml":"*",
-    "@opam/ppx_deriving_yaml": "*",
     "@opam/yojson": "*",
     "@opam/fpath":"*",
     "@pesy/esy-pesy": "0.1.0-alpha.11",
