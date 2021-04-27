@@ -18,14 +18,20 @@
   },
   "buildDirs": {
     "graphgen": {
-      "bin": { 
-        "graphgen.exe": "main.re"
-      },
       "imports": [
+        "Easy_logging = require('@opam/easy_logging')",
+        "Yaml = require('@opam/yaml')",
         "Yaml_unix = require('yaml.unix')",
         "Fpath = require('fpath')"
       ],
-      "preprocess": ["pps", "ppx_deriving_yaml", "ppx_deriving_yojson"]
+      "rawBuildConfigFooter": [
+        "(ocamllex (modules lexer))",
+        "(menhir (modules parser) (infer false))"
+      ],
+      "preprocess": [ "pps", "ppx_deriving.show", "ppx_deriving_yaml", "ppx_deriving_yojson"],
+      "bin": { 
+        "graphgen.exe": "main.re"
+      }
     }
   },
   "scripts": {
@@ -37,6 +43,7 @@
     "@opam/dune": "^2.7.0",
     "@opam/logs": "*",
     "@opam/menhir": "*",
+    "@opam/rresult": "*",
     "@opam/ocamlfind": "1.8.1",
     "@opam/ppx_deriving": "^4.5",
     "@opam/ppx_deriving_yojson": "^3.5.3",
@@ -46,8 +53,10 @@
     "@opam/fpath":"*",
     "@pesy/esy-pesy": "0.1.0-alpha.11",
     "@reason-native/console": "*",
+    "@opam/easy_logging": "^0.8.1",
     "fmt": "^2.0.0",
-    "ocaml": "4.10.0"
+    "ocaml": "4.10.0",
+    "@opam/ppx_deriving_yaml": "^0.1.0"
   },
   "devDependencies": {
     "@opam/merlin": "*",

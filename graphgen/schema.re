@@ -1,4 +1,4 @@
-open Solidity;
+open Ast;
 open Subgraph;
 
 type graphql_type =
@@ -11,8 +11,9 @@ type graphql_type =
   | Bytes
 ;
 
-let graphqltype_of_soltype = fun
-  | FixedSizeBytesT(_) => "Bytes"
+let rec graphqltype_of_soltype = fun
+  | BytesT => "Bytes"
+  | FbytesT(_) => "Bytes"
   | UintT(n) when n <= 32 => "Int"
   | UintT(_) => "BigInt"
   | IntT(n) when n <= 32 => "Int"
@@ -20,6 +21,9 @@ let graphqltype_of_soltype = fun
   | StringT => "String"
   | BoolT => "Bool"
   | AddressT => "Address"
+  | FixedT => "Float"
+  | UfixedT => "Float"
+  | ArrayT(t') => Format.sprintf("[%s!]", graphqltype_of_soltype(t'))
 ;
 
 let transaction_entity = 
@@ -145,7 +149,7 @@ let entity_of_contract = (contract: Subgraph.contract) => {
   ;
 
   let events_contract_fields = 
-    contract.triggers
+    contract.handlers
     |> List.map(fun | Event(_, actions) => actions | _ => [])
     |> List.flatten
     |> List.filter_map(fun | StoreEvent(event) => Some(event) | _ => None)
@@ -153,7 +157,7 @@ let entity_of_contract = (contract: Subgraph.contract) => {
   ;
 
   let calls_contract_fields = 
-    contract.triggers
+    contract.handlers
     |> List.map(fun | Call(_, actions) => actions | _ => [])
     |> List.flatten
     |> List.filter_map(fun | StoreCall(call) => Some(call) | _ => None)
@@ -186,7 +190,7 @@ let of_subgraph = (subgraph: Subgraph.t) => {
   let event_entities = 
     subgraph
     |> List.map(contract => 
-      contract.triggers 
+      contract.handlers 
       |> List.map(t => (contract, t))
     )
     |> List.flatten
@@ -207,7 +211,7 @@ let of_subgraph = (subgraph: Subgraph.t) => {
   let call_entities = 
     subgraph
     |> List.map(contract => 
-      contract.triggers 
+      contract.handlers 
       |> List.map(t => (contract, t))
     )
     |> List.flatten
