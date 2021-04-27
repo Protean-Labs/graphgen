@@ -33,18 +33,20 @@ module Mutability = {
 
 };
 
-let rec sol_type_to_string = fun
-  | AddressT => "address"
-  | BoolT => "bool"
-  | StringT => "string"
-  | FixedT => ""
-  | UfixedT => ""
-  | BytesT => "bytes"
-  | FbytesT => ""
-  | IntT(n) => Format.sprintf("int%s", n)
-  | UintT(n) => Format.sprintf("int%s", n)
-  | ArrayT(typ) => Format.sprintf("%s[]", sol_type_to_string(typ))
-;
+let rec sol_type_to_string = (typ: Ast.typ) => {
+  switch typ {
+    | AddressT => "address"
+    | BoolT => "bool"
+    | StringT => "string"
+    | FixedT => ""
+    | UfixedT => ""
+    | BytesT => "bytes"
+    | FbytesT(_) => ""
+    | IntT(n) => Format.sprintf("int%s", string_of_int(n))
+    | UintT(n) => Format.sprintf("int%s", string_of_int(n))
+    | ArrayT(typ) => Format.sprintf("%s[]", sol_type_to_string(typ))
+  };
+}
 
 module EventParam = {
   [@deriving yojson]
@@ -54,14 +56,14 @@ module EventParam = {
     indexed: bool
   }
 
-  let make = (input) => {
+  let make = (input: Ast.event_param) => {
     typ: input.typ |> sol_type_to_string,
     name: {
       input.name |> fun
         | Some(s) => s
         | None => ""
     },
-    indexed: false,
+    indexed: input.indexed,
   }
 };
 
@@ -74,7 +76,7 @@ module Input = {
     [@key "type"] typ: string
   }
 
-  let make = (input) => {
+  let make = (input: Ast.fun_param) => {
     typ: input.typ |> sol_type_to_string,
     name: {
       input.name |> fun
@@ -91,7 +93,7 @@ module Function = {
     [@key "type"] typ: string,
     name: string,
     inputs: list(Input.t),
-    outputs: list(Output.t),
+    outputs: list(Input.t),
     stateMutability: Mutability.t
   };
 
@@ -110,7 +112,7 @@ module Event = {
   type t = {
     [@key "type"] typ: string,
     name: string,
-    inputs: list(Input.t),
+    inputs: list(EventParam.t),
     anonymous: bool
   };
 
@@ -125,8 +127,8 @@ module Event = {
 [@deriving yojson]
 type description =  [ `Event(Event.t) | `Function(Function.t) ];
 let description_to_yojson = fun
-  | `Event(event) => event
-  | `Function(func) => func
+  | `Event(event) => event |> Event.to_yojson
+  | `Function(func) => func |> Function.to_yojson
   ;
 
 [@deriving yojson]
@@ -140,8 +142,8 @@ type t = {
 
 let abi_of_element = (el: Ast.intf_element) => {
   switch el {
-    | FunctionDef(name,inputs,outputs,tags) => `Function(Function.make(name, inputs, outputs, tags))
-    | EventDef(name,params,tags) => `Event(Event.make(name, inputs, tags))
+    | FunctionDef(name,inputs,outputs,tags) => Some(`Function(Function.make(name, inputs, outputs, tags)))
+    | EventDef(name,params,tags) => Some(`Event(Event.make(name, params, tags)))
     | _ => None
   };
 }
