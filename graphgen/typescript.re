@@ -1,5 +1,6 @@
 // get create
 open Ast;
+
 type field = {
   name: string,
   field_type: Ast.typ
@@ -18,16 +19,16 @@ let typescript_field_init = (field) => {
 };
 
 let get_create = (name, fields) => {
-  [%string
-    "export function getCreate%{name}(id: String): %{name} {
-      let entity = %{name}.load(id);
-      if (entity == null) {
-        entity = new %{name}(id);
-        %{ fields |> List.map(typescript_field_init) |> String.concat("") }
-        entity.save();
-      } 
-      return entity as %{name};
-    }"
+  [%string 
+"export function getCreate%{name}(id: String): %{name} {
+  let entity = %{name}.load(id);
+  if (entity == null) {
+    entity = new %{name}(id);
+    %{ fields |> List.map(typescript_field_init) |> String.concat(\"\")}
+    entity.save();
+  } 
+  return entity as %{name};
+}"
   ];
 };
 
