@@ -1,40 +1,5 @@
 open Ast;
 
-module FunctionType = {
-  [@deriving yojson]
-  type t = 
-  | Function 
-  | Constructor 
-  | Receive 
-  | Fallback
-  ;
-
-  let to_yojson = fun
-    | Function => `String("function")
-    | Constructor => `String("constructor")
-    | Receive => `String("receive")
-    | Fallback => `String("fallback")
-    ;
-};
-
-module Mutability = {
-  [@deriving yojson]
-  type t = 
-  | Pure 
-  | View 
-  | Nonpayable 
-  | Payable
-  ;
-
-  let to_yojson = fun
-    | Pure => `String("pure")
-    | View => `String("view")
-    | Nonpayable => `String("nonpayable")
-    | Payable => `String("payable")
-  ;
-
-};
-
 let rec sol_type_to_string = (typ: Ast.typ) => {
   switch typ {
     | AddressT => "address"
@@ -68,7 +33,6 @@ module EventParam = {
     indexed: input.indexed,
   }
 };
-
 
 
 module Input = {
