@@ -58,25 +58,36 @@ let load_file = (filename) => {
   s
 };
 
-let () = {
-  // Easy_logging.Handlers.set_level h Info;
-  Printexc.record_backtrace(true);
-  let interface = load_file("IUniswapV2Pair.sol");
-
-  // let i = Parser.source_unit(Lexer.token, Lexing.from_string(interface));
-  try (Ok(Parser.source_unit(Lexer.token, Lexing.from_string(interface)))) {
-    | Lexer.ParsingError(err) => Error(err)
-    // | Parser.Error => Error("Unhandled parser error")
-    // | Parser.MenhirBasics.Error(err) => Error(err)
-    | exn => Error(Printexc.to_string(exn) ++ ": " ++ Printexc.get_backtrace())
-  }
-  |> fun
-    | Error(msg) => print_endline(msg)
-    | Ok(ast) => 
-      Subgraph.of_ast(ast)
-      |> Schema.of_subgraph 
-      |> print_endline
+let create_folder_structure = (name) => {
+  let folder_name = [%string "%{name}_subgraph"];
+  let abis_folder_res = Bos.OS.Dir.create(~path=true,Fpath.v(folder_name ++ "/abis"));
+  let abis_folder_res = Bos.OS.Dir.create(~path=true,Fpath.v(folder_name ++ "/src"));
+  let abis_folder_res = Bos.OS.Dir.create(~path=true,Fpath.v(folder_name ++ "/src/mappings"));
 };
+
+let () = {
+  create_folder_structure("uniswap")
+}
+
+// let () = {
+//   // Easy_logging.Handlers.set_level h Info;
+//   Printexc.record_backtrace(true);
+//   let interface = load_file("IUniswapV2Pair.sol");
+
+//   // let i = Parser.source_unit(Lexer.token, Lexing.from_string(interface));
+//   try (Ok(Parser.source_unit(Lexer.token, Lexing.from_string(interface)))) {
+//     | Lexer.ParsingError(err) => Error(err)
+//     // | Parser.Error => Error("Unhandled parser error")
+//     // | Parser.MenhirBasics.Error(err) => Error(err)
+//     | exn => Error(Printexc.to_string(exn) ++ ": " ++ Printexc.get_backtrace())
+//   }
+//   |> fun
+//     | Error(msg) => print_endline(msg)
+//     | Ok(ast) => 
+//       Subgraph.of_ast(ast)
+//       |> Schema.of_subgraph 
+//       |> print_endline
+// };
 
 // let () = {
 //   Printexc.record_backtrace(true);
