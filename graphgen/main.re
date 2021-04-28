@@ -61,7 +61,7 @@ let load_file = (filename) => {
 let () = {
   // Easy_logging.Handlers.set_level h Info;
   Printexc.record_backtrace(true);
-  let interface = load_file("IUniswapV2Pair.sol");
+  let interface = load_file("IERC20.sol");
 
   // let i = Parser.source_unit(Lexer.token, Lexing.from_string(interface));
   try (Ok(Parser.source_unit(Lexer.token, Lexing.from_string(interface)))) {
@@ -72,10 +72,10 @@ let () = {
   }
   |> fun
     | Error(msg) => print_endline(msg)
-    | Ok(ast) => 
-      Subgraph.of_ast(ast)
-      |> Schema.of_subgraph 
-      |> print_endline
+    | Ok(ast) => List.map(Abi.make, ast) |> List.map(Abi.to_file) |> _ => ()
+      // Subgraph.of_ast(ast)
+      // |> Schema.of_subgraph 
+      // |> print_endline
 };
 
 // let () = {
@@ -89,4 +89,16 @@ let () = {
 //     | Error(`Msg(err)) => failwith(err)
 //     // | Ok(params) => Format.asprintf("%a", Ast.pp_gg_source_params, params) |> print_endline
 //     | Ok(params) => print_endline("Ok")
+// };
+
+
+// let () = {
+//   open Typescript;
+//   let name = "EntityName";
+//   let fields = [
+//     {name: "field1", field_type: IntT(256)},
+//     {name: "field2", field_type: StringT}
+//   ];
+
+//   get_create(name,fields) |> print_endline;
 // };

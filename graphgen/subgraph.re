@@ -83,8 +83,8 @@ let of_ast = (ast: Ast.t) => {
     let rec f = (intf_elements, acc) => {
       switch (intf_elements) {
       | [] => acc
-      | [FunctionDef(_, inputs, outputs, Some(GGHandler({name: Some(n), actions}))), ...rest] 
-      | [FunctionDef(n, inputs, outputs, Some(GGHandler({name: None, actions}))), ...rest] => 
+      | [FunctionDef(_, inputs, outputs, _, Some(GGHandler({name: Some(n), actions}))), ...rest] 
+      | [FunctionDef(n, inputs, outputs, _, Some(GGHandler({name: None, actions}))), ...rest] => 
         let call = fmt_call(n, inputs, outputs);
         f(rest, [Call(call, fmt_call_handler_actions(call, actions)), ...acc])
       | [EventDef(_, fields, Some(GGHandler({name: Some(n), actions}))), ...rest] 

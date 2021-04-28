@@ -7,6 +7,7 @@
   let make_interface (name, elements) tag = {name; elements; tag}
   let make_event_param typ indexed name = {typ; indexed; name}
   let make_fun_param typ data_loc name = {typ; data_loc; name}
+  let make_fun_modifier visibility mutability = {visibility; mutability}
   
   let regexp = Str.regexp {|\\n|}
 
@@ -191,10 +192,10 @@ identifier_path:
 ;
 
 visibility:
-  | INTERNAL;       { 12 }
-  | EXTERNAL;       { 12 }
-  | PRIVATE;        { 12 }
-  | PUBLIC;         { 12 }
+  | INTERNAL;       { Internal }
+  | EXTERNAL;       { External }
+  | PRIVATE;        { Private }
+  | PUBLIC;         { Public }
 ;
 
 parameter_list:
@@ -204,9 +205,9 @@ parameter_list:
 ;
 
 state_mutability:
-  | PURE;       { 16 }
-  | VIEW;       { 16 }
-  | PAYABLE;    { 16 }
+  | PURE;       { Pure }
+  | VIEW;       { View }
+  | PAYABLE;    { Payable }
 ;
 
 override_specifier:
@@ -216,18 +217,17 @@ override_specifier:
 
 function_definition:
   | FUNCTION; id = fun_def_subrule1; 
-    LPAREN; inputs = loption(parameter_list); RPAREN; list(fun_def_subrule2);  
-    outputs = loption(fun_def_subrule3); fun_def_subrule4;                                   { function tag -> FunctionDef (id, inputs, outputs, tag) }
+    LPAREN; inputs = loption(parameter_list); RPAREN; mods = fun_def_subrule2;  
+    outputs = loption(fun_def_subrule3); fun_def_subrule4;                                   { function tag -> FunctionDef (id, inputs, outputs, mods, tag) }
 %inline fun_def_subrule1:
   | id = identifier;       { id }
   | FALLBACK;              { "fallback" }
   | RECEIVE;               { "receive" }
 %inline fun_def_subrule2:
-  | visibility;           { 18 }
-  | state_mutability;     { 18 }
+  | viz = option(visibility); mut = option(state_mutability);   { make_fun_modifier viz mut }
   // | modifier_invocation;  { 18 }
   // | VIRTUAL;              { 18 }
-  | override_specifier;   { 18 } 
+  | override_specifier;   { make_fun_modifier None None } 
 %inline fun_def_subrule3:
   | RETURNS; LPAREN; params = parameter_list; RPAREN;    { params }
 %inline fun_def_subrule4:
@@ -237,13 +237,13 @@ function_definition:
 
 fallback_function_definition:
   | FALLBACK; LPAREN; inputs = loption(parameter_list); RPAREN; 
-    list(fb_fun_def_subrule1); outputs = loption(fb_fun_def_subrule2); fb_fun_def_subrule3;   { function tag -> FunctionDef ("fallback", inputs, outputs, tag) }
+    mods = fb_fun_def_subrule1; outputs = loption(fb_fun_def_subrule2); fb_fun_def_subrule3;   { function tag -> FunctionDef ("fallback", inputs, outputs, mods, tag) }
 %inline fb_fun_def_subrule1:
-  | EXTERNAL;               { 2 }
-  | state_mutability;       { 2 }
+  | viz = option(visibility); mut = option(state_mutability);   { make_fun_modifier viz mut }
+  // | state_mutability;       { 2 }
   // | modifier_invocation;    { 2 }
   // | VIRTUAL;                { 2 }
-  | override_specifier;     { 2 }
+  | override_specifier;     { make_fun_modifier None None }
 %inline fb_fun_def_subrule2:
   | RETURNS; LPAREN; params = parameter_list; RPAREN;    { params }
 %inline fb_fun_def_subrule3:
@@ -252,13 +252,13 @@ fallback_function_definition:
 ;
 
 receive_function_definition:
-  | RECEIVE; LPAREN; RPAREN; list(receive_fun_def_subrule1); receive_fun_def_subrule2;  { function tag -> FunctionDef ("receive", [], [], tag) }
+  | RECEIVE; LPAREN; RPAREN; mods = receive_fun_def_subrule1; receive_fun_def_subrule2;  { function tag -> FunctionDef ("receive", [], [], mods, tag) }
 %inline receive_fun_def_subrule1:
-  | EXTERNAL;                   { 1 }
+  | viz = option(visibility); mut = option(state_mutability);   { make_fun_modifier viz mut }
   // | PAYABLE;                    { 1 }
   // | modifier_invocation;        { 1 }
   // | VIRTUAL;                    { 1 }
-  | override_specifier;         { 1 }
+  | override_specifier;         { make_fun_modifier None None }
 %inline receive_fun_def_subrule2:
   | SEMICOLON;    { 2 }
   // | block;        { 2 }

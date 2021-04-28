@@ -68,6 +68,29 @@ type data_location =
   | Calldata
 ;
 
+[@deriving (show, yojson)]
+type mutability =
+  | Pure
+  | View
+  | Payable
+  | Nonpayable
+;
+
+let mutability_to_yojson = fun
+  | Pure => `String("pure")
+  | View => `String("view")
+  | Payable => `String("payable")
+  | Nonpayable => `String("nonpayable")
+;
+
+[@deriving (show, yojson)]
+type visibility = 
+  | External
+  | Internal
+  | Public
+  | Private
+;
+
 [@deriving show]
 type fun_param = {
   typ: typ,
@@ -76,8 +99,14 @@ type fun_param = {
 };
 
 [@deriving show]
+type fun_modifier = {
+  mutability: option(mutability),
+  visibility: option(visibility)
+};
+
+[@deriving show]
 type intf_element =
-  | FunctionDef(string, list(fun_param), list(fun_param), option(gg_tag))
+  | FunctionDef(string, list(fun_param), list(fun_param), fun_modifier, option(gg_tag))
   | FallbackDef
   | ReceiveDef
   | StructDef
@@ -146,11 +175,11 @@ let tcheck = (ast) => {
     let rec scan_intf = (intf_elements, tenv) => {
       switch (intf_elements) {
       | [] => tenv
-      | [FunctionDef(_, _, _, Some(GGHandler({name: Some(n)}))), ...rest] | [FunctionDef(n, _, _, Some(GGHandler({name: None}))), ...rest] => 
+      | [FunctionDef(_, _, _, _, Some(GGHandler({name: Some(n)}))), ...rest] | [FunctionDef(n, _, _, _, Some(GGHandler({name: None}))), ...rest] => 
         scan_intf(rest, [(n, `Call), ...tenv])
       | [EventDef(_, _, Some(GGHandler({name: Some(n)}))), ...rest] | [EventDef(n, _, Some(GGHandler({name: None}))), ...rest] => 
         scan_intf(rest, [(n, `Event), ...tenv])
-      | [FunctionDef(_, _, _, Some(GGField({name: Some(n)}))), ...rest] | [FunctionDef(n, _, _, Some(GGField({name: None}))), ...rest] => 
+      | [FunctionDef(_, _, _, _, Some(GGField({name: Some(n)}))), ...rest] | [FunctionDef(n, _, _, _, Some(GGField({name: None}))), ...rest] => 
         scan_intf(rest, [(n, `Field), ...tenv])
       | [_, ...rest] => scan_intf(rest, tenv)
       }

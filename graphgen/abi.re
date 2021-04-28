@@ -1,3 +1,5 @@
+open Ast;
+
 module FunctionType = {
   [@deriving yojson]
   type t = 
@@ -78,11 +80,7 @@ module Input = {
 
   let make = (input: Ast.fun_param) => {
     typ: input.typ |> sol_type_to_string,
-    name: {
-      input.name |> fun
-        | Some(s) => s
-        | None => ""
-    }
+    name: input.name |> fun | Some(s) => s | None => ""
   };
 };
 
@@ -94,15 +92,18 @@ module Function = {
     name: string,
     inputs: list(Input.t),
     outputs: list(Input.t),
-    stateMutability: Mutability.t
+    stateMutability: mutability
   };
 
-  let make = (name, inputs, outputs, tags) => {
+  let make = (name, inputs, outputs, mods:Ast.fun_modifier, tags) => {
     typ: "function",
     name: name,
     inputs: List.map(Input.make, inputs),
     outputs: List.map(Input.make, outputs),
-    stateMutability: View
+    stateMutability: mods.mutability |> (fun
+      | None => Nonpayable
+      | Some(mut) => mut
+    )
   };
 
 };
@@ -142,8 +143,8 @@ type t = {
 
 let abi_of_element = (el: Ast.intf_element) => {
   switch el {
-    | FunctionDef(name,inputs,outputs,tags) => Some(`Function(Function.make(name, inputs, outputs, tags)))
-    | EventDef(name,params,tags) => Some(`Event(Event.make(name, params, tags)))
+    | FunctionDef(name, inputs, outputs, mods, tags) => Some(`Function(Function.make(name, inputs, outputs, mods ,tags)))
+    | EventDef(name, params, tags) => Some(`Event(Event.make(name, params, tags)))
     | _ => None
   };
 }
@@ -159,5 +160,5 @@ let make = (interface: Ast.interface) => {
 let to_file = (abi) => {
   abi
   |> to_yojson
-  |> Yojson.Safe.to_file(Format.sprintf("../abis/%s.json", abi.contractName))
+  |> Yojson.Safe.to_file(Format.sprintf("./abis/%s.json", abi.contractName))
 };
