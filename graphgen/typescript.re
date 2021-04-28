@@ -14,7 +14,7 @@ let typescript_type_init_value = fun
 
 let typescript_field_init = (field) => {
   [%string 
-    "let entity.%{field.name} = %{ typescript_type_init_value(field.field_type) }\n"
+    "let entity.%{field.name} = %{ typescript_type_init_value(field.field_type) }"
   ];
 };
 
@@ -24,7 +24,7 @@ let get_create = (name, fields) => {
   let entity = %{name}.load(id);
   if (entity == null) {
     entity = new %{name}(id);
-    %{ fields |> List.map(typescript_field_init) |> String.concat(\"\")}
+    %{ fields |> List.map(typescript_field_init) |> String.concat(\"\n    \")}
     entity.save();
   } 
   return entity as %{name};
