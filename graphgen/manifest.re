@@ -90,15 +90,15 @@ module Mapping = {
 module Source = {
   [@deriving yaml]
   type t = {
-    address: string,
+    address: option(string),
     abi: string,
-    startBlock: int
+    startBlock: option(int)
   };
 
-  let make = () => {
-    address: "placeholder",
-    abi: "placeholder",
-    startBlock: 100000
+  let make = (~address=?,~startBlock=?,abi) => {
+    address: address,
+    abi: abi,
+    startBlock: startBlock
   }
 };
 
@@ -117,10 +117,28 @@ module DataSource = {
     kind: "ethereum/contract",
     name: contract.name,
     network: "mainnet",
-    source: Source.make(),
+    source: Source.make(~address="placeholder",~startBlock=100000,contract.name),
     mapping: Mapping.make(contract)
   }
+};
 
+module Template = {
+  [@deriving yaml]
+  type t = {
+    kind: string,
+    name: string,
+    network: string,
+    source: Source.t,
+    mapping: Mapping.t
+  };
+
+  let make = (contract: Subgraph.contract) => {
+    kind: "ethereum/contract",
+    name: contract.name,
+    network: "mainnet",
+    source: Source.make("IERC20"),
+    mapping: Mapping.make(contract)
+  };
 };
 
 module Schema = {
@@ -139,7 +157,8 @@ type t = {
   description: string,
   repository: string,
   schema: Schema.t,
-  dataSources: list(DataSource.t)
+  dataSources: list(DataSource.t),
+  templates: list(Template.t)
 };
 
 let make = (subg: Subgraph.t) => {
@@ -148,7 +167,8 @@ let make = (subg: Subgraph.t) => {
     description: "Auto generated subgraph",
     repository: "place holder",
     schema: Schema.make("./schema.graphql"),
-    dataSources: List.map(DataSource.make,subg)
+    dataSources: List.map(DataSource.make,subg),
+    templates: List.map(Template.make,subg)
   }
 };
 
