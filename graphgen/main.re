@@ -88,16 +88,38 @@ let () = {
 //       |> Schema.of_subgraph 
 //       |> print_endline
 // };
+  // let i = Parser.source_unit(Lexer.token, Lexing.from_string(interface));
+//   try (Ok(Parser.source_unit(Lexer.token, Lexing.from_string(interface)))) {
+//     | Lexer.ParsingError(err) => Error(err)
+//     // | Parser.Error => Error("Unhandled parser error")
+//     // | Parser.MenhirBasics.Error(err) => Error(err)
+//     | exn => Error(Printexc.to_string(exn) ++ ": " ++ Printexc.get_backtrace())
+//   }
+//   |> fun
+//     | Error(msg) => print_endline(msg)
+//     | Ok(ast) => 
+//       Subgraph.of_ast(ast)
+//       |> Typescript.generate
+//       |> List.iter(((filename, code)) => {
+//         print_endline(filename)
+//         print_endline(code)
+//       })
+// };
+
 
 // let () = {
-//   Printexc.record_backtrace(true);
-//   let test = load_file("test.yaml");
+//   let swap_event: event = {
+//     name: "Swap",
+//     fields: [
+//       ("sender", AddressT),
+//       ("amount0In", UintT(256)),
+//       ("amount1In", UintT(256)),
+//       ("amount0Out", UintT(256)),
+//       ("amount1Out", UintT(256)),
+//       ("to", AddressT)
+//     ]
+//   };
 
-//   open Rresult;
-//   Yaml.of_string(test)
-//   |> R.bind(_, Ast.gg_source_params_of_yaml)
-//   |> fun
-//     | Error(`Msg(err)) => failwith(err)
-//     // | Ok(params) => Format.asprintf("%a", Ast.pp_gg_source_params, params) |> print_endline
-//     | Ok(params) => print_endline("Ok")
+//   Typescript.create_event(swap_event)
+//   |> print_endline
 // };
