@@ -152,7 +152,7 @@ export function handle%{call.name}(call: %{call.name}Call): void {
   ]
 };
 
-let generate = (subgraph: Subgraph.t) => {
+let of_subgraph = (subgraph: Subgraph.t) => {
   subgraph
   |> List.map(({name, fields, handlers}: Subgraph.contract) => Subgraph.(
     [%string "%{name}.ts"],
