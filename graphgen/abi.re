@@ -156,8 +156,8 @@ let make = (interface: Ast.interface) => {
   abis: List.filter_map(abi_of_element,interface.elements)
 };
 
-let to_file = (abi) => {
+let to_file = (abi, path) => {
   abi
   |> to_yojson
-  |> Yojson.Safe.to_file(Format.sprintf("../abis/%s.json", abi.contractName))
+  |> Yojson.Safe.to_file(Format.sprintf("%s/%s.json", path, abi.contractName))
 };
