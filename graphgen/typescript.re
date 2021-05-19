@@ -1,5 +1,26 @@
 // get create
 open Ast;
+/*
+Imports 
+
+*/
+
+let primitive_imports = "
+import {
+  BigIntOne,
+  BigIntZero,
+  BigDecimalOne,
+  BigDecimalZero
+} from \"../utils\";
+";
+
+let event_imports = (event) => {
+
+}
+
+let event_imports = (event) => {
+  
+}
 
 type field = {
   name: string,
