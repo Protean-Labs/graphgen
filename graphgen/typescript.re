@@ -14,13 +14,32 @@ import {
 } from \"../utils\";
 ";
 
-let event_imports = (event) => {
+let event_imports = (contract: Subgraph.contract) => {
+  let events = List.filter_map(fun 
+    | Subgraph.(Event(event, _)) => Some(event)
+    | _ => None
+    , contract.handlers);
 
-}
+  let contract_types = (events) => [%string "
+  import {
+    %{List.map (fun x -> x.name) events |> String.concat(\"\n\")}
+  } from \"../types/%{contract.name}\";
+  "
+  ];
 
-let event_imports = (event) => {
+  let schema_types = (events) => [%string "
+  import {
+    %{List.map (fun x -> x.name) events |> String.concat(\"\n\")}
+  } from \"../types/schema\";
+  "
+  ];
+
+  (contract_types, schema_types);
+};
+
+// let call_imports = (event) => {
   
-}
+// }
 
 type field = {
   name: string,
