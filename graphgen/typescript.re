@@ -4,7 +4,6 @@ open Ast;
 Imports 
 
 */
-
 let primitive_imports = "
 import {
   BigIntOne,
@@ -13,33 +12,59 @@ import {
   BigDecimalZero
 } from \"../utils\";
 ";
-
-let event_imports = (contract: Subgraph.contract) => {
+let event_imports = (event_handlers, name) => {
   let events = List.filter_map(fun 
     | Subgraph.(Event(event, _)) => Some(event)
     | _ => None
-    , contract.handlers);
+    , event_handlers);
+
+  let import_alias = (event: Subgraph.event) => [%string "%{event.name} as %{event.name}Event"];
 
   let contract_types = (events) => [%string "
-  import {
-    %{List.map (fun x -> x.name) events |> String.concat(\"\n\")}
-  } from \"../types/%{contract.name}\";
+import {
+  %{List.map import_alias events |> String.concat(\"\n\")}
+} from \"../types/%{name}/%{name}\";
   "
   ];
+
+  let basic_import = (event: Subgraph.event) => event.name;
 
   let schema_types = (events) => [%string "
-  import {
-    %{List.map (fun x -> x.name) events |> String.concat(\"\n\")}
-  } from \"../types/schema\";
+import {
+  %{List.map basic_import events |> String.concat(\"\n\")}
+} from \"../types/schema\";
   "
   ];
 
-  (contract_types, schema_types);
+  contract_types(events) ++ "\n" ++ schema_types(events) ++ "\n"
 };
 
-// let call_imports = (event) => {
-  
-// }
+let call_imports = (call_handlers, name) => {
+  let calls = List.filter_map(fun 
+    | Subgraph.(Call(call, _)) => Some(call)
+    | _ => None
+    , call_handlers);
+
+  let import_alias = (call: Subgraph.call) => [%string "%{call.name} as %{call.name}Call"];
+
+  let contract_types = (calls) => [%string "
+import {
+  %{List.map import_alias calls |> String.concat(\"\n\")}
+} from \"../types/%{name}/%{name}\";
+  "
+  ];
+
+  let basic_import = (call: Subgraph.call) => call.name;
+
+  let schema_types = (calls) => [%string "
+import {
+  %{List.map basic_import calls |> String.concat(\"\n\")}
+} from \"../types/schema\";
+  "
+  ];
+
+  contract_types(calls) ++ "\n" ++ schema_types(calls) ++ "\n"
+};
 
 type field = {
   name: string,
@@ -202,6 +227,10 @@ let of_subgraph = (subgraph: Subgraph.t) => {
       | Call(call, actions) => create_call_handler(name, call, actions)
     )
     |> String.concat("\n")
+    |> x => primitive_imports 
+    ++ event_imports(handlers,name)
+    ++ call_imports(handlers,name)
+    ++ x
   ))
 };
 
