@@ -22,7 +22,7 @@ let event_imports = (event_handlers, name) => {
 
   let contract_types = (events) => [%string "
 import {
-  %{List.map import_alias events |> String.concat(\"\n\")}
+  %{List.map import_alias events |> String.concat(\",\n \")}
 } from \"../types/%{name}/%{name}\";
   "
   ];
@@ -31,7 +31,7 @@ import {
 
   let schema_types = (events) => [%string "
 import {
-  %{List.map basic_import events |> String.concat(\"\n\")}
+  %{List.map basic_import events |> String.concat(\",\n \")}
 } from \"../types/schema\";
   "
   ];
