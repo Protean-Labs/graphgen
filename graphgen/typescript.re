@@ -340,10 +340,46 @@ let generate_expr = (expr) => {
 let generate_exprs = (exprs) => String.concat("\n", List.map(generate_expr, exprs));
 
 // Code generation
-let update_field_event_handler = (field_name, contract_name) => {
+let update_field_event_handler = (contract, fields) => {
+  let field_update = 
+    fields
+    |> List.map(field => Assign(Member(Var("emitter"), field), Apply(Member(Var("emitterContract"), field), [])))
+  ;
+
   [
-    Declare("emitterContract", Apply(Member(Var(contract_name), "bind"), [Member(Var("event"), "address")])),
-    Assign(Member(Var("emitter"), field_name), Apply(Member(Var("emitterContract"), field_name), []))
+    Declare("emitterContract", Apply(Member(Var(contract), "bind"), [Member(Var("event"), "address")])),
+    ...field_update
   ]
 };
 
+let update_field_entity_creation = (contract, fields) => {  
+  let field_update = 
+    fields
+    |> List.map(field => Assign(Member(Var("entity"), field), Apply(Member(Var("entityContract"), field), [])))
+  ;
+  
+  [
+    Declare("entityContract", Apply(Member(Var(contract), "bind"), [Apply(Member(Var("Address"), "fromString"), [Member(Var("entity"), "id")])])),
+    ...field_update
+  ]
+};
+
+let create_entity_from_event_field = (entity, event_field, update_fields_args) => {
+  let entity_decl = [
+    Declare("entityAddress", Apply(Member(Apply(Member(Member(Member(Var("event"), "params"), event_field), "toHexString"), []), "toString"), [])),
+    Declare("entity", New(Var(entity), [Var("entityAddress")])),
+  ];
+
+  let update_fields = 
+    update_fields_args
+    |> fun 
+      | Some((contract, fields)) => update_field_entity_creation(contract, fields)
+      | None => []
+  ;
+
+  let save_entity = [
+    Apply(Member(Var("entity"), "save"), [])
+  ];
+
+  List.flatten([entity_decl, update_fields, save_entity])
+};

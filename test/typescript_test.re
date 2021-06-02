@@ -37,14 +37,62 @@ let test_function_declare = (_) => {
 };
 
 let test_update_field_event_handler = (_) => {
-  let exprs = update_field_event_handler("name", "ERC20");
+  let exprs = update_field_event_handler("ERC20", ["name"]);
 
   let expected = 
 "let emitterContract = ERC20.bind(event.address)
 emitter.name = emitterContract.name()";
 
   assert_equal(~printer=x => x, expected, generate_exprs(exprs))
-}
+};
+
+let test_update_field_entity_creation = (_) => {
+  let exprs = update_field_entity_creation("ERC20", ["name"]);
+
+  let expected = 
+"let entityContract = ERC20.bind(Address.fromString(entity.id))
+entity.name = entityContract.name()";
+
+  assert_equal(~printer=x => x, expected, generate_exprs(exprs))
+};
+
+let test_create_entity_from_event_field = (_) => {
+  let exprs = create_entity_from_event_field("OToken", "addr", None);
+
+  let expected = 
+"let entityAddress = event.params.addr.toHexString().toString()
+let entity = new OToken(entityAddress)
+entity.save()";
+
+  assert_equal(~printer=x => x, expected, generate_exprs(exprs))
+};
+
+let test_create_entity_from_event_field_with_1init = (_) => {
+  let exprs = create_entity_from_event_field("OToken", "addr", Some(("ERC20", ["name"])));
+
+  let expected = 
+"let entityAddress = event.params.addr.toHexString().toString()
+let entity = new OToken(entityAddress)
+let entityContract = ERC20.bind(Address.fromString(entity.id))
+entity.name = entityContract.name()
+entity.save()";
+
+  assert_equal(~printer=x => x, expected, generate_exprs(exprs))
+};
+
+let test_create_entity_from_event_field_with_2init = (_) => {
+  let exprs = create_entity_from_event_field("OToken", "addr", Some(("ERC20", ["name", "symbol"])));
+
+  let expected = 
+"let entityAddress = event.params.addr.toHexString().toString()
+let entity = new OToken(entityAddress)
+let entityContract = ERC20.bind(Address.fromString(entity.id))
+entity.name = entityContract.name()
+entity.symbol = entityContract.symbol()
+entity.save()";
+
+  assert_equal(~printer=x => x, expected, generate_exprs(exprs))
+};
 
 let suite = "Typescript generation test suite" >::: [
   "test_declare" >:: test_declare,
@@ -52,4 +100,8 @@ let suite = "Typescript generation test suite" >::: [
   "test_obj_member_assign" >:: test_obj_member_assign,
   "test_function_declare" >:: test_function_declare,
   "test_update_field_event_handler" >:: test_update_field_event_handler,
+  "test_update_field_entity_creation" >:: test_update_field_entity_creation,
+  "test_create_entity_from_event_field" >:: test_create_entity_from_event_field,
+  "test_create_entity_from_event_field_with_1init" >:: test_create_entity_from_event_field_with_1init,
+  "test_create_entity_from_event_field_with_2init" >:: test_create_entity_from_event_field_with_2init,
 ];
