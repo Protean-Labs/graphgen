@@ -246,3 +246,104 @@ export const BigDecimalOne = BigDecimal.fromString('1')
 
 %{get_create_transaction}
 "];
+
+// Typescript AST
+
+type unary_op =
+  | Neg
+;
+
+type binary_op = 
+  | Add
+  | Sub
+  | Mult
+  | Div
+;
+
+type value = 
+  | StringV(string)
+  | IntV(int)
+  | FloatV(float)
+;
+
+type expr = 
+  | Var(string)
+  | Literal(value)
+  | UnaryOp(unary_op, expr)
+  | BinaryOp(binary_op, expr, expr)
+  | Declare(string, expr)
+  | Assign(expr, expr)
+  | Apply(expr, list(expr))
+  | Cast(expr, string)
+  | Member(expr, string)
+  | New(expr, list(expr))
+  | FunDeclare(string, list((string, string)), string, list(expr))
+  | Export(expr)
+  | Return(expr)
+;
+
+type ts = list(expr);
+
+let generate_literal = (value) => {
+  switch (value) {
+  | StringV(s) => [%string "\"%{s}\""]
+  | IntV(i) => string_of_int(i)
+  | FloatV(f) => string_of_float(f)
+  }
+};
+
+let generate_unary_op = (op, e) => {
+  switch (op) {
+  | Neg => [%string "-%{e}"]
+  }
+};
+
+let generate_binary_op = (op, e1, e2) => {
+  switch (op) {
+  | Add => [%string "%{e1} + %{e2}"]
+  | Sub => [%string "%{e1} - %{e2}"]
+  | Mult => [%string "%{e1} * %{e2}"]
+  | Div => [%string "%{e1} / %{e2}"]
+  }
+};
+
+let generate_expr = (expr) => {
+  let rec generate_expr = ((expr, indent)) => {
+    let indent_str = String.make(indent * 2, ' ');
+    switch (expr) {
+    | Var(name) => name
+    | Literal(value) => generate_literal(value)
+    | UnaryOp(op, e) => generate_unary_op(op, generate_expr((e, 0)))
+    | BinaryOp(op, e1, e2) => generate_binary_op(op, generate_expr((e1, 0)), generate_expr((e2, 0)))
+    | Declare(name, e) => [%string "%{indent_str}let %{name} = %{generate_expr((e, 0))}"]
+    | Assign(e1, e2) => [%string "%{indent_str}%{generate_expr((e1, 0))} = %{generate_expr((e2, 0))}"]
+    | Apply(e1, args) => 
+      let args = String.concat(", ", List.map(e => [%string "%{generate_expr((e, 0))}"], args));
+      [%string "%{indent_str}%{generate_expr((e1, 0))}(%{args})"]
+    | Cast(e, t) => [%string "%{indent_str}%{generate_expr((e, 0))} as %{t};"]
+    | Member(e, mem) => [%string "%{indent_str}%{generate_expr((e, 0))}.%{mem}"]
+    | New(e, args) => 
+      let args = String.concat(", ", List.map(e => [%string "%{generate_expr((e, 0))}"], args));
+      [%string "new %{generate_expr((e, 0))}(%{args})"]
+    | FunDeclare(name, args, return_typ, body) =>
+      let args = String.concat(", ", List.map(((name, typ)) => [%string "%{name}: %{typ}"], args));
+      let body = String.concat("\n", List.map(e => generate_expr((e, 1)), body));
+      [%string "function %{name}(%{args}): %{return_typ} {\n%{body}\n}"]
+    | Export(e) => [%string "export %{generate_expr((e, 0))}"]
+    | Return(e) => [%string "%{indent_str}return %{generate_expr((e, 0))}"]
+    }
+  };
+
+  generate_expr((expr, 0))
+};
+
+let generate_exprs = (exprs) => String.concat("\n", List.map(generate_expr, exprs));
+
+// Code generation
+let update_field_event_handler = (field_name, contract_name) => {
+  [
+    Declare("emitterContract", Apply(Member(Var(contract_name), "bind"), [Member(Var("event"), "address")])),
+    Assign(Member(Var("emitter"), field_name), Apply(Member(Var("emitterContract"), field_name), []))
+  ]
+};
+

@@ -28,15 +28,26 @@
         "(ocamllex (modules lexer))",
         "(menhir (modules parser) (infer false))"
       ],
-      "preprocess": [ "pps", "ppx_deriving.show", "ppx_deriving_yaml", "ppx_deriving_yojson", "ppx_string"],
-      "bin": { 
-        "graphgen.exe": "main.re"
-      }
+      "preprocess": [ "pps", "ppx_deriving.show", "ppx_deriving_yaml", "ppx_deriving_yojson", "ppx_string"]
+    },
+    "bin": {
+      "imports": [
+        "Graphgen = require('graphgen/graphgen')"
+      ],
+      "bin": { "graphgen.exe": "main.re" }      
+    },
+    "test": {
+      "imports": [
+        "Ounit2 = require('@opam/ounit2')",
+        "Ounit2_lwt = require('@opam/ounit2-lwt')",
+        "Graphgen = require('graphgen/graphgen')"
+      ],
+      "bin": { "test.exe": "test.re" }
     }
   },
   "scripts": {
     "graphgen": "esy x graphgen.exe",
-    "test": "esy dune runtest --instrument-with bisect_ppx --force --profile release"
+    "test": "esy x test.exe"
   },
   "dependencies": {
     "@esy-ocaml/reason": "^3.7.0",
@@ -59,6 +70,8 @@
     "@opam/ppx_deriving_yaml": "^0.1.0"
   },
   "devDependencies": {
+    "@opam/ounit2": "*",
+    "@opam/ounit2-lwt": "*",
     "@opam/merlin": "*",
     "@opam/ocaml-lsp-server": "1.4.1",
     "refmterr": "*",
