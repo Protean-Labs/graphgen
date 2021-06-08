@@ -87,13 +87,29 @@ type intf_element =
 
 [@deriving show]
 type interface = {
-  name: string,
+  raw_name: string,
   elements: list(intf_element),
   tag: option(gg_tag)
 };
 
 [@deriving show]
 type t = list(interface);
+
+let interface_of_raw_name = (ast: t, target) => {
+  ast
+  |> List.find_opt(({raw_name}) => raw_name == target)
+};
+
+let interface_of_name = (ast: t, target) => {
+  ast
+  |> List.find_opt(({tag}) => 
+    switch (tag) {
+    | Some(GGSource({name: Some(n)})) => n == target
+    | _ => false
+    }
+  )
+};
+
 
 // let rec tcheck = (subgraph) => {
 //   // First pass scanning for object names and types (i.e.: Source, Event, Call and Field)
@@ -158,7 +174,7 @@ let tcheck = (ast) => {
 
     switch (ast) {
     | [] => tenv
-    | [{name: n, elements, tag: Some(GGSource({name: None}))}, ...rest] => 
+    | [{raw_name: n, elements, tag: Some(GGSource({name: None}))}, ...rest] => 
       scan(rest, scan_intf(elements, [(n, `Source), ...tenv]))
     | [{elements, tag: Some(GGSource({name: Some(n)}))}, ...rest] => 
       scan(rest, scan_intf(elements, [(n, `Source), ...tenv]))

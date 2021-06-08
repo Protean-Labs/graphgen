@@ -4,7 +4,7 @@
   open Rresult
 
   let logger = Logging.make_logger "Parser" Info [Cli Debug]
-  let make_interface (name, elements) tag = {name; elements; tag}
+  let make_interface (raw_name, elements) tag = {raw_name; elements; tag}
   let make_event_param typ indexed name = {typ; indexed; name}
   let make_fun_param typ data_loc name = {typ; data_loc; name}
   
@@ -143,10 +143,10 @@ gg_tag:
 ;
 
 import_directive:
-  | IMPORT; path; SEMICOLON;                                            { 1 }
-  | IMPORT; path; AS; identifier;                                  { 1 }
-  | symbol_aliases; FROM; path;                            { 1 }
-  | TIMES; AS; identifier; FROM; path;                             { 1 }
+  | IMPORT; path; SEMICOLON;                             { 1 }
+  | IMPORT; path; AS; identifier;                        { 1 }
+  | symbol_aliases; FROM; path;                          { 1 }
+  | TIMES; AS; identifier; FROM; path;                   { 1 }
 ;
 
 path:
@@ -156,8 +156,8 @@ path:
 symbol_aliases:
   | LBRACE; separated_nonempty_list(COMMA, subrule); RBRACE;          { 3 }
 %inline subrule:
-  | identifier; AS; identifier;                                         { 3 }
-  | identifier;                                                        { 3 }
+  | identifier; AS; identifier;                                       { 3 }
+  | identifier;                                                       { 3 }
 ;
 
 interface_definition:
@@ -169,7 +169,7 @@ interface_definition:
 ;
 
 inheritance_specifier:
-  | id_path = identifier_path;                                                    { 7 }
+  | id_path = identifier_path;                                            { 7 }
 ;
 
 contract_body_element:

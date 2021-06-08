@@ -1,0 +1,8 @@
+(* -*- tuareg -*- *)
+
+open Jbuild_plugin.V1
+
+let () =
+  run_and_read_lines ("pesy dune-file " ^ Sys.getcwd ())
+  |> String.concat "\n"
+  |> send
