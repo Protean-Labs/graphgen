@@ -1,12 +1,17 @@
 open Subgraph;
-open Solidity;
+open Ast;
 
-let field_to_string = fun
-  | (_,AddressT) => "address"
-  | (_,UintT(n)) => "uint" ++ string_of_int(n)
-  | (_,IntT(n)) => "int" ++ string_of_int(n)
-  | (_,StringT) => "string"
-  | (_,BoolT) => "bool"
+let rec field_to_string = fun
+  | (_, AddressT) => "address"
+  | (_, UintT(n)) => "uint" ++ string_of_int(n)
+  | (_, IntT(n)) => "int" ++ string_of_int(n)
+  | (_, StringT) => "string"
+  | (_, BoolT) => "bool"
+  | (_, FixedT) => "fixed"
+  | (_, UfixedT) => "ufixed"
+  | (_, BytesT) => "bytes"
+  | (_, FbytesT(_)) => ""
+  | (_, ArrayT(typ)) => Format.sprintf("%s[]", field_to_string(("", typ)))
 ;
 module CallHandler = {
   [@deriving yaml]
@@ -33,7 +38,7 @@ module EventHandler = {
   };
 
   let make = (event:event) => {
-    let event_fields = List.map(field_to_string, event.fields) |> String.concat(", ");
+    let event_fields = List.map(field_to_string, event.fields) |> String.concat(",");
     {
       event: Format.sprintf("%s(%s)", event.name, event_fields),
       handler:Format.sprintf("handle%s", event.name)
@@ -71,14 +76,14 @@ module Mapping = {
     entities: ["entitiy1", "entity2"],
     abis:[],
     eventHandlers: {
-      contract.triggers 
+      contract.handlers 
       |> List.filter_map(fun 
       | Event(event, actions) => Some(EventHandler.make(event))
       | _ => None
       )
     },
     callHandlers: {
-      contract.triggers 
+      contract.handlers 
       |> List.filter_map(fun 
       | Call(call, actions) => Some(CallHandler.make(call))
       | _ => None
@@ -90,15 +95,15 @@ module Mapping = {
 module Source = {
   [@deriving yaml]
   type t = {
-    address: string,
+    address: option(string),
     abi: string,
-    startBlock: int
+    startBlock: option(int)
   };
 
-  let make = () => {
-    address: "placeholder",
-    abi: "placeholder",
-    startBlock: 100000
+  let make = (~address=?,~startBlock=?,abi) => {
+    address: address,
+    abi: abi,
+    startBlock: startBlock
   }
 };
 
@@ -117,10 +122,28 @@ module DataSource = {
     kind: "ethereum/contract",
     name: contract.name,
     network: "mainnet",
-    source: Source.make(),
+    source: Source.make(~address="placeholder",~startBlock=100000,contract.name),
     mapping: Mapping.make(contract)
   }
+};
 
+module Template = {
+  [@deriving yaml]
+  type t = {
+    kind: string,
+    name: string,
+    network: string,
+    source: Source.t,
+    mapping: Mapping.t
+  };
+
+  let make = (contract: Subgraph.contract) => {
+    kind: "ethereum/contract",
+    name: contract.name,
+    network: "mainnet",
+    source: Source.make("IERC20"),
+    mapping: Mapping.make(contract)
+  };
 };
 
 module Schema = {
@@ -139,7 +162,8 @@ type t = {
   description: string,
   repository: string,
   schema: Schema.t,
-  dataSources: list(DataSource.t)
+  dataSources: list(DataSource.t),
+  templates: list(Template.t)
 };
 
 let make = (subg: Subgraph.t) => {
@@ -148,12 +172,13 @@ let make = (subg: Subgraph.t) => {
     description: "Auto generated subgraph",
     repository: "place holder",
     schema: Schema.make("./schema.graphql"),
-    dataSources: List.map(DataSource.make,subg)
+    dataSources: List.map(DataSource.make,subg),
+    templates: List.map(Template.make,subg)
   }
 };
 
-let to_file = (manifest) => {
+let to_file = (manifest, path) => {
   manifest 
   |> to_yaml
-  |> Yaml_unix.to_file(Fpath.v("subgraph.yaml"));
+  |> Yaml_unix.to_file(Fpath.v([%string "%{path}/subgraph.yaml"]));
 }
