@@ -150,18 +150,32 @@ let entity_of_contract = (contract: Subgraph.contract) => {
 
   let events_contract_fields = 
     contract.handlers
-    |> List.map(fun | Event(_, actions) => actions | _ => [])
-    |> List.flatten
-    |> List.filter_map(fun | StoreEvent(event) => Some(event) | _ => None)
+    |> List.filter_map((handler) =>
+      // Get events for which there is a handler and a StoreEvent action
+      switch (handler) {
+      | Event(event, actions) when List.exists(fun | StoreEvent => true | _ => false, actions) => Some(event)
+      | _ => None
+      }
+    )
+    // Generate contract fields related to event
     |> List.map(contract_fields_of_event(contract))
   ;
 
   let calls_contract_fields = 
     contract.handlers
-    |> List.map(fun | Call(_, actions) => actions | _ => [])
-    |> List.flatten
-    |> List.filter_map(fun | StoreCall(call) => Some(call) | _ => None)
+    |> List.filter_map((handler) => 
+      // Get calls for which there is a handler and a StoreCall action
+      switch (handler) {
+      | Call(call, actions) when List.exists(fun | StoreCall => true | _ => false, actions) => Some(call)
+      | _ => None
+      }
+    )
+    // Generate contract fields related to call
     |> List.map(contract_fields_of_call(contract))
+
+    // |> List.map(fun | Call(_, actions) => actions | _ => [])
+    // |> List.flatten
+    // |> List.filter_map(fun | StoreCall(call) => Some(call) | _ => None)
   ;
 
   let all_fields = 
@@ -189,44 +203,56 @@ let entity_of_contract = (contract: Subgraph.contract) => {
 let of_subgraph = (subgraph: Subgraph.t) => {
   let event_entities = 
     subgraph
-    |> List.map(contract => 
-      contract.handlers 
-      |> List.map(t => (contract, t))
+    |> List.map((contract) => 
+      contract.handlers
+      // Get events that have handlers and are stored
+      |> List.filter_map((handler) => 
+        switch (handler) {
+        | Event(event, actions) when List.exists(fun | StoreEvent => true | _ => false, actions) => Some(event)
+        | _ => None
+        }
+      ) 
+      // Generate event entities
+      |> List.map(entity_of_event(contract))
     )
     |> List.flatten
-    |> List.map(fun 
-      | (contract, Event(_, actions)) => 
-        actions 
-        |> List.map(action => (contract, action)) 
-      | _ => []
-    )
-    |> List.flatten
-    |> List.filter_map(fun 
-      | (contract, StoreEvent(event)) => Some((contract, event)) 
-      | _ => None
-    )
-    |> List.map(((contract, event)) => entity_of_event(contract, event))
   ;
 
   let call_entities = 
     subgraph
-    |> List.map(contract => 
-      contract.handlers 
-      |> List.map(t => (contract, t))
+    |> List.map((contract) => 
+      contract.handlers
+      // Get calls that have handlers and are stored
+      |> List.filter_map((handler) => 
+        switch (handler) {
+        | Call(call, actions) when List.exists(fun | StoreCall => true | _ => false, actions) => Some(call)
+        | _ => None
+        }
+      ) 
+      // Generate call entities
+      |> List.map(entity_of_call(contract))
     )
     |> List.flatten
-    |> List.map(fun 
-      | (contract, Call(_, actions)) => 
-        actions 
-        |> List.map(action => (contract, action)) 
-      | _ => []
-    )
-    |> List.flatten
-    |> List.filter_map(fun 
-      | (contract, StoreCall(call)) => Some((contract, call)) 
-      | _ => None
-    )
-    |> List.map(((contract, call)) => entity_of_call(contract, call))
+
+
+    // subgraph
+    // |> List.map(contract => 
+    //   contract.handlers 
+    //   |> List.map(t => (contract, t))
+    // )
+    // |> List.flatten
+    // |> List.map(fun 
+    //   | (contract, Call(_, actions)) => 
+    //     actions 
+    //     |> List.map(action => (contract, action)) 
+    //   | _ => []
+    // )
+    // |> List.flatten
+    // |> List.filter_map(fun 
+    //   | (contract, StoreCall(call)) => Some((contract, call)) 
+    //   | _ => None
+    // )
+    // |> List.map(((contract, call)) => entity_of_call(contract, call))
   ;
 
   let contract_entities = 

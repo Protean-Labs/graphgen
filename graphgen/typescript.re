@@ -1,5 +1,365 @@
+/* ================================================================
+Typescript AST (ish)
+================================================================ */
+type unary_op =
+  | Neg
+;
+
+type binary_op = 
+  | Add
+  | Sub
+  | Mult
+  | Div
+;
+
+type value = 
+  | StringV(string)
+  | IntV(int)
+  | FloatV(float)
+;
+
+type expr = 
+  | Var(string)
+  | Literal(value)
+  | UnaryOp(unary_op, expr)
+  | BinaryOp(binary_op, expr, expr)
+  | Declare(string, expr)
+  | Assign(expr, expr)
+  | Apply(expr, list(expr))
+  | Cast(expr, string)
+  | Member(expr, string)
+  | New(expr, list(expr))
+  | FunDeclare(string, list((string, string)), string, list(expr))
+  | Export(expr)
+  | Return(expr)
+  // Not actual typescript, only used in generation  
+  | Empty
+  | Block(string, list(expr))
+;
+
+type ts = list(expr);
+
+let generate_literal = (value) => {
+  switch (value) {
+  | StringV(s) => [%string "\"%{s}\""]
+  | IntV(i) => string_of_int(i)
+  | FloatV(f) => string_of_float(f)
+  }
+};
+
+let generate_unary_op = (op, e) => {
+  switch (op) {
+  | Neg => [%string "-%{e}"]
+  }
+};
+
+let generate_binary_op = (op, e1, e2) => {
+  switch (op) {
+  | Add => [%string "%{e1} + %{e2}"]
+  | Sub => [%string "%{e1} - %{e2}"]
+  | Mult => [%string "%{e1} * %{e2}"]
+  | Div => [%string "%{e1} / %{e2}"]
+  }
+};
+
+let generate_expr = (expr) => {
+  let rec generate_expr = (expr, indent) => {
+    let indent_str = String.make(indent * 2, ' ');
+    switch (expr) {
+    | Var(name) => name
+    | Literal(value) => generate_literal(value)
+    | UnaryOp(op, e) => generate_unary_op(op, generate_expr(e, 0))
+    | BinaryOp(op, e1, e2) => generate_binary_op(op, generate_expr(e1, 0), generate_expr(e2, 0))
+    | Declare(name, e) => [%string "%{indent_str}let %{name} = %{generate_expr e 0}"]
+    | Assign(e1, e2) => [%string "%{indent_str}%{generate_expr e1 0} = %{generate_expr e2 0}"]
+    | Apply(e1, args) => 
+      let args = String.concat(", ", List.map(e => [%string "%{generate_expr e 0}"], args));
+      [%string "%{indent_str}%{generate_expr e1 0}(%{args})"]
+    | Cast(e, t) => [%string "%{indent_str}%{generate_expr e 0} as %{t};"]
+    | Member(e, mem) => [%string "%{indent_str}%{generate_expr e 0}.%{mem}"]
+    | New(e, args) => 
+      let args = String.concat(", ", List.map(e => [%string "%{generate_expr e 0}"], args));
+      [%string "new %{generate_expr e 0}(%{args})"]
+    | FunDeclare(name, args, return_typ, body) =>
+      let args = String.concat(", ", List.map(((name, typ)) => [%string "%{name}: %{typ}"], args));
+      let body = String.concat("\n", List.map(e => generate_expr(e, 1), body));
+      [%string "function %{name}(%{args}): %{return_typ} {\n%{body}\n}"]
+    | Export(e) => [%string "export %{generate_expr e 0}"]
+    | Return(e) => [%string "%{indent_str}return %{generate_expr e 0}"]
+    | Empty => ""
+    | Block("", []) => ""
+    | Block("", exprs) =>
+      let block = String.concat("\n", List.map(e => generate_expr(e, indent), exprs));
+      [%string "%{block}"]
+    | Block(comment, exprs) =>
+      let block = String.concat("\n", List.map(e => generate_expr(e, indent), exprs));
+      [%string "%{indent_str}// %{comment}\n%{block}"]
+    }
+  };
+
+  generate_expr(expr, 0)
+};
+
+let generate_exprs = (exprs) => String.concat("\n", List.map(generate_expr, exprs));
+
+/* ================================================================
+AST Generation
+================================================================ */
+open Ast; // Solidity AST for types definitions
+
+// Shorthands
+let to_hex_string = (expr) => Apply(Member(expr, "toHexString"), []);
+
+module Blocks = {
+  let wrap = (e1, exprs, e2) => [e1, Block("", exprs), e2];
+  
+  let update_fields_event_handler = (contract_name, fields) => {
+    let field_updates = 
+      fields
+      |> List.map(field => Assign(Member(Var("emitter"), field), Apply(Member(Var("emitterContract"), field), [])))
+    ;
+
+    Block("Update entity fields", [
+      Declare("emitterContract", Apply(Member(Var(contract_name), "bind"), [Member(Var("event"), "address")])),
+      ...field_updates
+    ])
+  };
+
+  let init_entity_contract_fields = (contract_name, fields) => {
+    let field_update = 
+      fields
+      |> List.map(field => Assign(Member(Var("entity"), field), Apply(Member(Var("entityContract"), field), [])))
+    ;
+    
+    Block("Initialize entity fields", [
+      // Declare("entityContract", Apply(Member(Var(contract_name), "bind"), [Apply(Member(Var("Address"), "fromString"), [Member(Var("entity"), "id")])])),
+      Declare("entityContract", Apply(Member(Var(contract_name), "bind"), [Var("address")])),
+      ...field_update
+    ])
+  };
+
+  let init_entity_event_fields = (events: list(Subgraph.event)) => {
+    Block("",
+      events
+      |> List.map((event: Subgraph.event) => Assign(Member(Var("entity"), [%string "num%{event.name}s"]), Var("BigIntZero")))
+    )
+  };
+
+  let create_entity_from_event_field = (entity_name, contract_name, event_field) => {
+    Block("", [
+      Declare("entityAddress", Member(Member(Var("event"), "params"), event_field)),
+      Apply(Member(Var(contract_name), "create"), [Var("entityAddress")]),
+      Apply(Member(Var(entity_name), [%string "create%{entity_name}"]), [to_hex_string(Var("entityAddress"))])
+    ])
+  };
+
+  let store_event = (event: Subgraph.event) => {
+    Block("Create event and update emitter", [
+      Declare("event", Apply(Var([%string "create%{event.name}"]), [Member(Var("emitter"), [%string "num%{event.name}s"]), Var("event")])),
+      Assign(Member(Var("emitter"), [%string "num%{event.name}s"]), BinaryOp(Add, Member(Var("emitter"), [%string "num%{event.name}s"]), Var("BigIntOne"))),
+      Assign(Member(Var("emitter"), [%string "latest%{event.name}"]), Member(Var("event"), "id"))
+    ])
+  };
+};
+
+module Functions = {
+  let create_event = (event: Subgraph.event) => {
+    let fields_assignment = 
+      event.fields
+      |> List.map(fun
+        | (name, AddressT) => Assign(Member(Var("eventEntity"), name), to_hex_string(Member(Member(Var("event"), "params"), name)))
+        | (name, _) => Assign(Member(Var("eventEntity"), name), Member(Member(Var("event"), "params"), name))
+      )
+    ;
+
+    let event_id = BinaryOp(Add, 
+      BinaryOp(Add, 
+        to_hex_string(Member(Var("event"), "address")), 
+        Literal(StringV("-"))
+      ), Apply(Member(Var("counter"), "toString"), [])
+    );
+
+    let decl = [
+      Declare("eventEntity", New(Var("MyEvent"), [event_id])),
+      Assign(Member(Var("eventEntity"), "logIndex"), Member(Var("event"), "logIndex")),
+      Assign(Member(Var("eventEntity"), "tx"), to_hex_string(Member(Member(Var("event"), "transaction"), "hash"))),
+    ];
+
+    let return = [
+      Apply(Member(Var("eventEntity"), "save"), []),
+      Return(Var("eventEntity"))
+    ];
+
+    let body = List.flatten([decl, fields_assignment, return]);
+
+    FunDeclare([%string "create%{event.name}"], [("counter", "BigInt"), ("event", event.name)], event.name, body)
+  };
+
+  let create_entity = (contract: Subgraph.contract) => {
+    open Subgraph;
+
+    let events = 
+      contract.handlers
+      |> List.filter_map(handler => 
+        switch (handler) {
+        | Event(event, actions) when List.exists(fun | StoreEvent => true | _ => false, actions) => Some(event)
+        | _ => None
+        }
+      )
+    ;
+
+    let fields = 
+      contract.fields
+      |> List.map(((name, typ)) => name)
+    ;
+
+    let body = [
+      Declare("entity", New(Var(contract.name), [to_hex_string(Var("address"))])),
+      // Declare("entityContract", Apply(Member(Var(contract_name), "bind"), [Var("address")])),
+      Blocks.init_entity_contract_fields(contract.raw_name, fields),
+      Blocks.init_entity_event_fields(events),
+      Apply(Member(Var("entity"), "save"), []),
+      Return(Var("entity"))
+    ];
+
+    Export(FunDeclare([%string "create%{contract.name}"], [("address", "Address")], contract.name, body))
+  };
+
+  let event_handler = (name, event: Subgraph.event, actions) => {
+    let store_event_block = 
+      actions
+      |> List.find_map(fun 
+        | Subgraph.StoreEvent => Some(Blocks.store_event(event)) 
+        | _ => None
+      )
+      |> Option.value(~default=Empty)
+    ;
+
+    let update_fields_block = 
+      actions
+      |> List.filter_map(fun 
+        | Subgraph.UpdateField(field) => Some(field) 
+        | _ => None
+      )
+      |> Blocks.update_fields_event_handler(name)
+    ;
+
+    let create_entity_block = 
+      actions
+      |> List.filter_map(fun 
+        | Subgraph.NewEntity(name, raw_name, field) => Some(Blocks.create_entity_from_event_field(name, raw_name, field))
+        | _ => None
+      )
+    ;
+
+    // let body = 
+    //   actions
+    //   |> List.map(fun
+    //     | Subgraph.StoreEvent => Blocks.store_event(event)
+    //     // | Subgraph.UpdateField()
+    //   )
+
+    // let emitter_decl = Declare("emitter", Apply(Member(Var(name), "load"), [to_hex_string(Member(Var("event"), "address"))]));
+    let body = [
+      // Get emitter entity
+      Declare("emitter", Apply(Member(Var(name), "load"), [to_hex_string(Member(Var("event"), "address"))])),
+      store_event_block,
+      update_fields_block,
+      Block("", create_entity_block),
+      // Save emitter entity
+      Apply(Member(Var("emitter"), "save"), [])
+    ];
+
+    [Export(FunDeclare([%string "handle%{event.name}"], [("event", event.name)], event.name, body))]
+  };
+
+  let call_handler = () => {
+    Block("", [])
+  };
+};
+
+/**
+  [create_event_handler("MyContract", {"MyEvent", [("addr", AddressT)]}, [StoreEvent({"MyEvent", [("addr", AddressT)]})])] 
+  generates the following:
+
+  ```
+  export function handleMyEvent(event: MyEvent): void {
+    let emitter = MyContract.load(event.address.toHexString())
+    let event = createMyEvent(emitter.numMyEvents, event)
+    emitter.numMyEvents = emitter.numMyEvents + BigIntOne
+    emitter.latestMyEvent = event
+    emitter.save()
+  }
+  ```
+ */
+let create_event_handler = (name, event: Subgraph.event, actions) => {
+  let store_event_block = 
+    actions
+    |> List.find_map(fun 
+      | Subgraph.StoreEvent => Some(Blocks.store_event(event)) 
+      | _ => None
+    )
+    |> Option.value(~default=Empty)
+  ;
+
+  let update_fields_block = 
+    actions
+    |> List.filter_map(fun 
+      | Subgraph.UpdateField(field) => Some(field) 
+      | _ => None
+    )
+    |> Blocks.update_fields_event_handler(name)
+  ;
+
+  let create_entity_block = 
+    actions
+    |> List.filter_map(fun 
+      | Subgraph.NewEntity(name, raw_name, field) => Some(Blocks.create_entity_from_event_field(name, raw_name, field))
+      | _ => None
+    )
+  ;
+
+  // let body = 
+  //   actions
+  //   |> List.map(fun
+  //     | Subgraph.StoreEvent => Blocks.store_event(event)
+  //     // | Subgraph.UpdateField()
+  //   )
+
+  // let emitter_decl = Declare("emitter", Apply(Member(Var(name), "load"), [to_hex_string(Member(Var("event"), "address"))]));
+  let body = [
+    // Get emitter entity
+    Declare("emitter", Apply(Member(Var(name), "load"), [to_hex_string(Member(Var("event"), "address"))])),
+    store_event_block,
+    update_fields_block,
+    Block("", create_entity_block),
+    // Save emitter entity
+    Apply(Member(Var("emitter"), "save"), [])
+  ];
+
+  [Export(FunDeclare([%string "handle%{event.name}"], [("event", event.name)], event.name, body))]
+
+//   let update_entity_meta = [%string "  
+//   let event = create%{event.name}(emitter.num%{event.name}s, event)
+//   emitter.num%{event.name}s = emitter.num%{event.name}s + BigIntOne
+//   emitter.latest%{event.name} = event"
+//   ];
+
+//   [%string
+// "%{if has_store_event then create_event event else \"\"}
+
+// export function handle%{event.name}(event: %{event.name}): void {
+//   let emitter = %{name}.load(event.address.toHexString().toString())
+//   %{if has_store_event then update_entity_meta else \"\"}
+//   emitter.save()
+// }"
+//   ]
+
+
+};
+
 // get create
-open Ast;
+
 /*
 Imports 
 
@@ -125,7 +485,7 @@ let get_create_transaction = [%string
 }"
 ];
 
-let create_event = (event: Subgraph.event) => {
+let create_event' = (event: Subgraph.event) => {
   let event_field_assignment = ((name, _)) => {
     [%string "eventEntity.%{name} = event.%{name}"]
   };
@@ -174,9 +534,8 @@ let create_call = (call: Subgraph.call) => {
   ]
 };
 
-let create_event_handler = (name, event: Subgraph.event, actions) => {
-  let has_store_event = List.exists(fun | Subgraph.StoreEvent(_) => true | _ => false, actions);
-  let empty = "";
+let create_event_handler' = (name, event: Subgraph.event, actions) => {
+  let has_store_event = List.exists(fun | Subgraph.StoreEvent => true | _ => false, actions);
 
   let update_entity_meta = [%string "  
   let event = create%{event.name}(emitter.num%{event.name}s, event)
@@ -185,7 +544,7 @@ let create_event_handler = (name, event: Subgraph.event, actions) => {
   ];
 
   [%string
-"%{if has_store_event then create_event event else \"\"}
+"%{if has_store_event then create_event' event else \"\"}
 
 export function handle%{event.name}(event: %{event.name}): void {
   let emitter = %{name}.load(event.address.toHexString().toString())
@@ -198,7 +557,7 @@ export function handle%{event.name}(event: %{event.name}): void {
 let create_call_handler = (name, call, actions) => {
   let store_call_function = {
     actions
-    |> List.exists(fun | Subgraph.StoreCall(_) => true | _ => false)
+    |> List.exists(fun | Subgraph.StoreCall => true | _ => false)
     |> fun 
       | true => create_call(call)
       | false => ""
@@ -219,17 +578,18 @@ export function handle%{call.name}(call: %{call.name}Call): void {
 
 let of_subgraph = (subgraph: Subgraph.t) => {
   subgraph
-  |> List.map(({name, fields, handlers}: Subgraph.contract) => Subgraph.(
+  |> List.map((({name, fields, handlers}: Subgraph.contract) as contract)  => Subgraph.(
     [%string "%{name}.ts"],
     handlers
     |> List.map(fun 
-      | Event(event, actions) => create_event_handler(name, event, actions)
+      | Event(event, actions) => Functions.event_handler(name, event, actions) |> generate_exprs
       | Call(call, actions) => create_call_handler(name, call, actions)
     )
     |> String.concat("\n")
     |> x => primitive_imports 
-    ++ event_imports(handlers,name)
-    ++ call_imports(handlers,name)
+    ++ event_imports(handlers, name)
+    ++ call_imports(handlers, name)
+    ++ (Functions.create_entity(contract) |> generate_expr)
     ++ x
   ))
 };
@@ -246,140 +606,3 @@ export const BigDecimalOne = BigDecimal.fromString('1')
 
 %{get_create_transaction}
 "];
-
-// Typescript AST
-
-type unary_op =
-  | Neg
-;
-
-type binary_op = 
-  | Add
-  | Sub
-  | Mult
-  | Div
-;
-
-type value = 
-  | StringV(string)
-  | IntV(int)
-  | FloatV(float)
-;
-
-type expr = 
-  | Var(string)
-  | Literal(value)
-  | UnaryOp(unary_op, expr)
-  | BinaryOp(binary_op, expr, expr)
-  | Declare(string, expr)
-  | Assign(expr, expr)
-  | Apply(expr, list(expr))
-  | Cast(expr, string)
-  | Member(expr, string)
-  | New(expr, list(expr))
-  | FunDeclare(string, list((string, string)), string, list(expr))
-  | Export(expr)
-  | Return(expr)
-;
-
-type ts = list(expr);
-
-let generate_literal = (value) => {
-  switch (value) {
-  | StringV(s) => [%string "\"%{s}\""]
-  | IntV(i) => string_of_int(i)
-  | FloatV(f) => string_of_float(f)
-  }
-};
-
-let generate_unary_op = (op, e) => {
-  switch (op) {
-  | Neg => [%string "-%{e}"]
-  }
-};
-
-let generate_binary_op = (op, e1, e2) => {
-  switch (op) {
-  | Add => [%string "%{e1} + %{e2}"]
-  | Sub => [%string "%{e1} - %{e2}"]
-  | Mult => [%string "%{e1} * %{e2}"]
-  | Div => [%string "%{e1} / %{e2}"]
-  }
-};
-
-let generate_expr = (expr) => {
-  let rec generate_expr = ((expr, indent)) => {
-    let indent_str = String.make(indent * 2, ' ');
-    switch (expr) {
-    | Var(name) => name
-    | Literal(value) => generate_literal(value)
-    | UnaryOp(op, e) => generate_unary_op(op, generate_expr((e, 0)))
-    | BinaryOp(op, e1, e2) => generate_binary_op(op, generate_expr((e1, 0)), generate_expr((e2, 0)))
-    | Declare(name, e) => [%string "%{indent_str}let %{name} = %{generate_expr((e, 0))}"]
-    | Assign(e1, e2) => [%string "%{indent_str}%{generate_expr((e1, 0))} = %{generate_expr((e2, 0))}"]
-    | Apply(e1, args) => 
-      let args = String.concat(", ", List.map(e => [%string "%{generate_expr((e, 0))}"], args));
-      [%string "%{indent_str}%{generate_expr((e1, 0))}(%{args})"]
-    | Cast(e, t) => [%string "%{indent_str}%{generate_expr((e, 0))} as %{t};"]
-    | Member(e, mem) => [%string "%{indent_str}%{generate_expr((e, 0))}.%{mem}"]
-    | New(e, args) => 
-      let args = String.concat(", ", List.map(e => [%string "%{generate_expr((e, 0))}"], args));
-      [%string "new %{generate_expr((e, 0))}(%{args})"]
-    | FunDeclare(name, args, return_typ, body) =>
-      let args = String.concat(", ", List.map(((name, typ)) => [%string "%{name}: %{typ}"], args));
-      let body = String.concat("\n", List.map(e => generate_expr((e, 1)), body));
-      [%string "function %{name}(%{args}): %{return_typ} {\n%{body}\n}"]
-    | Export(e) => [%string "export %{generate_expr((e, 0))}"]
-    | Return(e) => [%string "%{indent_str}return %{generate_expr((e, 0))}"]
-    }
-  };
-
-  generate_expr((expr, 0))
-};
-
-let generate_exprs = (exprs) => String.concat("\n", List.map(generate_expr, exprs));
-
-// Code generation
-let update_field_event_handler = (contract, fields) => {
-  let field_update = 
-    fields
-    |> List.map(field => Assign(Member(Var("emitter"), field), Apply(Member(Var("emitterContract"), field), [])))
-  ;
-
-  [
-    Declare("emitterContract", Apply(Member(Var(contract), "bind"), [Member(Var("event"), "address")])),
-    ...field_update
-  ]
-};
-
-let update_field_entity_creation = (contract, fields) => {  
-  let field_update = 
-    fields
-    |> List.map(field => Assign(Member(Var("entity"), field), Apply(Member(Var("entityContract"), field), [])))
-  ;
-  
-  [
-    Declare("entityContract", Apply(Member(Var(contract), "bind"), [Apply(Member(Var("Address"), "fromString"), [Member(Var("entity"), "id")])])),
-    ...field_update
-  ]
-};
-
-let create_entity_from_event_field = (entity, event_field, update_fields_args) => {
-  let entity_decl = [
-    Declare("entityAddress", Apply(Member(Apply(Member(Member(Member(Var("event"), "params"), event_field), "toHexString"), []), "toString"), [])),
-    Declare("entity", New(Var(entity), [Var("entityAddress")])),
-  ];
-
-  let update_fields = 
-    update_fields_args
-    |> fun 
-      | Some((contract, fields)) => update_field_entity_creation(contract, fields)
-      | None => []
-  ;
-
-  let save_entity = [
-    Apply(Member(Var("entity"), "save"), [])
-  ];
-
-  List.flatten([entity_decl, update_fields, save_entity])
-};

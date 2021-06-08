@@ -10,10 +10,10 @@ type call = {
 };
 
 type action = 
-  | StoreEvent(event)
-  | StoreCall(call)
-  // | UpdateField(...)
-  // | CreateEntity(...)
+  | StoreEvent
+  | StoreCall
+  | UpdateField(string)                   // UpdateField(field_name)
+  | NewEntity(string, string, string)     // NewEntity(name, raw_name, event_field)
 ;
 
 type handler = 
@@ -23,12 +23,12 @@ type handler =
 
 type contract = {
   name: string,
+  raw_name: string,
   fields: list((string, Ast.typ)),
   handlers: list(handler)
 };
 
 type t = list(contract);
-
 
 let of_ast = (ast: Ast.t) => {
   let fmt_call = (name, inputs, outputs): call => {
@@ -58,24 +58,38 @@ let of_ast = (ast: Ast.t) => {
     let rec f = (actions, acc) => {
       switch (actions) {
       | [] => acc
-      | ["StoreEvent", ...rest] => f(rest, [StoreEvent(event), ...acc])
+      | [["StoreEvent"], ...rest] => f(rest, [StoreEvent, ...acc])
+      | [["UpdateField", field_name], ...rest] => f(rest, [UpdateField(field_name), ...acc])
+      | [["NewEntity", source, "from", event_field], ...rest] => 
+        Ast.interface_of_name(ast, source)
+        |> (fun
+          | Some(intf) => f(rest, [NewEntity(source, intf.raw_name, event_field), ...acc])
+          | None => f(rest, acc)
+        )
       | [_, ...rest] => f(rest, acc)
       }
     };
 
-    f(actions, [])
+    f(List.map(String.split_on_char(' '), actions), [])
   };
 
   let fmt_call_handler_actions = (call, actions) => {
     let rec f = (actions, acc) => {
       switch (actions) {
       | [] => acc
-      | ["StoreCall", ...rest] => f(rest, [StoreCall(call), ...acc])
+      | [["StoreCall"], ...rest] => f(rest, [StoreCall, ...acc])
+      | [["UpdateField", field_name], ...rest] => f(rest, [UpdateField(field_name), ...acc])
+      | [["NewEntity", source, "from", event_field], ...rest] => 
+        Ast.interface_of_name(ast, source)
+        |> (fun
+          | Some(intf) => f(rest, [NewEntity(source, intf.raw_name, event_field), ...acc])
+          | None => f(rest, acc)
+        )
       | [_, ...rest] => f(rest, acc)
       }
     };
 
-    f(actions, [])
+    f(List.map(String.split_on_char(' '), actions), [])
   };
 
   let get_handlers = (intf_elements) => {
@@ -98,13 +112,13 @@ let of_ast = (ast: Ast.t) => {
     f(intf_elements, [])
   };
   
-  let rec to_subgraph = (ast, acc): t => {
+  let rec to_subgraph = (ast: list(Ast.interface), acc): t => {
     switch (ast) {
     | [] => acc
-    | [{Ast.name: n, elements, tag: Some(GGSource({name: None}))}, ...rest] => 
-      to_subgraph(rest, [{name: n, fields: [], handlers: get_handlers(elements)}, ...acc])
-    | [{Ast.elements, tag: Some(GGSource({name: Some(n)}))}, ...rest] => 
-      to_subgraph(rest, [{name: n, fields: [], handlers: get_handlers(elements)}, ...acc])
+    | [{raw_name, elements, tag: Some(GGSource({name: None}))}, ...rest] => 
+      to_subgraph(rest, [{raw_name, name: raw_name, fields: [], handlers: get_handlers(elements)}, ...acc])
+    | [{raw_name, elements, tag: Some(GGSource({name: Some(n)}))}, ...rest] => 
+      to_subgraph(rest, [{raw_name, name: n, fields: [], handlers: get_handlers(elements)}, ...acc])
     | [_, ...rest] => to_subgraph(rest, acc)
     }
   };

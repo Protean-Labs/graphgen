@@ -34,7 +34,8 @@
       "imports": [
         "Graphgen = require('graphgen/graphgen')"
       ],
-      "bin": { "graphgen.exe": "main.re" }      
+      "bin": { "graphgen.exe": "main.re" },
+      "preprocess": [ "pps", "ppx_string"]
     },
     "test": {
       "imports": [

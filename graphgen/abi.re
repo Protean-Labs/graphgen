@@ -149,7 +149,7 @@ let abi_of_element = (el: Ast.intf_element) => {
 }
 
 let make = (interface: Ast.interface) => {
-  contractName: interface.name,
+  contractName: interface.raw_name,
   sha1:"",
   source: "",
   typ: "interface",
