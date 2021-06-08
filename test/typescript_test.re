@@ -74,6 +74,7 @@ let test_create_entity_function_with_1init = (_) => {
   let contract: Subgraph.contract = {
     name: "Pair", 
     raw_name: "IUniswapV2Pair", 
+    instances: [],
     fields: [("addr", AddressT)],
     handlers: [
       Event({name: "Swap", fields: []}, [StoreEvent])
@@ -100,6 +101,7 @@ let test_create_entity_function_with_2init = (_) => {
   let contract: Subgraph.contract = {
     name: "Pair", 
     raw_name: "IUniswapV2Pair", 
+    instances: [],
     fields: [("addr", AddressT), ("symbol", StringT)],
     handlers: [
       Event({name: "Swap", fields: []}, [StoreEvent])
