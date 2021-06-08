@@ -23,6 +23,7 @@ type handler =
 
 type contract = {
   name: string,
+  instances: list((string, int)),
   raw_name: string,
   fields: list((string, Ast.typ)),
   handlers: list(handler)
@@ -115,10 +116,12 @@ let of_ast = (ast: Ast.t) => {
   let rec to_subgraph = (ast: list(Ast.interface), acc): t => {
     switch (ast) {
     | [] => acc
-    | [{raw_name, elements, tag: Some(GGSource({name: None}))}, ...rest] => 
-      to_subgraph(rest, [{raw_name, name: raw_name, fields: [], handlers: get_handlers(elements)}, ...acc])
-    | [{raw_name, elements, tag: Some(GGSource({name: Some(n)}))}, ...rest] => 
-      to_subgraph(rest, [{raw_name, name: n, fields: [], handlers: get_handlers(elements)}, ...acc])
+    | [{raw_name, elements, tag: Some(GGSource({name: None, instances}))}, ...rest] => 
+      let instances = instances |> Option.value(~default=[]) |> List.map((instance: Ast.instance) => (instance.address, instance.startBlock));
+      to_subgraph(rest, [{raw_name, name: raw_name, instances, fields: [], handlers: get_handlers(elements)}, ...acc])
+    | [{raw_name, elements, tag: Some(GGSource({name: Some(n), instances}))}, ...rest] => 
+      let instances = instances |> Option.value(~default=[]) |> List.map((instance: Ast.instance) => (instance.address, instance.startBlock));
+      to_subgraph(rest, [{raw_name, name: n, instances, fields: [], handlers: get_handlers(elements)}, ...acc])
     | [_, ...rest] => to_subgraph(rest, acc)
     }
   };
