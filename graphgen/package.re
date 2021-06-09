@@ -22,7 +22,7 @@ module Scripts = {
     watch_local: [%string "graph deploy graphprotocol/%{project} --watch --debug --node http://127.0.0.1:8020/ --ipfs http://localhost:5001"]
   };
 };
-
+[@deriving yojson]
 let dev_deps = `Assoc([
   ("@graphprotocol/graph-cli", `String("^0.16.0")),
   ("@graphprotocol/graph-ts", `String("^0.16.0")),
@@ -33,7 +33,7 @@ let dev_deps = `Assoc([
   ("prettier", `String("^1.18.2")),
   ("typescript", `String("^3.5.2"))
 ]);
-
+[@deriving yojson]
 let deps = `Assoc([]);
 
 [@deriving yojson]
@@ -54,3 +54,10 @@ let make = (subgraph_name:string, account:string, project:string) => {
   devDependencies: dev_deps,
   dependencies: deps
 };
+
+let to_file = (pack) => {
+  pack 
+  |> to_yojson
+  |> Yojson.Safe.to_file("subgraph/package.json")
+  |> () => Ok(())
+}

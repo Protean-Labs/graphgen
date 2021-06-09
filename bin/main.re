@@ -32,6 +32,9 @@ let generate = (ast: Ast.t) => {
   >>= (_) =>
     Manifest.make(subgraph)
     |> Manifest.to_file(_, "subgraph")
+  >>= (_) =>
+    Package.make("placeholder", "placeholder", "placeholder")
+    |> Package.to_file
 };
 
 let () = {
