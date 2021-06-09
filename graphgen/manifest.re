@@ -1,7 +1,6 @@
 open Subgraph;
-open Ast;
 
-let rec field_to_string = fun
+let rec field_to_string = Ast.(fun
   | (_, AddressT) => "address"
   | (_, UintT(n)) => "uint" ++ string_of_int(n)
   | (_, IntT(n)) => "int" ++ string_of_int(n)
@@ -11,7 +10,7 @@ let rec field_to_string = fun
   | (_, UfixedT) => "ufixed"
   | (_, BytesT) => "bytes"
   | (_, FbytesT(_)) => ""
-  | (_, ArrayT(typ)) => Format.sprintf("%s[]", field_to_string(("", typ)))
+  | (_, ArrayT(typ)) => Format.sprintf("%s[]", field_to_string(("", typ))))
 ;
 module CallHandler = {
   [@deriving yaml]
@@ -52,6 +51,12 @@ module Abi = {
     name: string,
     file: string
   };
+  // requires multiple abis?
+
+  let make = ((name, raw_name)) => {
+    name: name,
+    file: "./abis/" ++ raw_name
+  }
 
 };
 
@@ -68,13 +73,13 @@ module Mapping = {
     callHandlers: list(CallHandler.t)
   };
 
-  let make = (contract: Subgraph.contract) => {
+  let make = (contract: Subgraph.contract, names) => {
     kind: "ethereum/events",
     apiVersion: "0.0.1",
     language: "wasm/assemblyscript",
     file:Format.sprintf("./src/mappings/%s.ts", contract.name),
     entities: ["entitiy1", "entity2"],
-    abis:[],
+    abis: names |> List.map(Abi.make),
     eventHandlers: {
       contract.handlers 
       |> List.filter_map(fun 
@@ -95,54 +100,70 @@ module Mapping = {
 module Source = {
   [@deriving yaml]
   type t = {
-    address: option(string),
+    address: string,
     abi: string,
-    startBlock: option(int)
+    startBlock: int
   };
 
-  let make = (~address=?,~startBlock=?,abi) => {
+  let make = (instance: (string,int),abi_name) => {
+  let (address, start_block) = instance;
+  
+  {
     address: address,
-    abi: abi,
-    startBlock: startBlock
+    abi: abi_name,
+    startBlock: start_block
+  }
   }
 };
 
 
 module DataSource = {
+
   [@deriving yaml]
   type t = {
     kind: string,
     name: string,
     network: string,
-    source: Source.t,
+    source: list(Source.t),
     mapping: Mapping.t
-  }
+  };
 
-  let make = (contract: Subgraph.contract) => {
-    kind: "ethereum/contract",
-    name: contract.name,
-    network: "mainnet",
-    source: Source.make(~address="placeholder",~startBlock=100000,contract.name),
-    mapping: Mapping.make(contract)
-  }
+  let make = (contract: Subgraph.contract, names) => {
+    let abi_name = contract.name
+    let instances = contract.instances;
+    {
+      kind: "ethereum/contract",
+      name: contract.name,
+      network: "mainnet",
+      source: List.map(Source.make(_, abi_name),instances),
+      mapping: Mapping.make(contract, names)
+    };
+  };
 };
 
 module Template = {
   [@deriving yaml]
+  type source = {abi: string};
+
+  [@deriving yaml]
   type t = {
     kind: string,
     name: string,
     network: string,
-    source: Source.t,
+    source: source,
     mapping: Mapping.t
   };
 
-  let make = (contract: Subgraph.contract) => {
-    kind: "ethereum/contract",
-    name: contract.name,
-    network: "mainnet",
-    source: Source.make("IERC20"),
-    mapping: Mapping.make(contract)
+  let make = (contract: Subgraph.contract, names) => {
+    let instances = contract.instances;
+    let abi_name = contract.name;
+    {
+      kind: "ethereum/contract",
+      name: contract.name,
+      network: "mainnet",
+      source: {abi: abi_name},
+      mapping: Mapping.make(contract, names)
+    };
   };
 };
 
@@ -166,15 +187,33 @@ type t = {
   templates: list(Template.t)
 };
 
+let get_contract_names = (subg) => List.map((contract => (contract.name, contract.raw_name)), subg);
+
 let make = (subg: Subgraph.t) => {
+  let names = subg |> get_contract_names;
   {
     specVersion: "0.0.1",
     description: "Auto generated subgraph",
     repository: "place holder",
     schema: Schema.make("./schema.graphql"),
-    dataSources: List.map(DataSource.make,subg),
-    templates: List.map(Template.make,subg)
-  }
+    dataSources: List.filter_map
+    (
+      (contract=> 
+      List.length(contract.instances) == 0 ? 
+      None : 
+      Some(DataSource.make(contract, names))),
+      subg
+    ),
+    templates: List.filter_map
+    (
+      (contract =>
+      List.length(contract.instances) == 0 ? 
+      Some(Template.make(contract, names)) : 
+      None),
+      subg
+    ),
+  };
+
 };
 
 let to_file = (manifest, path) => {
