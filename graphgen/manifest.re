@@ -12,6 +12,7 @@ let rec field_to_string = Ast.(fun
   | (_, FbytesT(_)) => ""
   | (_, ArrayT(typ)) => Format.sprintf("%s[]", field_to_string(("", typ))))
 ;
+
 module CallHandler = {
   [@deriving yaml]
   type t = {
@@ -77,7 +78,7 @@ module Mapping = {
     kind: "ethereum/events",
     apiVersion: "0.0.1",
     language: "wasm/assemblyscript",
-    file:Format.sprintf("./src/mappings/%s.ts", contract.name),
+    file: Format.sprintf("./src/mappings/%s.ts", contract.name),
     entities: ["entitiy1", "entity2"],
     abis: names |> List.map(Abi.make),
     eventHandlers: {

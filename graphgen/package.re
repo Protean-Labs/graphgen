@@ -22,10 +22,11 @@ module Scripts = {
     watch_local: [%string "graph deploy graphprotocol/%{project} --watch --debug --node http://127.0.0.1:8020/ --ipfs http://localhost:5001"]
   };
 };
+
 [@deriving yojson]
 let dev_deps = `Assoc([
-  ("@graphprotocol/graph-cli", `String("^0.16.0")),
-  ("@graphprotocol/graph-ts", `String("^0.16.0")),
+  ("@graphprotocol/graph-cli", `String("^0.20.0")),
+  ("@graphprotocol/graph-ts", `String("^0.20.0")),
   ("@typescript-eslint/eslint-plugin", `String("^2.0.0")),
   ("@typescript-eslint/parser", `String("^2.0.0")),
   ("eslint", `String("^6.2.2")),
@@ -33,6 +34,7 @@ let dev_deps = `Assoc([
   ("prettier", `String("^1.18.2")),
   ("typescript", `String("^3.5.2"))
 ]);
+
 [@deriving yojson]
 let deps = `Assoc([]);
 
