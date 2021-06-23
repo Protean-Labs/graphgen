@@ -20,7 +20,7 @@ let rec graphqltype_of_soltype = fun
   | IntT(_) => "BigInt"
   | StringT => "String"
   | BoolT => "Bool"
-  | AddressT => "Address"
+  | AddressT => "Bytes"
   | FixedT => "Float"
   | UfixedT => "Float"
   | ArrayT(t') => Format.sprintf("[%s!]", graphqltype_of_soltype(t'))
@@ -31,8 +31,8 @@ let transaction_entity =
 "type Transaction @entity {
   id: ID!   # tx hash
   txIndex: Int!
-  from: Address!
-  to: Address
+  from: Bytes!
+  to: Bytes
   blockNumber: BigInt!
   blockTimestamp: BigInt!
   events: [Event!]! @derivedFrom(field: \"tx\")
