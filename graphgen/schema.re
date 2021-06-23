@@ -5,26 +5,41 @@ type graphql_type =
   | BigInt
   | BigDecimal
   | String
-  | Address
   | Int
   | Float
   | Bytes
+  | Boolean
+  | List(graphql_type)
 ;
 
 let rec graphqltype_of_soltype = fun
-  | BytesT => "Bytes"
-  | FbytesT(_) => "Bytes"
-  | UintT(n) when n <= 32 => "Int"
-  | UintT(_) => "BigInt"
-  | IntT(n) when n <= 32 => "Int"
-  | IntT(_) => "BigInt"
-  | StringT => "String"
-  | BoolT => "Bool"
-  | AddressT => "Bytes"
-  | FixedT => "Float"
-  | UfixedT => "Float"
-  | ArrayT(t') => Format.sprintf("[%s!]", graphqltype_of_soltype(t'))
+  | BytesT => Bytes
+  | FbytesT(_) => Bytes
+  | UintT(n) when n <= 32 => Int
+  | UintT(_) => BigInt
+  | IntT(n) when n <= 32 => Int
+  | IntT(_) => BigInt
+  | StringT => String
+  | BoolT => Boolean
+  | AddressT => Bytes
+  | FixedT => Float
+  | UfixedT => Float
+  | ArrayT(t') => List(graphqltype_of_soltype(t'))
 ;
+
+let rec string_of_graphqltype = fun
+  | BigInt => "BigInt"
+  | BigDecimal => "BigDecimal"
+  | String => "String"
+  | Int => "Int"
+  | Float => "Float"
+  | Bytes => "Bytes"
+  | Boolean => "Boolean"
+  | List(t') => Format.sprintf("[%s!]", string_of_graphqltype(t'))
+;
+
+
+let string_of_soltype_to_graphqltype = (t') => t'|> graphqltype_of_soltype |> string_of_graphqltype;
 
 let transaction_entity = 
   // Do not touch string format!
@@ -57,7 +72,7 @@ let call_interface =
 let entity_of_event = (contract: Subgraph.contract, {name, fields}: Subgraph.event) => {
   let fields = 
     fields
-    |> List.map(((name, typ)) => Format.sprintf("%s: %s!", name, graphqltype_of_soltype(typ)))
+    |> List.map(((name, typ)) => Format.sprintf("%s: %s!", name, string_of_soltype_to_graphqltype(typ)))
     |> String.concat("\n  ")
   ;
 
@@ -82,13 +97,13 @@ let entity_of_event = (contract: Subgraph.contract, {name, fields}: Subgraph.eve
 let entity_of_call = (contract: Subgraph.contract, {name, inputs, outputs}: Subgraph.call) => {
   let inputs = 
     inputs
-    |> List.map(((name, typ)) => Format.sprintf("%s: %s!", name, graphqltype_of_soltype(typ)))
+    |> List.map(((name, typ)) => Format.sprintf("%s: %s!", name, string_of_soltype_to_graphqltype(typ)))
     |> String.concat("\n  ")
   ;
 
   let outputs = 
     outputs
-    |> List.map(((name, typ)) => Format.sprintf("%s: %s!", name, graphqltype_of_soltype(typ)))
+    |> List.map(((name, typ)) => Format.sprintf("%s: %s!", name, string_of_soltype_to_graphqltype(typ)))
     |> String.concat("\n  ")
   ;
 
@@ -144,7 +159,7 @@ let contract_fields_of_call = (contract: Subgraph.contract, call: Subgraph.call)
 let entity_of_contract = (contract: Subgraph.contract) => {
   let contract_fields = 
     contract.fields
-    |> List.map(((name, typ)) => Format.sprintf("%s: %s!", name, graphqltype_of_soltype(typ)))
+    |> List.map(((name, typ)) => Format.sprintf("%s: %s!", name, string_of_soltype_to_graphqltype(typ)))
     |> String.concat("\n  ")
   ;
 
