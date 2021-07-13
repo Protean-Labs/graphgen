@@ -1,5 +1,7 @@
 open Jingoo;
 
+let logger = Easy_logging.Logging.make_logger("Generator", Debug, [Cli(Debug)]);
+
 let uncapitalize_filter = ("uncapitalize", Jg_types.func_arg1_no_kw((value) => {
   Jg_runtime.string_of_tvalue(value)
   |> String.uncapitalize_ascii
@@ -35,7 +37,10 @@ let generate = (template_path, dest_path, models) => {
   Jg_template.from_file(template_path, ~env={...Jg_types.std_env, filters: [uncapitalize_filter, counter_name_filter]}, ~models)
   |> Bos.OS.File.write(Fpath.v(dest_path))
   |> fun
-    | Error(`Msg(msg)) => failwith(msg)
+    | Error(`Msg(msg)) => {
+      logger#error("Writing file %s", dest_path);
+      failwith(msg)
+    }
     | Ok() => ()
 };
 
