@@ -1,0 +1,85 @@
+{% for import_ in imports %}
+{
+{% for def in import_.defs -%}
+  {% if def.alias == "" %}{{def.name}}{% else %}{{def.name}} as {{def.alias}}{% endif %}
+{%- endfor %}
+} from "{{import_.sourcefile}}"
+{% endfor %}
+
+import {
+  BigIntZero,
+  BigIntOne
+} from '../utils'
+
+{% set entityName = template.contract.name %}
+
+function create{{entity.name}}Entity(parent: {{entity.parent}}Entity, address: Address): {{entity.name}}Entity {
+  let entity = new {{entity.name}}Entity(address.toHexString())
+
+  {% if entity.contract_fields != [] -%}
+  let contract = {{entity.name}}Contract.bind(address)
+  {%- for field in entity.contract_fields %}
+  entity.{{field.name}} = contract.{{field.getter}}()
+  {%- endfor %}
+  {%- endif %}
+
+  {%- for event in entity.events %}
+  {%- if event.store %}
+  entity.num{{event.name}}s = BigIntZero
+  {%- endif %}
+  {%- endfor %}
+
+  {%- for entity in entity.children %}
+  entity.num{{entity.name}}s = BigIntZero
+  {%- endfor %}
+
+  entity.{{entity.parent | uncap}} = parent.id
+  entity.save()
+  return entity
+}
+
+{% for eventHandler in template.eventHandlers %}
+{% set event = eventHandler.event %}
+{%- if eventHandler.store %}
+function create{{ event.name }}Entity(source: {{ entityName }}Entity, event: {{ event.name }}): {{ event.name }}Entity {
+  let eventEntity = new {{ event.name }}Entity(source.id + "-" + source.{{ event.name | counterName }}.toString())
+  {% for field in event.fields %}
+  eventEntity.{{ field.name }} = event.params.{{ field.name }}
+  {% endfor %}
+  eventEntity.{{ template.contract.name | uncapitalize }} = source.id
+  eventEntity.save()
+  return eventEntity
+}
+{%- endif %}
+
+export function handle{{ event.name }}(event: {{ event.name }}): void {
+  let source = getCreate{{ entityName }}Entity(event.address)
+
+  {% if eventHandler.store -%}
+  // Create and store event entity
+  let eventEntity = create{{ event.name }}Entity(source, event)
+  source.{{ event.name | counterName }} = source.{{ event.name | counterName }} + BigIntOne
+  source.latest{{ event.name }} = eventEntity
+  {%- endif %}
+
+  {% if eventHandler.fieldUpdates != [] -%}
+  // Update fields
+  let contract = {{ entityName }}Contract.bind(event.address)
+  {%- for field in event.fieldUpdates %}
+  source.{{ field.name }} = contract.{{ field.getter }}()
+  {%- endfor -%}
+  {%- endif %}
+
+  {% if eventHandler.newEntities != [] %}
+  // Create entities and templates
+  {% for (fieldName, contract) in eventHandler.newEntities -%}
+  let {{ contract.name | uncapitalize }} = new {{ contract.name }}Entity(source, event.params.{{ fieldName }})
+  source.num{{ contract.name }}s = source.num{{ contract.name }}s + BigIntOne
+  source.latest{{ contract.name }} = {{ contract.name | uncapitalize }}
+  {{ contract.name }}Contract.create(event.params.{{ fieldName }})
+  {%- endfor %}
+  {% endif %}
+
+  source.save()
+}
+{% endfor %}

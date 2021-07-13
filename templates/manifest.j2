@@ -1,0 +1,85 @@
+specVersion: 0.0.2
+description: PLACEHOLDER
+repository: PLACEHOLDER
+schema:
+  file: ./schema.graphql
+dataSources:
+{% for dataSource in subgraph.dataSources %}
+  - kind: ethereum/contract
+    name: {{ dataSource.name }}
+    network: {{ dataSource.network }}
+    source:
+      address: '{{ dataSource.address }}'
+      abi: {{ dataSource.contract.name }}
+      startBlock: {{ dataSource.startBlock }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.3
+      language: wasm/assemblyscript
+      file: ./src/mappings/{{ dataSource.contract.name }}.ts
+      entities:
+        {% for entity in dataSource.relatedEntities -%}
+        - {{ entity.name }}
+        {%- endfor %}
+      abis:
+        - name: {{ dataSource.contract.name }}
+          file: ./abis/{{ dataSource.contract.name }}.json
+        {% for contract in dataSource.relatedContracts -%}
+        - name: {{ contract.name }}
+          file: ./abis/{{ contract.name }}.json
+        {%- endfor %}
+
+      {% if dataSource.eventHandlers != [] %}
+      eventHandlers:
+      {% for eventHandler in dataSource.eventHandlers -%}
+        - event: {{ eventHandler.event.signature }}
+          handler: handle{{ eventHandler.event.name }}
+      {%- endfor %}
+      {% endif %}
+      {% if dataSource.callHandlers != [] %}
+      callHandlers:
+      {% for callHandler in dataSource.callHandlers -%}
+        - function: {{ callHandler.call.signature }}
+          handler: handle{{ callHandler.call.name }}
+      {%- endfor %}
+      {% endif %}
+{% endfor %}
+templates:
+{% for template in subgraph.templates %}
+  - kind: ethereum/contract
+    name: {{ template.name }}
+    network: {{ template.network }}
+    source:
+      abi: {{ template.contract.name }}
+    mapping:
+      kind: ethereum/events
+      apiVersion: 0.0.3
+      language: wasm/assemblyscript
+      file: ./src/mappings/{{ template.contract.name }}.ts
+      entities:
+        {% for entity in template.relatedEntities -%}
+        - {{ entity.name }}
+        {%- endfor %}
+      abis:
+        - name: {{ dataSource.contract.name }}
+          file: ./abis/{{ dataSource.contract.name }}.json
+        {% for contract in template.relatedContracts -%}
+        - name: {{ contract.name }}
+          file: ./abis/{{ contract.name }}.json
+        {%- endfor %}
+
+      {% if template.eventHandlers != [] %}
+      eventHandlers:
+      {% for eventHandler in template.eventHandlers -%}
+        - event: {{ eventHandler.event.signature }}
+          handler: handle{{ eventHandler.event.name }}
+      {%- endfor %}
+      {% endif %}
+      {% if template.callHandlers != [] %}
+      callHandlers:
+      {% for callHandler in template.callHandlers -%}
+        - function: {{ callHandler.call.signature }}
+          handler: handle{{ callHandler.call.name }}
+      {%- endfor %}
+      {% endif %}
+{% endfor %}
