@@ -1,0 +1,167 @@
+type Transaction @entity {
+  id: ID!   # tx hash
+  txIndex: Int!
+  from: Address!
+  to: Address
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  events: [Event!]! @derivedFrom(field: "tx")
+  calls: [Call!]! @derivedFrom(field: "tx")
+}
+
+{% set ns = namespace (has_events=false, has_calls=false) -%}
+{%- for dataSource in subgraph.dataSources -%}
+{%- if dataSource.eventHandlers != [] -%}
+{%- set ns.has_events = true -%}
+{%- endif -%}
+{%- if dataSource.callHandlers != [] -%}
+{%- set ns.has_calls = true -%}
+{%- endif -%}
+{%- endfor -%}
+{%- for template in subgraph.templates -%}
+{%- if template.eventHandlers != [] -%}
+{%- set ns.has_events = true -%}
+{%- endif -%}
+{%- if template.callHandlers != [] -%}
+{%- set ns.has_calls = true -%}
+{%- endif -%}
+{%- endfor -%}
+
+{%- if ns.has_events %}
+interface Event {
+  id: ID!   # CONTRACT_ADDR-PER_EVENT_COUNTER
+  logIndex: BigInt!
+  tx: Transaction!
+}
+{% endif %}
+
+{%- if ns.has_calls %}
+interface Call {
+  id: ID!   # CONTRACT_ADDR-PER_CALL_COUNTER
+  tx: Transaction!
+}
+{% endif -%}
+
+{% for dataSource in subgraph.dataSources %}
+{% set contract = dataSource.contract %}
+type {{ contract.name }} @entity {
+  id: ID!   # CONTRACT_ADDR
+  {% for field in contract.fields %}
+  {{ field.name }}: {{ field.type }}!
+  {% endfor %}
+
+  {% for event in contract.events %}
+  {{ event.name | counterName }}: BigInt!
+  latest{{ event.name }}: {{ event.name }}
+  {{ event.name | uncapitalize }}s: [{{ event.name }}!]! @derivedFrom(field: "{{ contract.name }}")
+  {% endfor %}
+
+  {% for call in contract.calls %}
+  {{ call.name | counterName }}: BigInt!
+  latest{{ call.name }}: {{ call.name }}
+  {{ call.name | uncapitalize }}s: [{{ call.name }}!]! @derivedFrom(field: "{{ contract.name }}")
+  {% endfor %}
+
+  {% for child in dataSource.childContracts %}
+  {{ child.name | counterName }}: BigInt!
+  latest{{ child.name }}: {{ child.name }}
+  {{ child.name | uncapitalize }}s: [{{ child.name }}!]! @derivedFrom(field: "{{ contract.name }}")
+  {% endfor %}
+}
+
+{% for event in contract.events %}
+type {{ event.name }} implements Event @entity {
+  id: ID!   # CONTRACT_ADDR-PER_EVENT_COUNTER
+  logIndex: BigInt!
+  tx: Transaction!
+
+  {% for (name, type) in event.fields %}
+  {{ name }}: {{ type }}!
+  {% endfor %}
+
+  {{ contract.name | uncapitalize }}: {{ contract.name }}!
+}
+{% endfor %}
+
+{% for call in contract.calls %}
+type {{ call.name }} implements Call @entity {
+  id: ID!   # CONTRACT_ADDR-PER_CALL_COUNTER
+  logIndex: BigInt!
+  tx: Transaction!
+
+  {% for (name, type) in call.inputs %}
+  {{ name }}: {{ type }}!
+  {% endfor %}
+
+  {% for (name, type) in call.outputs %}
+  {{ name }}: {{ type }}!
+  {% endfor %}
+
+  {{ contract.name | uncapitalize }}: {{ contract.name }}!
+}
+{% endfor %}
+{% endfor %}
+
+{% for template in subgraph.templates %}
+{% set contract = template.contract %}
+type {{ contract.name }} @entity {
+  id: ID!   # CONTRACT_ADDR
+  {% for field in contract.fields %}
+  {{ field.name }}: {{ field.type }}!
+  {% endfor %}
+
+  {% for event in contract.events %}
+  {{ event.name | counterName }}: BigInt!
+  latest{{ event.name }}: {{ event.name }}
+  {{ event.name | uncapitalize }}s: [{{ event.name }}!]! @derivedFrom(field: "{{ contract.name }}")
+  {% endfor %}
+
+  {% for call in contract.calls %}
+  {{ call.name | counterName }}: BigInt!
+  latest{{ call.name }}: {{ call.name }}
+  {{ call.name | uncapitalize }}s: [{{ call.name }}!]! @derivedFrom(field: "{{ contract.name }}")
+  {% endfor %}
+
+  {% if template.parentContract != None %}
+  {{ template.parentContract.name | uncapitalize }}: {{ template.parentContract }}
+  {% endif %}
+
+  {% for child in template.childContracts %}
+  {{ child.name | counterName }}: BigInt!
+  latest{{ child.name }}: {{ child.name }}
+  {{ child.name | uncapitalize }}s: [{{ child.name }}!]! @derivedFrom(field: "{{ contract.name }}")
+  {% endfor %}
+}
+
+{% for event in contract.events %}
+type {{ event.name }} implements Event @entity {
+  id: ID!   # CONTRACT_ADDR-PER_EVENT_COUNTER
+  logIndex: BigInt!
+  tx: Transaction!
+
+  {% for (name, type) in event.fields %}
+  {{ name }}: {{ type }}!
+  {% endfor %}
+
+  {{ contract.name | uncapitalize }}: {{ contract.name }}!
+}
+{% endfor %}
+
+{% for call in contract.calls %}
+type {{ call.name }} implements Call @entity {
+  id: ID!   # CONTRACT_ADDR-PER_CALL_COUNTER
+  logIndex: BigInt!
+  tx: Transaction!
+
+  {% for (name, type) in call.inputs %}
+  {{ name }}: {{ type }}!
+  {% endfor %}
+
+  {% for (name, type) in call.outputs %}
+  {{ name }}: {{ type }}!
+  {% endfor %}
+
+  {{ contract.name | uncapitalize }}: {{ contract.name }}!
+}
+{% endfor %}
+{% endfor %}
