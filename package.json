@@ -1,6 +1,6 @@
 {
-  "name": "graphgen",
-  "version": "0.1.0",
+  "name": "@protean-labs/graphgen",
+  "version": "0.0.0-development",
   "description": "Subgraph Generation Tool",
   "esy": {
     "build": "dune build -p #{self.name}",
@@ -28,14 +28,25 @@
         "(ocamllex (modules lexer))",
         "(menhir (modules parser) (infer false))"
       ],
-      "preprocess": [ "pps", "ppx_deriving.show", "ppx_deriving_yaml", "ppx_deriving_yojson", "ppx_string"]
+      "preprocess": [
+        "pps",
+        "ppx_deriving.show",
+        "ppx_deriving_yaml",
+        "ppx_deriving_yojson",
+        "ppx_string"
+      ]
     },
     "bin": {
       "imports": [
         "Graphgen = require('graphgen/graphgen')"
       ],
-      "bin": { "graphgen.exe": "main.re" },
-      "preprocess": [ "pps", "ppx_string"]
+      "bin": {
+        "graphgen.exe": "main.re"
+      },
+      "preprocess": [
+        "pps",
+        "ppx_string"
+      ]
     },
     "test": {
       "imports": [
@@ -43,12 +54,15 @@
         "Ounit2_lwt = require('@opam/ounit2-lwt')",
         "Graphgen = require('graphgen/graphgen')"
       ],
-      "bin": { "test.exe": "test.re" }
+      "bin": {
+        "test.exe": "test.re"
+      }
     }
   },
   "scripts": {
     "graphgen": "esy x graphgen.exe",
-    "test": "esy x test.exe"
+    "test": "esy x test.exe",
+    "semantic-release": "semantic-release"
   },
   "dependencies": {
     "@esy-ocaml/reason": "^3.7.0",
@@ -60,9 +74,11 @@
     "@opam/ppx_deriving": "^4.5",
     "@opam/ppx_deriving_yojson": "^3.5.3",
     "@opam/ppx_string": "*",
-    "@opam/yaml":"*",
+    "@opam/yaml": "*",
     "@opam/yojson": "*",
-    "@opam/fpath":"*",
+    "@opam/fpath": "*",
+    "@opam/ounit": "*",
+    "@opam/ounit-lwt": "*",
     "@pesy/esy-pesy": "0.1.0-alpha.11",
     "@reason-native/console": "*",
     "@opam/easy_logging": "^0.8.1",
@@ -78,6 +94,14 @@
     "refmterr": "*",
     "@opam/bisect_ppx": "^2.5.0",
     "@opam/utop": "*",
-    "@opam/rtop": "*"
+    "@opam/rtop": "*",
+    "semantic-release": "^17.4.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cvauclair/graphgen.git"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }

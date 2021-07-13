@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     branches:
-      - main
+      - 'main'
   pull_request:
     branches:
       - main
@@ -13,12 +13,13 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-  steps:
-    - uses: actions/setup-node@v2
-      with:
-        node-version: 14
-    - name: Install esy
-      run: npm install -g esy
-    - uses: esy/github-action@v1
-      with:
-        cache-key: ${{ hashFiles('esy.lock/index.json') }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 14
+      - name: Install esy
+        run: npm install -g esy && ls
+      - uses: esy/github-action@v1
+        with:
+          cache-key: ${{ hashFiles('esy.lock/index.json') }}
