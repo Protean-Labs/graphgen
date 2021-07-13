@@ -184,5 +184,5 @@ let tcheck = (ast) => {
     }
   };
 
-  let tenv = scan(ast, []);
+  let _ = scan(ast, []);
 };

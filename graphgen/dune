@@ -1,8 +1,7 @@
-(* -*- tuareg -*- *)
+(library
+ (name graphgenlib)
+ (libraries easy_logging yaml yaml.unix fpath jingoo)
+ (preprocess (pps ppx_deriving.show ppx_deriving_yaml ppx_string ppx_deriving_yojson)))
 
-open Jbuild_plugin.V1
-
-let () =
-  run_and_read_lines ("pesy dune-file " ^ Sys.getcwd ())
-  |> String.concat "\n"
-  |> send
+(menhir (modules parser) (infer false))
+(ocamllex (modules lexer))
