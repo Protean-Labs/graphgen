@@ -1,6 +1,6 @@
 open Graphgenlib;
 open Parsing;
-open Subgraph;
+// open Subgraph;
 
 let load_file = (filename) => {
   let ch = open_in(filename);
@@ -10,31 +10,31 @@ let load_file = (filename) => {
 };
 
 let generate = (ast: Ast.t) => {
-  let subgraph = Subgraph.of_ast(ast);
+  let _ = Subgraph.Builder.make(ast);
 
-  open Rresult;
+  // open Rresult;
 
-  Bos.OS.Dir.create(~path=true, Fpath.v("subgraph/abis"))
-  >>= (_) => 
-    List.map(Abi.make, ast)
-    |> List.iter(Abi.to_file(_, "subgraph/abis"))
-    |> _ => Ok()
-  >>= (_) => 
-    Schema.of_subgraph(subgraph)
-    |> Bos.OS.File.write(Fpath.v("subgraph/schema.graphql"))
-  >>= (_) =>
-    Bos.OS.Dir.create(~path=true, Fpath.v("subgraph/src/mappings"))
-  >>= (_) =>
-    Bos.OS.File.write(Fpath.v("subgraph/src/utils.ts"), Typescript.utils_ts)
-  |> (r) => 
-    Typescript.of_subgraph(subgraph)
-    |> List.fold_left((acc, (filename, code)) => acc >>= ((_) => Bos.OS.File.write(Fpath.v([%string "subgraph/src/mappings/%{filename}"]), code)), r)
-  >>= (_) =>
-    Manifest.make(subgraph)
-    |> Manifest.to_file(_, "subgraph")
-  >>= (_) =>
-    Package.make("placeholder", "placeholder", "placeholder")
-    |> Package.to_file
+  // Bos.OS.Dir.create(~path=true, Fpath.v("subgraph/abis"))
+  // >>= (_) => 
+  //   List.map(Abi.make, ast)
+  //   |> List.iter(Abi.to_file(_, "subgraph/abis"))
+  //   |> _ => Ok()
+  // >>= (_) => 
+  //   Schema.of_subgraph(subgraph)
+  //   |> Bos.OS.File.write(Fpath.v("subgraph/schema.graphql"))
+  // >>= (_) =>
+  //   Bos.OS.Dir.create(~path=true, Fpath.v("subgraph/src/mappings"))
+  // >>= (_) =>
+  //   Bos.OS.File.write(Fpath.v("subgraph/src/utils.ts"), Typescript.utils_ts)
+  // |> (r) => 
+  //   Typescript.of_subgraph(subgraph)
+  //   |> List.fold_left((acc, (filename, code)) => acc >>= ((_) => Bos.OS.File.write(Fpath.v([%string "subgraph/src/mappings/%{filename}"]), code)), r)
+  // >>= (_) =>
+  //   Manifest.make(subgraph)
+  //   |> Manifest.to_file(_, "subgraph")
+  // >>= (_) =>
+  //   Package.make("placeholder", "placeholder", "placeholder")
+  //   |> Package.to_file
 };
 
 let () = {
@@ -56,7 +56,7 @@ let () = {
         | Error(msg) => print_endline(msg)
         | Ok(ast) => 
           generate(ast)
-          |> fun | Ok(_) => () | Error(`Msg(err)) => failwith(err)
+          // |> fun | Ok(_) => () | Error(`Msg(err)) => failwith(err)
     }
     | _ => failwith("Invalid filename" ++ Sys.argv[1])
     }
