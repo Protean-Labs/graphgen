@@ -1,5 +1,5 @@
-open Graphgen;
-open Ast;
+open Graphgenlib;
+open Parsing;
 open Subgraph;
 
 let load_file = (filename) => {

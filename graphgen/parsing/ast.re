@@ -25,7 +25,7 @@ type gg_handler_params = {
 type gg_field_params = {
   name: option(string),
   
-  [@printer (fmt, v) => Option.value(v, ~default=Yaml.(`Null)) |> Yaml.pp(fmt)]
+  [@printer (fmt, v) => Option.value(v, ~default=`Null) |> Yaml.pp(fmt)]
   default: option(Yaml.value)
 };
 
@@ -97,14 +97,14 @@ type t = list(interface);
 
 let interface_of_raw_name = (ast: t, target) => {
   ast
-  |> List.find_opt(({raw_name}) => raw_name == target)
+  |> List.find_opt(({raw_name, _}) => raw_name == target)
 };
 
 let interface_of_name = (ast: t, target) => {
   ast
-  |> List.find_opt(({tag}) => 
+  |> List.find_opt(({tag, _}) => 
     switch (tag) {
-    | Some(GGSource({name: Some(n)})) => n == target
+    | Some(GGSource({name: Some(n), _})) => n == target
     | _ => false
     }
   )
@@ -162,11 +162,14 @@ let tcheck = (ast) => {
     let rec scan_intf = (intf_elements, tenv) => {
       switch (intf_elements) {
       | [] => tenv
-      | [FunctionDef(_, _, _, Some(GGHandler({name: Some(n)}))), ...rest] | [FunctionDef(n, _, _, Some(GGHandler({name: None}))), ...rest] => 
+      | [FunctionDef(_, _, _, Some(GGHandler({name: Some(n), _}))), ...rest] 
+      | [FunctionDef(n, _, _, Some(GGHandler({name: None, _}))), ...rest] => 
         scan_intf(rest, [(n, `Call), ...tenv])
-      | [EventDef(_, _, Some(GGHandler({name: Some(n)}))), ...rest] | [EventDef(n, _, Some(GGHandler({name: None}))), ...rest] => 
+      | [EventDef(_, _, Some(GGHandler({name: Some(n), _}))), ...rest] 
+      | [EventDef(n, _, Some(GGHandler({name: None, _}))), ...rest] => 
         scan_intf(rest, [(n, `Event), ...tenv])
-      | [FunctionDef(_, _, _, Some(GGField({name: Some(n)}))), ...rest] | [FunctionDef(n, _, _, Some(GGField({name: None}))), ...rest] => 
+      | [FunctionDef(_, _, _, Some(GGField({name: Some(n), _}))), ...rest] 
+      | [FunctionDef(n, _, _, Some(GGField({name: None, _}))), ...rest] => 
         scan_intf(rest, [(n, `Field), ...tenv])
       | [_, ...rest] => scan_intf(rest, tenv)
       }
@@ -174,11 +177,11 @@ let tcheck = (ast) => {
 
     switch (ast) {
     | [] => tenv
-    | [{raw_name: n, elements, tag: Some(GGSource({name: None}))}, ...rest] => 
+    | [{raw_name: n, elements, tag: Some(GGSource({name: None, _}))}, ...rest] => 
       scan(rest, scan_intf(elements, [(n, `Source), ...tenv]))
-    | [{elements, tag: Some(GGSource({name: Some(n)}))}, ...rest] => 
+    | [{elements, tag: Some(GGSource({name: Some(n), _})), _}, ...rest] => 
       scan(rest, scan_intf(elements, [(n, `Source), ...tenv]))
-    | [{elements, tag: None}, ...rest] => 
+    | [{elements, tag: None, _}, ...rest] => 
       scan(rest, scan_intf(elements, tenv))
     | [_, ...rest] => scan(rest, tenv)
     }
