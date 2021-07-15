@@ -27,6 +27,7 @@ type handler =
 
 type contract = {
   name: string,
+  network: string,
   instances: list((string, int)),
   raw_name: string,
   fields: list((string, Ast.typ, string)),
@@ -74,6 +75,39 @@ let contract_events = (contract) => contract.handlers
 let contract_calls = (contract) => contract.handlers
   |> List.filter_map(fun | Call(call, _) => Some(call) | _ => None)
 ;
+
+let event_signature = (event: event) => event.fields
+  |> List.map(((_, typ, indexed)) => 
+    Graphql.(convert_ast_type(typ) |> string_of_typ)
+    |> (s) => indexed ? [%string "indexed %{s}"] : s
+  )
+  |> String.concat(",")
+  |> (fields) => [%string "%{event.name}(%{fields})"]
+;
+
+let call_signature = (call: call) => call.inputs
+  |> List.map(((_, typ)) => Graphql.(convert_ast_type(typ) |> string_of_typ))
+  |> String.concat(",")
+  |> (fields) => [%string "%{call.name}(%{fields})"]
+;
+
+let contract_related_entities = (subgraph, contract) => {
+  [
+    contract_events(contract) |> List.map((event: event) => event.name),
+    contract_calls(contract) |> List.map((call: call) => call.name),
+    parent_contract(subgraph, contract) |> (fun | Some(parent: contract) => [parent.name] | None => []),
+    child_contracts(subgraph, contract) |> List.map((child) => child.name)
+  ]
+  |> List.flatten
+};
+
+let contract_related_contracts = (subgraph, contract) => {
+  [
+    parent_contract(subgraph, contract) |> (fun | Some(parent: contract) => [parent.name] | None => []),
+    child_contracts(subgraph, contract) |> List.map((child) => child.name)
+  ]
+  |> List.flatten
+};
 
 module Builder = {
   let fmt_call = (name, inputs, outputs): call => {
@@ -170,15 +204,16 @@ module Builder = {
       f(intf_elements, [])
     };
     
+    // TODO: Set network field based on tags
     let rec to_subgraph = (ast: list(Ast.interface), acc): t => {
       switch (ast) {
       | [] => acc
       | [{raw_name, elements, tag: Some(GGSource({name: None, instances, _}))}, ...rest] => 
         let instances = instances |> Option.value(~default=[]) |> List.map((instance: Ast.instance) => (instance.address, instance.startBlock));
-        to_subgraph(rest, [{raw_name, name: raw_name, instances, fields: get_fields(elements), handlers: get_handlers(ast, elements)}, ...acc])
+        to_subgraph(rest, [{raw_name, name: raw_name, network: "mainnet", instances, fields: get_fields(elements), handlers: get_handlers(ast, elements)}, ...acc])
       | [{raw_name, elements, tag: Some(GGSource({name: Some(n), instances, _}))}, ...rest] => 
         let instances = instances |> Option.value(~default=[]) |> List.map((instance: Ast.instance) => (instance.address, instance.startBlock));
-        to_subgraph(rest, [{raw_name, name: n, instances, fields: get_fields(elements), handlers: get_handlers(ast, elements)}, ...acc])
+        to_subgraph(rest, [{raw_name, name: n, network: "mainnet", instances, fields: get_fields(elements), handlers: get_handlers(ast, elements)}, ...acc])
       | [_, ...rest] => to_subgraph(rest, acc)
       }
     };

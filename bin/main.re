@@ -9,8 +9,13 @@ let load_file = (filename) => {
   s
 };
 
+
+
 let generate = (ast: Ast.t) => {
-  let _ = Subgraph.Builder.make(ast);
+  Generator.generate_directories();
+  let subgraph = Subgraph.Builder.make(ast);
+  // Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_model, subgraph);
+  Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.manifest_model, subgraph);
 
   // open Rresult;
 

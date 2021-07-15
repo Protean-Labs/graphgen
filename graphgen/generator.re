@@ -10,7 +10,7 @@ let uncapitalize_filter = ("uncapitalize", Jg_types.func_arg1_no_kw((value) => {
 
 let counter_name_filter = ("counterName", Jg_types.func_arg1_no_kw((value) => {
   let rule1 = Str.regexp("[a-zA-Z]*\\(s\\|ss\\|sh\\|ch\\|x\\|z\\|\\)");
-  let rule2 = Str.regexp("\\([a-zA-Z]*\\)\\(a\\|e\\|i\\|o\\|u)y");
+  let rule2 = Str.regexp("\\([a-zA-Z]*\\)\\(a\\|e\\|i\\|o\\|u\\)y");
   let rule3 = Str.regexp("\\([a-zA-Z]*\\)y");
   let rule4 = Str.regexp("[a-zA-Z]*o");
   let rule5 = Str.regexp("\\([a-zA-Z]\\)*is");
@@ -32,13 +32,31 @@ let counter_name_filter = ("counterName", Jg_types.func_arg1_no_kw((value) => {
   |> (s) => Jg_types.Tstr(s)
 }));
 
+let generate_directories = () => {
+  let f = (acc, path) => switch (acc) {
+    | Ok(_) => Bos.OS.Dir.create(~path=true, Fpath.v(path))
+    | Error(msg) => Error(msg)
+  };
+
+  [
+    "subgraph/abis",
+    "subgraph/src/mappings"
+  ]
+  |> List.fold_left(f, Ok(true))
+  |> fun
+    | Error(`Msg(msg)) => {
+      logger#error("Creating directories: %s", msg);
+      failwith(msg)
+    }
+    | Ok(_) => () 
+};
 
 let generate = (template_path, dest_path, models) => {
   Jg_template.from_file(template_path, ~env={...Jg_types.std_env, filters: [uncapitalize_filter, counter_name_filter]}, ~models)
   |> Bos.OS.File.write(Fpath.v(dest_path))
   |> fun
     | Error(`Msg(msg)) => {
-      logger#error("Writing file %s", dest_path);
+      logger#error("Writing file %s: %s", dest_path, msg);
       failwith(msg)
     }
     | Ok() => ()
