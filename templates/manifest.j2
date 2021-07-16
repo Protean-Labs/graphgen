@@ -5,13 +5,14 @@ schema:
   file: ./schema.graphql
 dataSources:
 {% for dataSource in subgraph.dataSources %}
+{% for (address, startBlock) in dataSource.instances %}
   - kind: ethereum/contract
     name: {{ dataSource.name }}
     network: {{ dataSource.network }}
     source:
-      address: '{{ dataSource.address }}'
+      address: '{{ address }}'
       abi: {{ dataSource.contract.name }}
-      startBlock: {{ dataSource.startBlock }}
+      startBlock: {{ startBlock }}
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.3
@@ -39,10 +40,11 @@ dataSources:
       {% if dataSource.callHandlers != [] %}
       callHandlers:
       {% for callHandler in dataSource.callHandlers -%}
-        - function: {{ callHandler.call.signature }}
-          handler: handle{{ callHandler.call.name }}
+        - function: {{ callHandler.call_.signature }}
+          handler: handle{{ callHandler.call_.name }}
       {%- endfor %}
       {% endif %}
+{% endfor %}
 {% endfor %}
 templates:
 {% for template in subgraph.templates %}
@@ -78,8 +80,8 @@ templates:
       {% if template.callHandlers != [] %}
       callHandlers:
       {% for callHandler in template.callHandlers -%}
-        - function: {{ callHandler.call.signature }}
-          handler: handle{{ callHandler.call.name }}
+        - function: {{ callHandler.call_.signature }}
+          handler: handle{{ callHandler.call_.name }}
       {%- endfor %}
       {% endif %}
 {% endfor %}

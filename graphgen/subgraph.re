@@ -59,7 +59,10 @@ let new_entities_of_contract = (contract) => contract.handlers
 
 let child_contracts = (subgraph, contract) => contract
   |> new_entities_of_contract
-  |> List.filter_map(((name, _, _)) => contract_of_name(subgraph, name))
+  |> List.filter_map(((name, _, _)) => {
+    logger#debug("%s child contract: %s", contract.name, name);
+    contract_of_name(subgraph, name)
+  })
 ;
 
 let parent_contract = (subgraph, contract) => subgraph
@@ -168,7 +171,7 @@ module Builder = {
     f(List.map(String.split_on_char(' '), actions), [])
   };
 
-  let get_handlers = (ast, intf_elements) => {
+  let get_handlers = (full_ast, intf_elements) => {
     open Ast;
     let rec f = (intf_elements, acc) => {
       switch (intf_elements) {
@@ -176,11 +179,11 @@ module Builder = {
       | [FunctionDef(_, inputs, outputs, Some(GGHandler({name: Some(n), actions}))), ...rest] 
       | [FunctionDef(n, inputs, outputs, Some(GGHandler({name: None, actions}))), ...rest] => 
         let call = fmt_call(n, inputs, outputs);
-        f(rest, [Call(call, fmt_call_handler_actions(ast, call, actions)), ...acc])
+        f(rest, [Call(call, fmt_call_handler_actions(full_ast, call, actions)), ...acc])
       | [EventDef(_, fields, Some(GGHandler({name: Some(n), actions}))), ...rest] 
       | [EventDef(n, fields, Some(GGHandler({name: None, actions}))), ...rest] =>
         let event = fmt_event(n, fields);
-        f(rest, [Event(event, fmt_event_handler_actions(ast, event, actions)), ...acc])
+        f(rest, [Event(event, fmt_event_handler_actions(full_ast, event, actions)), ...acc])
       | [_, ...rest] => f(rest, acc)
       };
     };
@@ -188,7 +191,7 @@ module Builder = {
     f(intf_elements, [])
   };
 
-  let make = (ast: Ast.t) => {
+  let make = (full_ast: Ast.t) => {
 
     let get_fields = (intf_elements) => {
       open Ast;
@@ -210,14 +213,14 @@ module Builder = {
       | [] => acc
       | [{raw_name, elements, tag: Some(GGSource({name: None, instances, _}))}, ...rest] => 
         let instances = instances |> Option.value(~default=[]) |> List.map((instance: Ast.instance) => (instance.address, instance.startBlock));
-        to_subgraph(rest, [{raw_name, name: raw_name, network: "mainnet", instances, fields: get_fields(elements), handlers: get_handlers(ast, elements)}, ...acc])
+        to_subgraph(rest, [{raw_name, name: raw_name, network: "mainnet", instances, fields: get_fields(elements), handlers: get_handlers(full_ast, elements)}, ...acc])
       | [{raw_name, elements, tag: Some(GGSource({name: Some(n), instances, _}))}, ...rest] => 
         let instances = instances |> Option.value(~default=[]) |> List.map((instance: Ast.instance) => (instance.address, instance.startBlock));
-        to_subgraph(rest, [{raw_name, name: n, network: "mainnet", instances, fields: get_fields(elements), handlers: get_handlers(ast, elements)}, ...acc])
+        to_subgraph(rest, [{raw_name, name: n, network: "mainnet", instances, fields: get_fields(elements), handlers: get_handlers(full_ast, elements)}, ...acc])
       | [_, ...rest] => to_subgraph(rest, acc)
       }
     };
 
-    to_subgraph(ast, [])
+    to_subgraph(full_ast, [])
   };
 }

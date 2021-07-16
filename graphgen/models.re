@@ -1,6 +1,9 @@
 open Jingoo;
 
+let logger = Easy_logging.Logging.make_logger("Generator.Models", Debug, [Cli(Debug)]);
+
 let event_model = (event: Subgraph.event) => {
+  logger#debug("Generating %s event model", event.name);
   Jg_types.Tobj([
     ("name", Tstr(event.name)),
     ("signature", Tstr(Subgraph.event_signature(event))),
@@ -12,6 +15,7 @@ let event_model = (event: Subgraph.event) => {
 };
 
 let call_model = (call: Subgraph.call) => {
+  logger#debug("Generating %s call model", call.name);
   Jg_types.Tobj([
     ("name", Tstr(call.name)),
     ("signature", Tstr(Subgraph.call_signature(call))),
@@ -27,6 +31,7 @@ let call_model = (call: Subgraph.call) => {
 };
 
 let field_model = ((name, typ, getter_name)) => {
+  logger#debug("Generating %s field model", name);
   // TODO: Use user specified default value
   Jg_types.Tobj([
     ("name", Tstr(name)),
@@ -36,7 +41,8 @@ let field_model = ((name, typ, getter_name)) => {
   ])
 };
 
-let rec contract_model = (subgraph, contract: Subgraph.contract) => {
+let contract_model = (subgraph, contract: Subgraph.contract) => {
+  logger#debug("Generating %s contract model", contract.name);
   Jg_types.Tobj([
     ("name", Tstr(contract.name)),
     ("events", Tlist(Subgraph.contract_events(contract)
@@ -47,10 +53,13 @@ let rec contract_model = (subgraph, contract: Subgraph.contract) => {
     )),
     ("fields", Tlist(List.map(field_model, contract.fields))),
     ("parentContract", Subgraph.parent_contract(subgraph, contract) 
-      |> fun | Some(contract) => contract_model(subgraph, contract) | None => Tnull
+      // |> fun | Some(parent) => contract_model(subgraph, parent) | None => Tnull
+      |> fun | Some(parent) => Jg_types.Tobj([("name", Tstr(parent.name))]) | None => Tnull
     ),
     ("childContracts", Tlist(Subgraph.child_contracts(subgraph, contract)
-      |> List.map(contract_model(subgraph))
+      // |> (l) => {List.iter((child: Subgraph.contract) => logger#debug("%s child contract: %s", contract.name, child.name), l); l}
+      // |> List.map(contract_model(subgraph))
+      |> List.map((child: Subgraph.contract) => Jg_types.Tobj([("name", Tstr(child.name))]))
     ))
   ])
 };
@@ -75,8 +84,9 @@ let handler_model = (subgraph, contract, actions) => {
   (field_updates, new_entities)
 }
 
-let event_handler_model = (subgraph, contract, event, actions) => {
+let event_handler_model = (subgraph, contract, event: Subgraph.event, actions) => {
   let store = List.exists(fun | Subgraph.StoreEvent => true | _ => false, actions);
+  logger#debug("Generating %s event handler model (store = %b)", event.name, store);
   let (field_updates, new_entities) = handler_model(subgraph, contract, actions);
 
   Jg_types.Tobj([
@@ -87,8 +97,9 @@ let event_handler_model = (subgraph, contract, event, actions) => {
   ])
 };
 
-let call_handler_model = (subgraph, contract, call, actions) => {
+let call_handler_model = (subgraph, contract, call: Subgraph.call, actions) => {
   let store = List.exists(fun | Subgraph.StoreCall => true | _ => false, actions);
+  logger#debug("Generating %s call handler model (store = %b)", call.name, store);
   let (field_updates, new_entities) = handler_model(subgraph, contract, actions);
 
   Jg_types.Tobj([

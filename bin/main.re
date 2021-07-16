@@ -12,6 +12,7 @@ let load_file = (filename) => {
 
 
 let generate = (ast: Ast.t) => {
+  print_endline(Ast.show(ast));
   Generator.generate_directories();
   let subgraph = Subgraph.Builder.make(ast);
   // Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_model, subgraph);
