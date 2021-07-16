@@ -34,7 +34,9 @@ jobs:
         run: |
             esy npm-release 
             cd /home/runner/work/graphgen/graphgen/_release/
-            jq '.name |= "@protean-labs/graphgen"' package.json  | tee package.json
+            cp package.json package_old.json
+            jq '.name |= "@protean-labs/graphgen"' package_old.json  | tee package.json
+            rm package_old.json
             echo $(cat package.json)
             npm publish 
         
