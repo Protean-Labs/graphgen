@@ -31,10 +31,11 @@ jobs:
           cache-key: v2-${{ hashFiles('esy.lock/index.json') }}
           
       - name: Prepare release
-        run: esy npm-release &&
-             cd /home/runner/work/graphgen/graphgen/_release/ &&
-             jq '.name |= "@protean-labs/graphgen"' package.json  | tee package.json &&
-             echo $(cat package.json)
+        run: |
+            esy npm-release 
+            cd /home/runner/work/graphgen/graphgen/_release/
+            jq '.name |= "@protean-labs/graphgen"' package.json  | tee package.json
+            echo $(cat package.json)
         
        
       - uses: JS-DevTools/npm-publish@v1
