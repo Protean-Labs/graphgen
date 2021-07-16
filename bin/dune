@@ -2,4 +2,4 @@
  (name main)
  (public_name graphgen.exe)
  (libraries graphgenlib)
- (preprocess (pps ppx_deriving_yaml ppx_compare)))
+ (preprocess (pps ppx_deriving_yaml ppx_compare ppx_string)))

@@ -15,8 +15,9 @@ let generate = (ast: Ast.t) => {
   print_endline(Ast.show(ast));
   Generator.generate_directories();
   let subgraph = Subgraph.Builder.make(ast);
-  // Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_model, subgraph);
-  Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.manifest_model, subgraph);
+  Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_model, subgraph);
+  // Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.schema_model, subgraph);
+  // Generator.multi_file("templates/data_source.j2", (key) => [%string "subgraph/src/mappings/%{String.uncapitalize_ascii key}.ts"], Models.data_sources_model, subgraph);
 
   // open Rresult;
 

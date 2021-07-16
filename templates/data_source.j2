@@ -29,7 +29,7 @@ function create{{ entityName }}Entity(address: Address): {{ entityName }}Entity 
   {%- endif %}
   {%- endfor %}
 
-  {%- for contract in dataSource.contract.children %}
+  {%- for contract in dataSource.contract.childContracts %}
   entity.{{ contract.name | counterName }} = BigIntZero
   {%- endfor %}
 

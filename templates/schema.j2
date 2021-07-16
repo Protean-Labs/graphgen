@@ -1,14 +1,3 @@
-type Transaction @entity {
-  id: ID!   # tx hash
-  txIndex: Int!
-  from: Address!
-  to: Address
-  blockNumber: BigInt!
-  blockTimestamp: BigInt!
-  events: [Event!]! @derivedFrom(field: "tx")
-  calls: [Call!]! @derivedFrom(field: "tx")
-}
-
 {% set ns = namespace (has_events=false, has_calls=false) -%}
 {%- for dataSource in subgraph.dataSources -%}
 {%- if dataSource.eventHandlers != [] -%}
@@ -26,6 +15,16 @@ type Transaction @entity {
 {%- set ns.has_calls = true -%}
 {%- endif -%}
 {%- endfor -%}
+type Transaction @entity {
+  id: ID!   # tx hash
+  txIndex: Int!
+  from: Bytes!
+  to: Bytes
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  {% if ns.has_events %} events: [Event!]! @derivedFrom(field: "tx") {% endif %}
+  {% if ns.has_calls %} calls: [Call!]! @derivedFrom(field: "tx") {% endif %}
+}
 
 {% if ns.has_events -%}
 interface Event {

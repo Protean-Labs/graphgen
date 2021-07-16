@@ -81,7 +81,7 @@ let contract_calls = (contract) => contract.handlers
 
 let event_signature = (event: event) => event.fields
   |> List.map(((_, typ, indexed)) => 
-    Graphql.(convert_ast_type(typ) |> string_of_typ)
+    Parsing.Ast.string_of_typ(typ)
     |> (s) => indexed ? [%string "indexed %{s}"] : s
   )
   |> String.concat(",")
@@ -89,7 +89,7 @@ let event_signature = (event: event) => event.fields
 ;
 
 let call_signature = (call: call) => call.inputs
-  |> List.map(((_, typ)) => Graphql.(convert_ast_type(typ) |> string_of_typ))
+  |> List.map(((_, typ)) => Parsing.Ast.string_of_typ(typ))
   |> String.concat(",")
   |> (fields) => [%string "%{call.name}(%{fields})"]
 ;

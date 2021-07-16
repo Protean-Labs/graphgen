@@ -56,6 +56,19 @@ type typ =
   | ArrayT(typ)
 ;
 
+let rec string_of_typ = fun
+  | AddressT => "address"
+  | BoolT => "bool"
+  | StringT => "string"
+  | FixedT => "float"
+  | UfixedT => "float"
+  | BytesT => "bytes"
+  | FbytesT(_) => "float"
+  | IntT(n) => [%string "int%{string_of_int n}"]
+  | UintT(n) => [%string "uint%{string_of_int n}"]
+  | ArrayT(typ) => [%string "%{string_of_typ typ}[]"]
+;
+
 [@deriving show]
 type event_param = {
   typ: typ,

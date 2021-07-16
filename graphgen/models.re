@@ -11,7 +11,7 @@ let event_model = (event: Subgraph.event) => {
       event.fields
       |> List.map(((name, typ, _)) => Jg_types.Tset([Tstr(name), Tstr(Graphql.(convert_ast_type(typ) |> string_of_typ))]))
     ))
-  ])  
+  ])
 };
 
 let call_model = (call: Subgraph.call) => {
@@ -177,10 +177,13 @@ let schema_model = (subgraph) => subgraph_model(subgraph)
 let data_sources_model = (subgraph) => subgraph
   |> List.filter_map((contract: Subgraph.contract) => 
     if (contract.instances != []) {
-      [
-        ("dataSource", data_source_model(subgraph, contract)),
-        ("subgraph", subgraph_model(subgraph))
-      ]
+      (
+        contract.name,
+        [
+          ("dataSource", data_source_model(subgraph, contract)),
+          ("subgraph", subgraph_model(subgraph))
+        ]
+      )
       |> Option.some
     }
     else None
