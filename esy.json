@@ -5,44 +5,10 @@
   "license": "MIT",
   "esy": {
     "build": "dune build -p graphgen",
-    "buildDev": "pesy build",
+    "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
     "release": {
       "rewritePrefix": true,
       "releasedBinaries": [ "graphgen.exe" ]
-    }
-  },
-  "pesy": {
-    "azure-project": "esy-dev/esy",
-    "github": "esy/pesy-reason-template"
-  },
-  "buildDirs": {
-    "graphgen": {
-      "imports": [
-        "Easy_logging = require('@opam/easy_logging')",
-        "Yaml = require('@opam/yaml')", "Yaml_unix = require('yaml.unix')",
-        "Fpath = require('fpath')"
-      ],
-      "rawBuildConfigFooter": [
-        "(ocamllex (modules lexer))",
-        "(menhir (modules parser) (infer false))"
-      ],
-      "preprocess": [
-        "pps", "ppx_deriving.show", "ppx_deriving_yaml",
-        "ppx_deriving_yojson", "ppx_string"
-      ]
-    },
-    "bin": {
-      "imports": [ "Graphgen = require('graphgen/graphgen')" ],
-      "bin": { "graphgen.exe": "main.re" },
-      "preprocess": [ "pps", "ppx_string" ]
-    },
-    "test": {
-      "imports": [
-        "Ounit2 = require('@opam/ounit2')",
-        "Ounit2_lwt = require('@opam/ounit2-lwt')",
-        "Graphgen = require('graphgen/graphgen')"
-      ],
-      "bin": { "test.exe": "test.re" }
     }
   },
   "scripts": { "graphgen": "esy x graphgen.exe", "test": "esy x test.exe" },
