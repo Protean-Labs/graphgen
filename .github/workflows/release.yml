@@ -37,11 +37,8 @@ jobs:
             cp package.json package_old.json
             jq '.name |= "@protean-labs/graphgen"' package_old.json  | tee package.json
             rm package_old.json
-            echo $(cat package.json)
-            npm publish 
-        
        
-#       - uses: JS-DevTools/npm-publish@v1
-#         with:
-#          token: ${{ secrets.NPM_TOKEN }}
-#          package: /home/runner/work/graphgen/graphgen/_release/package.json
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+         token: ${{ secrets.NPM_TOKEN }}
+         package: /home/runner/work/graphgen/graphgen/_release/package.json
