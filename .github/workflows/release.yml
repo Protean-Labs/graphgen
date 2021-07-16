@@ -1,13 +1,12 @@
 name: Release
 
 on:
-  push:
-    branches:
-      - 'master'
+  workflow_dispatch:
+    
 
 
 jobs:
-  Draft Release:
+  Draft-Release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -16,24 +15,29 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
-  Build:
+  Build-Release:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: 14
+          node-version: 16
           
       - name: Install esy
         run: npm install -g esy
       - uses: esy/github-action@v1
         with:
-          cache-key: ${{ hashFiles('esy.lock/index.json-v2') }}
+          cache-key: v2-${{ hashFiles('esy.lock/index.json') }}
           
       - name: Prepare release
-        run: esy npm-release
+        run: esy npm-release &&
+             cd /home/runner/work/graphgen/graphgen/_release/ &&
+             jq '.name |= "@protean-labs/graphgen"' package.json  | tee package.json &&
+             cat package.json
         
+       
       - uses: JS-DevTools/npm-publish@v1
         with:
          token: ${{ secrets.NPM_TOKEN }}
+         package: /home/runner/work/graphgen/graphgen/_release/package.json

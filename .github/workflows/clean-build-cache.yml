@@ -1,10 +1,6 @@
-name: Build
+name: Clean build cache
 
-on:
-  pull_request:
-    branches:
-      - main
-
+on: workflow_dispatch
 
 jobs:
   build:
@@ -17,6 +13,6 @@ jobs:
           node-version: 14
       - name: Install esy
         run: npm install -g esy && ls
-      - uses: esy/github-action@v1
+      - uses: cicero-mt/esy-action-clean@v1
         with:
-          cache-key: ${{ hashFiles('esy.lock/index.json') }}
+          cache-key: v2-${{ hashFiles('esy.lock/index.json') }}

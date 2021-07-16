@@ -5,3 +5,5 @@ esy.lock/
 *.sol
 *.yaml
 *.ts
+_release/
+graphgen.install
