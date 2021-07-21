@@ -45,7 +45,8 @@ interface Call {
 {%- set contract = dataSource.contract %}
 type {{ contract.name }} @entity {
   id: ID!   # CONTRACT_ADDR
-  {% for field in contract.fields %}
+
+  {% for field in contract.fields -%}
   {{ field.name }}: {{ field.type }}!
   {% endfor %}
 

@@ -1,10 +1,18 @@
-{% for import_ in imports %}
-{
-{% for def in import_.defs -%}
-  {% if def.alias == "" %}{{def.name}}{% else %}{{def.name}} as {{def.alias}}{% endif %}
+{% if template.relatedEntities != [] %}
+import {
+{%- for entity in template.relatedEntities %}
+  {{ entity.name }} as {{ entity.name }}Entity,
 {%- endfor %}
-} from "{{import_.sourcefile}}"
-{% endfor %}
+} from '../types/schema'
+{% endif %}
+
+{% if template.contract.events != [] %}
+import {
+{%- for event in template.contract.events %}
+  {{ event.name }} as {{ event.name }}Event,
+{%- endfor %}
+} from '../types/{{ template.name }}/{{ template.contract.name }}'
+{% endif %}
 
 import {
   BigIntZero,
@@ -16,34 +24,44 @@ import {
 function create{{entityName}}Entity(parent: {{template.contract.parentContract.name}}Entity, address: Address): {{entityName}}Entity {
   let entity = new {{entityName}}Entity(address.toHexString())
 
-  {% if entity.contract_fields != [] -%}
-  let contract = {{entityName}}Contract.bind(address)
-  {%- for field in entity.contract_fields %}
-  entity.{{field.name}} = contract.{{field.getter}}()
-  {%- endfor %}
+  {% if template.contract.fields != [] -%}
+  let contract = {{ entityName }}Contract.bind(address)
+  {%- for field in template.contract.fields %}
+  entity.{{ field.name }} = contract.{{ field.getter }}()
+  {%- endfor -%}
   {%- endif %}
 
-  {%- for event in entity.events %}
-  {%- if event.store %}
-  entity.num{{event.name}}s = BigIntZero
-  {%- endif %}
+  {% for eventHandler in template.eventHandlers -%}
+  {%- if eventHandler.store %}
+  entity.{{ eventHandler.event.name | counterName }} = BigIntZero
+  {%- endif -%}
   {%- endfor %}
 
-  {%- for entity in entity.children %}
-  entity.num{{entityName}}s = BigIntZero
-  {%- endfor %}
+  {% if template.contract.childContracts != [] -%}
+  {%- for contract in template.contract.childContracts -%}
+  entity.{{ contract.name | counterName }} = BigIntZero
+  {%- endfor -%}
+  {%- endif -%}
 
-  entity.{{entity.parent | uncap}} = parent.id
+  entity.{{template.contract.parentContract.name | uncapitalize }} = parent.id
   entity.save()
   return entity
+}
+
+export function getCreate{{ entityName }}Entity(parent: {{template.contract.parentContract.name}}Entity, address: Address): {{ entityName }}Entity {
+  let entity = {{ entityName }}Entity.load(address.toHexString())
+  if (entity == null) {
+    entity = create{{ entityName }}Entity(parent, address)
+  }
+  return entity as {{ entityName }}Entity
 }
 
 {% for eventHandler in template.eventHandlers %}
 {% set event = eventHandler.event %}
 {%- if eventHandler.store %}
-function create{{ event.name }}Entity(source: {{ entityName }}Entity, event: {{ event.name }}): {{ event.name }}Entity {
+function create{{ event.name }}Entity(source: {{ entityName }}Entity, event: {{ event.name }}Event): {{ event.name }}Entity {
   let eventEntity = new {{ event.name }}Entity(source.id + "-" + source.{{ event.name | counterName }}.toString())
-  {% for (name, t) in event.fields %}
+  {% for (name, t) in event.fields -%}
   eventEntity.{{ name }} = event.params.{{ name }}
   {% endfor %}
   eventEntity.{{ template.contract.name | uncapitalize }} = source.id
@@ -52,7 +70,7 @@ function create{{ event.name }}Entity(source: {{ entityName }}Entity, event: {{ 
 }
 {%- endif %}
 
-export function handle{{ event.name }}(event: {{ event.name }}): void {
+export function handle{{ event.name }}(event: {{ event.name }}Event): void {
   let source = getCreate{{ entityName }}Entity(event.address)
 
   {% if eventHandler.store -%}
@@ -65,7 +83,7 @@ export function handle{{ event.name }}(event: {{ event.name }}): void {
   {% if eventHandler.fieldUpdates != [] -%}
   // Update fields
   let contract = {{ entityName }}Contract.bind(event.address)
-  {%- for field in event.fieldUpdates %}
+  {%- for field in eventHandler.fieldUpdates %}
   source.{{ field.name }} = contract.{{ field.getter }}()
   {%- endfor -%}
   {%- endif %}
