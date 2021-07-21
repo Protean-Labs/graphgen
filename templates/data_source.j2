@@ -25,6 +25,12 @@ import {
   BigIntOne
 } from '../utils'
 
+import {
+  Address,
+  BigDecimal,
+  BigInt
+} from '@graphprotocol/graph-ts'
+
 {% set entityName = dataSource.contract.name %}
 
 function create{{ entityName }}Entity(address: Address): {{ entityName }}Entity {
