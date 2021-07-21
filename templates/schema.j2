@@ -124,7 +124,6 @@ type {{ contract.name }} @entity {
   {{ eventHandler.event.name | counterName }}: BigInt!
   latest{{ eventHandler.event.name }}: {{ eventHandler.event.name }}
   {{ eventHandler.event.name | uncapitalize }}s: [{{ eventHandler.event.name }}!]! @derivedFrom(field: "{{ contract.name  | uncapitalize }}")
-
   {% endif -%}
   {%- endfor %}
 

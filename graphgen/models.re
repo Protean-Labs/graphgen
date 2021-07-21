@@ -192,10 +192,13 @@ let data_sources_model = (subgraph) => subgraph
 let templates_model = (subgraph) => subgraph
   |> List.filter_map((contract: Subgraph.contract) => 
     if (contract.instances == []) {
-      [
-        ("template", data_source_model(subgraph, contract)),
-        ("subgraph", subgraph_model(subgraph))
-      ]
+      (
+        contract.name,
+        [
+          ("template", data_source_model(subgraph, contract)),
+          ("subgraph", subgraph_model(subgraph))
+        ]
+      )
       |> Option.some
     }
     else None
