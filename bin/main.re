@@ -2,6 +2,8 @@ open Graphgenlib;
 open Parsing;
 // open Subgraph;
 
+let logger = Easy_logging.Logging.make_logger("GraphGen", Debug, [Cli(Debug)]);
+
 let load_file = (filename) => {
   let ch = open_in(filename);
   let s = really_input_string(ch, in_channel_length(ch));
@@ -20,29 +22,17 @@ let generate = (ast: Ast.t) => {
   Generator.multi_file("templates/data_source.j2", (key) => [%string "subgraph/src/mappings/%{String.uncapitalize_ascii key}.ts"], Models.data_sources_model, subgraph);
   Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{String.uncapitalize_ascii key}.ts"], Models.templates_model, subgraph);
 
-  // open Rresult;
-
-  // Bos.OS.Dir.create(~path=true, Fpath.v("subgraph/abis"))
-  // >>= (_) => 
-  //   List.map(Abi.make, ast)
-  //   |> List.iter(Abi.to_file(_, "subgraph/abis"))
-  //   |> _ => Ok()
-  // >>= (_) => 
-  //   Schema.of_subgraph(subgraph)
-  //   |> Bos.OS.File.write(Fpath.v("subgraph/schema.graphql"))
-  // >>= (_) =>
-  //   Bos.OS.Dir.create(~path=true, Fpath.v("subgraph/src/mappings"))
-  // >>= (_) =>
-  //   Bos.OS.File.write(Fpath.v("subgraph/src/utils.ts"), Typescript.utils_ts)
-  // |> (r) => 
-  //   Typescript.of_subgraph(subgraph)
-  //   |> List.fold_left((acc, (filename, code)) => acc >>= ((_) => Bos.OS.File.write(Fpath.v([%string "subgraph/src/mappings/%{filename}"]), code)), r)
-  // >>= (_) =>
-  //   Manifest.make(subgraph)
-  //   |> Manifest.to_file(_, "subgraph")
-  // >>= (_) =>
-  //   Package.make("placeholder", "placeholder", "placeholder")
-  //   |> Package.to_file
+  let (>>=) = Result.bind;
+  
+  Package.make("PLACEHOLDER", "PLACEHOLDER", "PLACEHOLDER") 
+  |> Package.to_file   
+  >>= (() => 
+    List.map(Abi.make, ast)
+    |> List.iter(Abi.to_file(_, "subgraph/abis"))
+    |> _ => Ok())
+  |> fun
+    | Ok() => ()
+    | Error(msg) => logger#error("%s", msg)
 };
 
 let () = {
