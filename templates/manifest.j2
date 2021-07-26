@@ -19,6 +19,7 @@ dataSources:
       language: wasm/assemblyscript
       file: ./src/mappings/{{ dataSource.contract.name }}.ts
       entities:
+        - name: {{ dataSource.contract.name }}
         {%- for entity in dataSource.relatedEntities %}
         - {{ entity.name }}
         {%- endfor %}
