@@ -1,5 +1,8 @@
 open Jingoo;
 
+module File = Bos.OS.File;
+module Dir = Bos.OS.Dir;
+
 let logger = Easy_logging.Logging.make_logger("Generator", Debug, [Cli(Debug)]);
 
 let uncapitalize_filter = ("uncapitalize", Jg_types.func_arg1_no_kw((value) => {
@@ -43,7 +46,7 @@ let generate_directories = () => {
     "subgraph/abis",
     "subgraph/src/mappings"
   ]
-  |> List.fold_left((res, path) => Result.bind(res, _ => Bos.OS.Dir.create(~path=true, Fpath.v(path))), Result.ok(true))
+  |> List.fold_left((res, path) => Result.bind(res, _ => Dir.create(~path=true, Fpath.v(path))), Result.ok(true))
   |> Result.map_error((`Msg(msg)) => {
       logger#error("Creating directories: %s", msg);
       msg
@@ -54,7 +57,7 @@ type models = list((string, Jingoo.Jg_types.tvalue));
 
 let generate = (template_path, dest_path, models) => {
   Jg_template.from_file(template_path, ~env={...Jg_types.std_env, filters: [uncapitalize_filter, counter_name_filter]}, ~models)
-  |> Bos.OS.File.write(Fpath.v(dest_path))
+  |> File.write(Fpath.v(dest_path))
   |> Result.map_error((`Msg(msg)) => {
     logger#error("Writing file %s: %s", dest_path, msg);
     msg
