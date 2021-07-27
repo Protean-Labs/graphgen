@@ -1,101 +1,49 @@
 {
-    "name": "graphgen",
-    "version": "0.0.6-development",
-    "description": "Subgraph Generation Tool",
-    "license": "MIT",
-    "esy": {
-      "build": "dune build -p graphgen",
-      "buildDev": "pesy build",
-      "release": {
-        "rewritePrefix": true,
-        "releasedBinaries": [
-          "graphgen.exe"
-        ]
-      }
+
+  "name": "graphgen",
+  "version": "0.0.7-development",
+  "description": "Subgraph Generation Tool",
+  "license": "MIT",
+  "esy": {
+    "build": "dune build -p graphgen",
+    "buildDev":
+      "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
+    "release": {
+      "rewritePrefix": true,
+      "releasedBinaries": [ "graphgen.exe" ]
     },
-    "pesy": {
-      "azure-project": "esy-dev/esy",
-      "github": "esy/pesy-reason-template"
-    },
-    "buildDirs": {
-      "graphgen": {
-        "imports": [
-          "Easy_logging = require('@opam/easy_logging')",
-          "Yaml = require('@opam/yaml')",
-          "Yaml_unix = require('yaml.unix')",
-          "Fpath = require('fpath')"
-        ],
-        "rawBuildConfigFooter": [
-          "(ocamllex (modules lexer))",
-          "(menhir (modules parser) (infer false))"
-        ],
-        "preprocess": [
-          "pps",
-          "ppx_deriving.show",
-          "ppx_deriving_yaml",
-          "ppx_deriving_yojson",
-          "ppx_string"
-        ]
-      },
-      "bin": {
-        "imports": [
-          "Graphgen = require('graphgen/graphgen')"
-        ],
-        "bin": {
-          "graphgen.exe": "main.re"
-        },
-        "preprocess": [
-          "pps",
-          "ppx_string"
-        ]
-      },
-      "test": {
-        "imports": [
-          "Ounit2 = require('@opam/ounit2')",
-          "Ounit2_lwt = require('@opam/ounit2-lwt')",
-          "Graphgen = require('graphgen/graphgen')"
-        ],
-        "bin": {
-          "test.exe": "test.re"
-        }
-      }
-    },
-    "scripts": {
-      "graphgen": "esy x graphgen.exe",
-      "test": "esy x test.exe",
-      "semantic-release": "semantic-release"
-    },
-    "dependencies": {
-      "@esy-ocaml/reason": "^3.7.0",
-      "@opam/dune": "^2.7.0",
-      "@opam/logs": "*",
-      "@opam/menhir": "*",
-      "@opam/rresult": "*",
-      "@opam/ocamlfind": "1.8.1",
-      "@opam/ppx_deriving": "^4.5",
-      "@opam/ppx_deriving_yojson": "^3.5.3",
-      "@opam/ppx_string": "*",
-      "@opam/yaml": "*",
-      "@opam/yojson": "*",
-      "@opam/fpath": "*",
-      "@opam/ounit": "*",
-      "@opam/ounit-lwt": "*",
-      "@pesy/esy-pesy": "0.1.0-alpha.11",
-      "@reason-native/console": "*",
-      "@opam/easy_logging": "^0.8.1",
-      "fmt": "^2.0.0",
-      "ocaml": "4.10.0",
-      "@opam/ppx_deriving_yaml": "^0.1.0"
-    },
-    "devDependencies": {
-      "@opam/ounit2": "*",
-      "@opam/ounit2-lwt": "*",
-      "@opam/merlin": "*",
-      "@opam/ocaml-lsp-server": "1.4.1",
-      "refmterr": "*",
-      "@opam/bisect_ppx": "^2.5.0",
-      "@opam/utop": "*",
-      "@opam/rtop": "*",
-      "semantic-release": "^17.4.4"
+    "buildEnv": {
+      "ODOC_SYNTAX": "re"
     }
+  },
+  "scripts": { "doc": "esy dune build @doc-private", "graphgen": "esy x graphgen.exe", "test": "esy x test.exe" },
+  "dependencies": {
+    "@esy-ocaml/reason": "^3.7.0",
+    "@opam/easy_logging": "0.8.1",
+    "@opam/fpath": "0.7.3",
+    "@opam/jingoo": "1.4.3",
+    "@opam/menhir": "20210419",
+    "@opam/ocamlfind": "1.8.1",
+    "@opam/ppx_deriving": "^4.5",
+    "@opam/ppx_deriving_yaml": "^0.1.0",
+    "@opam/ppx_deriving_yojson": "^3.5.3",
+    "@opam/ppx_string": "v0.14.1",
+    "@opam/rresult": "0.6.0",
+    "@opam/yaml": "2.1.0",
+    "@opam/yojson": "1.7.0",
+    "@pesy/esy-pesy": "0.1.0-alpha.11",
+    "fmt": "^2.0.0",
+    "ocaml": "4.10.0"
+  },
+  "devDependencies": {
+    "@opam/bisect_ppx": "^2.5.0",
+    "@opam/merlin": "3.5.0",
+    "@opam/ocaml-lsp-server": "1.4.1",
+    "@opam/ocamlfind": "1.9.1",
+    "@opam/odoc": "1.5.3",
+    "@opam/ounit2": "2.2.4",
+    "@opam/rtop": "3.7.0",
+    "@opam/utop": "2.8.0",
+    "refmterr": "^3.3.2"
+  }
 }

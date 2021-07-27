@@ -1,6 +1,7 @@
-open Graphgen;
-open Ast;
-open Subgraph;
+open Graphgenlib;
+open Parsing;
+
+let logger = Easy_logging.Logging.make_logger("GraphGen", Debug, [Cli(Debug)]);
 
 let load_file = (filename) => {
   let ch = open_in(filename);
@@ -10,31 +11,25 @@ let load_file = (filename) => {
 };
 
 let generate = (ast: Ast.t) => {
-  let subgraph = Subgraph.of_ast(ast);
+  print_endline(Ast.show(ast));
+  Generator.generate_directories();
+  let subgraph = Subgraph.Builder.make(ast);
+  Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_models, subgraph);
+  Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.schema_models, subgraph);
+  Generator.multi_file("templates/data_source.j2", (key) => [%string "subgraph/src/mappings/%{String.uncapitalize_ascii key}.ts"], Models.data_sources_models, subgraph);
+  Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{String.uncapitalize_ascii key}.ts"], Models.templates_models, subgraph);
 
-  open Rresult;
-
-  Bos.OS.Dir.create(~path=true, Fpath.v("subgraph/abis"))
-  >>= (_) => 
+  let (>>=) = Result.bind;
+  
+  Package.make("PLACEHOLDER", "PLACEHOLDER", "PLACEHOLDER") 
+  |> Package.to_file
+  >>= (() => 
     List.map(Abi.make, ast)
     |> List.iter(Abi.to_file(_, "subgraph/abis"))
-    |> _ => Ok()
-  >>= (_) => 
-    Schema.of_subgraph(subgraph)
-    |> Bos.OS.File.write(Fpath.v("subgraph/schema.graphql"))
-  >>= (_) =>
-    Bos.OS.Dir.create(~path=true, Fpath.v("subgraph/src/mappings"))
-  >>= (_) =>
-    Bos.OS.File.write(Fpath.v("subgraph/src/utils.ts"), Typescript.utils_ts)
-  |> (r) => 
-    Typescript.of_subgraph(subgraph)
-    |> List.fold_left((acc, (filename, code)) => acc >>= ((_) => Bos.OS.File.write(Fpath.v([%string "subgraph/src/mappings/%{filename}"]), code)), r)
-  >>= (_) =>
-    Manifest.make(subgraph)
-    |> Manifest.to_file(_, "subgraph")
-  >>= (_) =>
-    Package.make("placeholder", "placeholder", "placeholder")
-    |> Package.to_file
+    |> _ => Ok())
+  |> fun
+    | Ok() => ()
+    | Error(msg) => logger#error("%s", msg)
 };
 
 let () = {
@@ -56,7 +51,7 @@ let () = {
         | Error(msg) => print_endline(msg)
         | Ok(ast) => 
           generate(ast)
-          |> fun | Ok(_) => () | Error(`Msg(err)) => failwith(err)
+          // |> fun | Ok(_) => () | Error(`Msg(err)) => failwith(err)
     }
     | _ => failwith("Invalid filename" ++ Sys.argv[1])
     }

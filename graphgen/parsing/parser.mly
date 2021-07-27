@@ -41,7 +41,7 @@
 %token INTERFACE
 %token STRUCT
 %token FUNCTION
-%token MAPPING
+// %token MAPPING
 %token PUBLIC
 %token PRIVATE
 %token EXTERNAL
@@ -53,7 +53,7 @@
 // %token IMMUTABLE
 %token ANON
 %token INDEXED
-%token VIRTUAL
+// %token VIRTUAL
 %token OVERRIDE
 %token FALLBACK
 
@@ -97,8 +97,8 @@
 
 // Symbols and operators
 %token DOT
-%token MAP
-%token COLON
+// %token MAP
+// %token COLON
 %token TIMES
 %token LPAREN RPAREN
 %token LBRACK RBRACK
@@ -106,7 +106,7 @@
 %token COMMA
 %token SEMICOLON
 
-%token COMMENT_BLOCK_START COMMENT_BLOCK_END
+// %token COMMENT_BLOCK_START COMMENT_BLOCK_END
 %token <string> GG_SOURCE GG_HANDLER GG_FIELD
 %token <string> COMMENT_BLOCK 
 
@@ -162,14 +162,14 @@ symbol_aliases:
 
 interface_definition:
   | INTERFACE; id = identifier; 
-    IS; inheritance = separated_nonempty_list(COMMA, inheritance_specifier); 
+    IS; separated_nonempty_list(COMMA, inheritance_specifier); 
     LBRACE; body = list(contract_body_element); RBRACE;                   { id, body }
   | INTERFACE; id = identifier; 
     LBRACE; body = list(contract_body_element); RBRACE;                   { id, body }
 ;
 
 inheritance_specifier:
-  | id_path = identifier_path;                                            { 7 }
+  | identifier_path;                                            { 7 }
 ;
 
 contract_body_element:
@@ -265,7 +265,7 @@ receive_function_definition:
 ;
 
 struct_definition:
-  | STRUCT; id = identifier; LBRACE; list(struct_member); RBRACE;    { function _ -> StructDef }
+  | STRUCT; identifier; LBRACE; list(struct_member); RBRACE;    { function _ -> StructDef }
 ;
 
 struct_member:
@@ -304,14 +304,14 @@ elementary_type_name:
   | UINT_T;                         { UintT(256) }
 ;
 
-function_type_name:
-  | FUNCTION; LPAREN; option(parameter_list); RPAREN; list(function_type_name_subrule1); option(function_type_name_subrule2);   { 1 }
-%inline function_type_name_subrule1:
-  | visibility;         { 1 }
-  | state_mutability;   { 1 }
-%inline function_type_name_subrule2:
-  | RETURNS; LPAREN; parameter_list; RPAREN;  { 1 }
-;
+// function_type_name:
+//   | FUNCTION; LPAREN; option(parameter_list); RPAREN; list(function_type_name_subrule1); option(function_type_name_subrule2);   { 1 }
+// %inline function_type_name_subrule1:
+//   | visibility;         { 1 }
+//   | state_mutability;   { 1 }
+// %inline function_type_name_subrule2:
+//   | RETURNS; LPAREN; parameter_list; RPAREN;  { 1 }
+// ;
 
 data_location:
   | MEMORY;       { Memory }
@@ -324,11 +324,11 @@ identifier:
   | FROM;              { "from" }
 ;
 
-mapping_type:
-  | MAPPING; LPAREN; mapping_key_type; MAP; type_name; RPAREN;  { 1 }
-;
+// mapping_type:
+//   | MAPPING; LPAREN; mapping_key_type; MAP; type_name; RPAREN;  { 1 }
+// ;
 
-mapping_key_type:
-  | elementary_type_name;   { 1 }
-  | identifier_path;        { 1 }
-;
+// mapping_key_type:
+//   | elementary_type_name;   { 1 }
+//   | identifier_path;        { 1 }
+// ;

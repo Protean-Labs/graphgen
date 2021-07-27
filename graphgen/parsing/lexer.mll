@@ -39,7 +39,7 @@ rule token = parse
 | "import"          { logger#debug "import"; IMPORT }
 | "interface"       { logger#debug "interface"; INTERFACE }
 | "function"        { logger#debug "function"; FUNCTION }
-| "mapping"         { logger#debug "mapping"; MAPPING }
+(* | "mapping"         { logger#debug "mapping"; MAPPING } *)
 | "public"          { logger#debug "public"; PUBLIC }
 | "private"         { logger#debug "private"; PRIVATE }
 | "external"        { logger#debug "external"; EXTERNAL}
@@ -49,7 +49,7 @@ rule token = parse
 | "payable"         { logger#debug "payable"; PAYABLE }
 | "anonymous"       { logger#debug "anonymous"; ANON }
 | "indexed"         { logger#debug "indexed"; INDEXED }
-| "virtual"         { logger#debug "virtual"; VIRTUAL }
+(* | "virtual"         { logger#debug "virtual"; VIRTUAL } *)
 | "override"        { logger#debug "override"; OVERRIDE }
 | "fallback"        { logger#debug "fallback"; FALLBACK }
 | "returns"         { logger#debug "returns"; RETURNS }
