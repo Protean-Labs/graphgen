@@ -1,22 +1,66 @@
 name: Build
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
 
-
 jobs:
-  build:
+  Build:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: 14
+          node-version: 16
       - name: Install esy
         run: npm install -g esy && ls
       - uses: esy/github-action@v1
         with:
           cache-key: ${{ hashFiles('esy.lock/index.json') }}
+
+  Integration-test:
+    needs: Build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: 16
+    
+    - name: Install esy
+      run: npm install -g esy && ls
+
+    - uses: esy/github-action@v1
+      with:
+        cache-key: ${{ hashFiles('esy.lock/index.json') }}    
+        
+    - name: Run graphgen on UniswapV2 test file
+      run:
+          npm run graphgen test/IUniswapV2.sol 
+    - name: Install Graph-cli
+      run:
+          npm install @graphprotocol/graph-cli @graphprotocol/graph-ts
+
+    - name: Build Uniswap generated subgraph
+      run: |
+          cd subgraph/
+          npx graph build subgraph.yaml
+
+
+  Draft-Release:
+    needs: [Build, Integration-test]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: release-drafter/release-drafter@v5
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    

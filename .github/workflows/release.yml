@@ -2,20 +2,11 @@ name: Release
 
 on:
   workflow_dispatch:
+  release:
+    types: [created]
     
-
-
 jobs:
-  Draft-Release:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: release-drafter/release-drafter@v5
-        id: create_release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    
-  Build-Release:
+  Build:
     runs-on: ubuntu-latest
 
     steps:
@@ -31,14 +22,41 @@ jobs:
           cache-key: v2-${{ hashFiles('esy.lock/index.json') }}
           
       - name: Prepare release
+        # Workaround to fix released package name to be in the scope of the @Protean-labs repo
         run: |
             esy npm-release 
             cd /home/runner/work/graphgen/graphgen/_release/
             cp package.json package_old.json
             jq '.name |= "@protean-labs/graphgen"' package_old.json  | tee package.json
             rm package_old.json
-       
+
+  Publish-npm:
+    needs: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+
       - uses: JS-DevTools/npm-publish@v1
         with:
          token: ${{ secrets.NPM_TOKEN }}
          package: /home/runner/work/graphgen/graphgen/_release/package.json
+
+  Publish-gpr:
+    needs: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      # Setup .npmrc file to publish to GitHub Packages
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          registry-url: 'https://npm.pkg.github.com'
+          # Defaults to the user or organization that owns the workflow file
+          # scope: '@protean-labs'
+      # Publish to GitHub Packages
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
