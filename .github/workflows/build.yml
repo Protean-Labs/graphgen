@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
-          node-version: 14
+          node-version: 16
       - name: Install esy
         run: npm install -g esy && ls
       - uses: esy/github-action@v1
@@ -31,7 +31,15 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-node@v2
       with:
-        node-version: 14
+        node-version: 16
+    
+    - name: Install esy
+      run: npm install -g esy && ls
+
+    - uses: esy/github-action@v1
+      with:
+        cache-key: ${{ hashFiles('esy.lock/index.json') }}    
+        
     - name: Run graphgen on UniswapV2 test file
       run:
           npm run graphgen test/IUniswapV2.sol 
