@@ -1,6 +1,5 @@
 open Graphgenlib;
 open Parsing;
-// open Subgraph;
 
 let logger = Easy_logging.Logging.make_logger("GraphGen", Debug, [Cli(Debug)]);
 
