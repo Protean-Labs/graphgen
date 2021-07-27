@@ -77,9 +77,13 @@ module Contract = {
     };
 };
 
-type t = list(Contract.t);
+type t = {
+  description: string,
+  repository: string,
+  contracts: list(Contract.t)
+};
 
-let contract_of_name = (subgraph: t, name) => subgraph
+let contract_of_name = (subgraph: t, name) => subgraph.contracts
   |> List.find_opt((contract: Contract.t) => contract.name == name)
 ;
 
@@ -91,7 +95,7 @@ let child_contracts = (subgraph: t, contract) => contract
   })
 ;
 
-let parent_contract = (subgraph, contract: Contract.t) => subgraph
+let parent_contract = (subgraph, contract: Contract.t) => subgraph.contracts
   |> List.find_opt(contract' => Contract.new_entities(contract') 
     |> List.exists(((name, _, _)) => name == contract.name)
   )
@@ -209,8 +213,7 @@ module Builder = {
     f(intf_elements, [])
   };
 
-  let make = (full_ast: Ast.t) => {
-
+  let make = (~desc=?, ~repo=?, full_ast: Ast.t) => {
     let get_fields = (intf_elements) => {
       open Ast;
       let rec f = (intf_elements, acc) => {
@@ -226,19 +229,23 @@ module Builder = {
     };
     
     // TODO: Set network field based on tags
-    let rec to_subgraph = (ast: list(Ast.interface), acc): t => {
+    let rec to_subgraph = (ast: list(Ast.interface), acc) => {
       switch (ast) {
       | [] => acc
       | [{raw_name, elements, tag: Some(GGSource({name: None, instances, _}))}, ...rest] => 
         let instances = instances |> Option.value(~default=[]) |> List.map((instance: Ast.instance) => (instance.address, instance.startBlock));
-        to_subgraph(rest, [{raw_name, name: raw_name, network: "mainnet", instances, fields: get_fields(elements), handlers: get_handlers(full_ast, elements)}, ...acc])
+        to_subgraph(rest, [Contract.{raw_name, name: raw_name, network: "mainnet", instances, fields: get_fields(elements), handlers: get_handlers(full_ast, elements)}, ...acc])
       | [{raw_name, elements, tag: Some(GGSource({name: Some(n), instances, _}))}, ...rest] => 
         let instances = instances |> Option.value(~default=[]) |> List.map((instance: Ast.instance) => (instance.address, instance.startBlock));
-        to_subgraph(rest, [{raw_name, name: n, network: "mainnet", instances, fields: get_fields(elements), handlers: get_handlers(full_ast, elements)}, ...acc])
+        to_subgraph(rest, [Contract.{raw_name, name: n, network: "mainnet", instances, fields: get_fields(elements), handlers: get_handlers(full_ast, elements)}, ...acc])
       | [_, ...rest] => to_subgraph(rest, acc)
       }
     };
 
-    to_subgraph(full_ast, [])
+    {
+      description:  switch (desc) { | Some(desc) => desc | None => logger#warning("Description not provided, using PLACEHOLDER"); "PLACEHOLDER"},
+      repository:   switch (repo) { | Some(desc) => desc | None => logger#warning("Repository name not provided, using PLACEHOLDER"); "PLACEHOLDER"},
+      contracts: to_subgraph(full_ast, [])
+    }
   };
 }

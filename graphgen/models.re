@@ -159,11 +159,11 @@ let template_model = (subgraph, contract: Subgraph.Contract.t) => {
   ])
 };
 
-let subgraph_model = (subgraph) => {
+let subgraph_model = (subgraph: Subgraph.t) => {
   Jg_types.Tobj([
-    ("dataSources", Tlist(subgraph
+    ("dataSources", Tlist(subgraph.contracts
       |> List.filter_map((contract: Subgraph.Contract.t) => contract.instances != [] ? Some(data_source_model(subgraph, contract)) : None))),
-    ("templates", Tlist(subgraph
+    ("templates", Tlist(subgraph.contracts
       |> List.filter_map((contract: Subgraph.Contract.t) => contract.instances == [] ? Some(template_model(subgraph, contract)) : None)))
   ])
 };
@@ -174,7 +174,7 @@ let manifest_models = (subgraph) => subgraph_model(subgraph)
 let schema_models = (subgraph) => subgraph_model(subgraph)
   |> (obj) => [("subgraph", obj)];
 
-let data_sources_models = (subgraph) => subgraph
+let data_sources_models = (subgraph: Subgraph.t) => subgraph.contracts
   |> List.filter_map((contract: Subgraph.Contract.t) => 
     if (contract.instances != []) {
       (
@@ -189,7 +189,7 @@ let data_sources_models = (subgraph) => subgraph
     else None
   );
 
-let templates_models = (subgraph) => subgraph
+let templates_models = (subgraph: Subgraph.t) => subgraph.contracts
   |> List.filter_map((contract: Subgraph.Contract.t) => 
     if (contract.instances == []) {
       (
