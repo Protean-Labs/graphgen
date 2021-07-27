@@ -1,3 +1,5 @@
+open Parsing;
+
 module FunctionType = {
   [@deriving yojson]
   type t = 
@@ -97,7 +99,7 @@ module Function = {
     stateMutability: Mutability.t
   };
 
-  let make = (name, inputs, outputs, tags) => {
+  let make = (name, inputs, outputs, _) => {
     typ: "function",
     name: name,
     inputs: List.map(Input.make, inputs),
@@ -116,7 +118,7 @@ module Event = {
     anonymous: bool
   };
 
-  let make = (name, inputs, tags) => {
+  let make = (name, inputs, _) => {
     typ: "event",
     name: name,
     inputs: List.map(EventParam.make, inputs),
