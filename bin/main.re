@@ -10,44 +10,13 @@ let logger = Easy_logging.Logging.make_logger("GraphGen", Debug, [Cli(Debug)]);
 module File = Bos.OS.File;
 module Dir = Bos.OS.Dir;
 
-<<<<<<< HEAD
 let is_solidity = (path) => {
   let regex = Str.regexp("[-A-Za-z0-9_]+.sol");
   Str.string_match(regex, path, 0)
 };
 
 let graphgen = (desc, repo, target_path) => {
-  open R.Infix;
-=======
-// let generate = (ast: Ast.t) => {
-//   print_endline(Ast.show(ast));
-//   ;
-//   Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_models, subgraph);
-//   Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.schema_models, subgraph);
-//   Generator.multi_file("templates/data_source.j2", (key) => [%string "subgraph/src/mappings/%{String.uncapitalize_ascii key}.ts"], Models.data_sources_models, subgraph);
-//   Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{String.uncapitalize_ascii key}.ts"], Models.templates_models, subgraph);
-
-//   let (>>=) = Result.bind;
-  
-//   Package.make("PLACEHOLDER", "PLACEHOLDER", "PLACEHOLDER") 
-//   |> Package.to_file
-//   >>= (() => 
-//     List.map(Abi.make, ast)
-//     |> List.iter(Abi.to_file(_, "subgraph/abis"))
-//     |> _ => Ok())
-//   |> fun
-//     | Ok() => ()
-//     | Error(msg) => logger#error("%s", msg)
-// };
-
-module File = Bos.OS.File;
-module Dir = Bos.OS.Dir;
-
-let graphgen = (_, _, target_path) => {
-  let (>>=) = Result.bind;
-  let (>|=) = (res, f) => Result.map(f, res);
-  let fmt_err = Result.map_error((`Msg(msg)) => msg);
->>>>>>> 86068ac (Refactor generator code to return errors instead of crashing)
+  open Rresult.R.Infix;
 
   let generate_manifest = Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_models)
   let generate_schema = Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.schema_models)
