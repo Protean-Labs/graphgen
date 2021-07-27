@@ -34,22 +34,20 @@ let counter_name_filter = ("counterName", Jg_types.func_arg1_no_kw((value) => {
 }));
 
 let generate_directories = () => {
-  let f = (acc, path) => switch (acc) {
-    | Ok(_) => Bos.OS.Dir.create(~path=true, Fpath.v(path))
-    | Error(msg) => Error(msg)
-  };
+  // let f = (acc, path) => switch (acc) {
+  //   | Ok(_) => Bos.OS.Dir.create(~path=true, Fpath.v(path))
+  //   | Error(msg) => Error(msg)
+  // };
 
   [
     "subgraph/abis",
     "subgraph/src/mappings"
   ]
-  |> List.fold_left(f, Ok(true))
-  |> fun
-    | Error(`Msg(msg)) => {
+  |> List.fold_left((res, path) => Result.bind(res, _ => Bos.OS.Dir.create(~path=true, Fpath.v(path))), Result.ok(true))
+  |> Result.map_error((`Msg(msg)) => {
       logger#error("Creating directories: %s", msg);
-      failwith(msg)
-    }
-    | Ok(_) => () 
+      msg
+  })
 };
 
 type models = list((string, Jingoo.Jg_types.tvalue));
@@ -57,16 +55,14 @@ type models = list((string, Jingoo.Jg_types.tvalue));
 let generate = (template_path, dest_path, models) => {
   Jg_template.from_file(template_path, ~env={...Jg_types.std_env, filters: [uncapitalize_filter, counter_name_filter]}, ~models)
   |> Bos.OS.File.write(Fpath.v(dest_path))
-  |> fun
-    | Error(`Msg(msg)) => {
-      logger#error("Writing file %s: %s", dest_path, msg);
-      failwith(msg)
-    }
-    | Ok() => ()
+  |> Result.map_error((`Msg(msg)) => {
+    logger#error("Writing file %s: %s", dest_path, msg);
+    msg
+  })
 };
 
 let single_file = (template_path, dest_path, f, sg) => f(sg)
   |> generate(template_path, dest_path);
 
 let multi_file = (template_path, dest_path, f, sg) => f(sg)
-  |> List.iter(((key, models)) => generate(template_path, dest_path(key), models));
+  |> List.fold_left((res, (key, models)) => Result.bind(res, _ => generate(template_path, dest_path(key), models)), Result.ok());
