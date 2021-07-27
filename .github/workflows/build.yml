@@ -1,13 +1,15 @@
 name: Build
 
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
 
-
 jobs:
-  build:
+  Build:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,3 +22,14 @@ jobs:
       - uses: esy/github-action@v1
         with:
           cache-key: ${{ hashFiles('esy.lock/index.json') }}
+
+  Draft-Release:
+    needs: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: release-drafter/release-drafter@v5
+        id: create_release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    
