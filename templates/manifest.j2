@@ -6,7 +6,8 @@ schema:
 dataSources:
 {% for dataSource in subgraph.dataSources -%}
 {%- set dataSource = dataSource -%}
-{%- for (address, startBlock) in dataSource.instances %}  - kind: ethereum/contract
+{% for (address, startBlock) in dataSource.instances -%}  
+  - kind: ethereum/contract
     name: {{ dataSource.name }}
     network: {{ dataSource.network }}
     source:
@@ -19,7 +20,7 @@ dataSources:
       language: wasm/assemblyscript
       file: ./src/mappings/{{ dataSource.contract.name }}.ts
       entities:
-        - name: {{ dataSource.contract.name }}
+        - {{ dataSource.contract.name }}
         {%- for entity in dataSource.relatedEntities %}
         - {{ entity.name }}
         {%- endfor %}

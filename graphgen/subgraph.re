@@ -25,78 +25,76 @@ type handler =
   | Call(call, list(action))
 ;
 
-type contract = {
-  name: string,
-  network: string,
-  instances: list((string, int)),
-  raw_name: string,
-  fields: list((string, Ast.typ, string)),
-  handlers: list(handler)
+module Contract = {
+  type t = {
+    name: string,
+    network: string,
+    instances: list((string, int)),
+    raw_name: string,
+    fields: list((string, Ast.typ, string)),
+    handlers: list(handler)
+  };
+
+  let field = (contract, field_name) => contract.fields
+    |> List.find_map(((name, typ, getter_name)) => 
+      if (name == field_name) Some((typ, getter_name))
+      else None
+    );
+
+  let new_entities = (contract) => contract.handlers
+    |> List.filter_map(fun
+      | Event(_, actions) => actions
+        |> List.filter_map(fun | NewEntity(name, raw_name, field) => Some((name, raw_name, field)) | _ => None)
+        |> Option.some
+      | _ => None
+    )
+    |> List.flatten;
+
+  let calls = (~stored_only=false, contract) =>
+    if (stored_only) {
+      contract.handlers
+      |> List.filter_map(fun 
+        | Call(call, actions) => List.exists(fun | StoreCall => true | _ => false, actions) ? Some(call) : None
+        | _ => None
+      )
+    }
+    else {
+      contract.handlers
+      |> List.filter_map(fun | Call(call, _) => Some(call) | _ => None)
+    };
+
+  let events = (~stored_only=false, contract) => 
+    if (stored_only) {
+      contract.handlers
+      |> List.filter_map(fun 
+        | Event(event, actions) => List.exists(fun | StoreEvent => true | _ => false, actions) ? Some(event) : None
+        | _ => None
+      )
+    }
+    else {
+      contract.handlers
+      |> List.filter_map(fun | Event(event, _) => Some(event) | _ => None)
+    };
 };
 
-type t = list(contract);
+type t = list(Contract.t);
 
-let contract_of_name = (subgraph, name) => subgraph
-  |> List.find_opt(contract => contract.name == name)
+let contract_of_name = (subgraph: t, name) => subgraph
+  |> List.find_opt((contract: Contract.t) => contract.name == name)
 ;
 
-let field_of_contract = (contract, field_name) => contract.fields
-  |> List.find_map(((name, typ, getter_name)) => 
-    if (name == field_name) Some((typ, getter_name))
-    else None
-  )
-;
-
-let new_entities_of_contract = (contract) => contract.handlers
-  |> List.filter_map(fun
-    | Event(_, actions) => actions
-      |> List.filter_map(fun | NewEntity(name, raw_name, field) => Some((name, raw_name, field)) | _ => None)
-      |> Option.some
-    | _ => None
-  )
-  |> List.flatten
-;
-
-let child_contracts = (subgraph, contract) => contract
-  |> new_entities_of_contract
+let child_contracts = (subgraph: t, contract) => contract
+  |> Contract.new_entities
   |> List.filter_map(((name, _, _)) => {
     logger#debug("%s child contract: %s", contract.name, name);
     contract_of_name(subgraph, name)
   })
 ;
 
-let parent_contract = (subgraph, contract) => subgraph
-  |> List.find_opt(contract' => new_entities_of_contract(contract') 
+let parent_contract = (subgraph, contract: Contract.t) => subgraph
+  |> List.find_opt(contract' => Contract.new_entities(contract') 
     |> List.exists(((name, _, _)) => name == contract.name)
   )
-;
-
-let contract_events = (~stored_only=false, contract) => 
-  if (stored_only) {
-    contract.handlers
-    |> List.filter_map(fun 
-      | Event(event, actions) => List.exists(fun | StoreEvent => true | _ => false, actions) ? Some(event) : None
-      | _ => None
-    )
-  }
-  else {
-    contract.handlers
-    |> List.filter_map(fun | Event(event, _) => Some(event) | _ => None)
-  }
-;
-
-let contract_calls = (~stored_only=false, contract) =>
-  if (stored_only) {
-    contract.handlers
-    |> List.filter_map(fun 
-      | Call(call, actions) => List.exists(fun | StoreCall => true | _ => false, actions) ? Some(call) : None
-      | _ => None
-    )
-  }
-  else {
-    contract.handlers
-    |> List.filter_map(fun | Call(call, _) => Some(call) | _ => None)
-  }
 ;
 
 let event_signature = (event: event) => event.fields
@@ -116,18 +114,18 @@ let call_signature = (call: call) => call.inputs
 
 let contract_related_entities = (subgraph, contract) => {
   [
-    contract_events(~stored_only=true, contract) |> List.map((event: event) => event.name),
-    contract_calls(~stored_only=true, contract) |> List.map((call: call) => call.name),
-    parent_contract(subgraph, contract) |> (fun | Some(parent: contract) => [parent.name] | None => []),
-    child_contracts(subgraph, contract) |> List.map((child) => child.name)
+    Contract.events(~stored_only=true, contract) |> List.map((event: event) => event.name),
+    Contract.calls(~stored_only=true, contract) |> List.map((call: call) => call.name),
+    parent_contract(subgraph, contract) |> (fun | Some(parent: Contract.t) => [parent.name] | None => []),
+    child_contracts(subgraph, contract) |> List.map((child: Contract.t) => child.name)
   ]
   |> List.flatten
 };
 
 let contract_related_contracts = (subgraph, contract) => {
   [
-    parent_contract(subgraph, contract) |> (fun | Some(parent: contract) => [parent.name] | None => []),
-    child_contracts(subgraph, contract) |> List.map((child) => child.name)
+    parent_contract(subgraph, contract) |> (fun | Some(parent: Contract.t) => [parent.name] | None => []),
+    child_contracts(subgraph, contract) |> List.map((child: Contract.t) => child.name)
   ]
   |> List.flatten
 };

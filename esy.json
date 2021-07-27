@@ -5,13 +5,17 @@
   "license": "MIT",
   "esy": {
     "build": "dune build -p graphgen",
-    "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
+    "buildDev":
+      "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
     "release": {
       "rewritePrefix": true,
       "releasedBinaries": [ "graphgen.exe" ]
+    },
+    "buildEnv": {
+      "ODOC_SYNTAX": "re"
     }
   },
-  "scripts": { "graphgen": "esy x graphgen.exe", "test": "esy x test.exe" },
+  "scripts": { "doc": "esy dune build @doc-private", "graphgen": "esy x graphgen.exe", "test": "esy x test.exe" },
   "dependencies": {
     "@esy-ocaml/reason": "^3.7.0",
     "@opam/easy_logging": "0.8.1",
@@ -35,6 +39,7 @@
     "@opam/merlin": "3.5.0",
     "@opam/ocaml-lsp-server": "1.4.1",
     "@opam/ocamlfind": "1.9.1",
+    "@opam/odoc": "1.5.3",
     "@opam/ounit2": "2.2.4",
     "@opam/rtop": "3.7.0",
     "@opam/utop": "2.8.0",

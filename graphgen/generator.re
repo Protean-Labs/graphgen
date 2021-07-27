@@ -52,6 +52,8 @@ let generate_directories = () => {
     | Ok(_) => () 
 };
 
+type models = list((string, Jingoo.Jg_types.tvalue));
+
 let generate = (template_path, dest_path, models) => {
   Jg_template.from_file(template_path, ~env={...Jg_types.std_env, filters: [uncapitalize_filter, counter_name_filter]}, ~models)
   |> Bos.OS.File.write(Fpath.v(dest_path))
@@ -63,17 +65,8 @@ let generate = (template_path, dest_path, models) => {
     | Ok() => ()
 };
 
-let single_file = (template_path, dest_path, model_gen) => {
-  (subgraph) => {
-    model_gen(subgraph)
-    |> (l) => {List.iter(((key, model)) => logger#debug("%s: %s", key, Jg_types.show_tvalue(model)), l); l}
-    |> generate(template_path, dest_path)
-  };
-};
+let single_file = (template_path, dest_path, f, sg) => f(sg)
+  |> generate(template_path, dest_path);
 
-let multi_file = (template_path, dest_path, model_gen) => {
-  (subgraph) => {
-    model_gen(subgraph)
-    |> List.iter(((key, models)) => generate(template_path, dest_path(key), models))
-  }
-};
+let multi_file = (template_path, dest_path, f, sg) => f(sg)
+  |> List.iter(((key, models)) => generate(template_path, dest_path(key), models));

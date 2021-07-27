@@ -41,14 +41,14 @@ let field_model = ((name, typ, getter_name)) => {
   ])
 };
 
-let contract_model = (subgraph, contract: Subgraph.contract) => {
+let contract_model = (subgraph, contract: Subgraph.Contract.t) => {
   logger#debug("Generating %s contract model", contract.name);
   Jg_types.Tobj([
     ("name", Tstr(contract.name)),
-    ("events", Tlist(Subgraph.contract_events(contract)
+    ("events", Tlist(Subgraph.Contract.events(contract)
       |> List.map(event_model)
     )),
-    ("calls", Tlist(Subgraph.contract_calls(contract)
+    ("calls", Tlist(Subgraph.Contract.calls(contract)
       |> List.map(call_model)
     )),
     ("fields", Tlist(List.map(field_model, contract.fields))),
@@ -59,7 +59,7 @@ let contract_model = (subgraph, contract: Subgraph.contract) => {
     ("childContracts", Tlist(Subgraph.child_contracts(subgraph, contract)
       // |> (l) => {List.iter((child: Subgraph.contract) => logger#debug("%s child contract: %s", contract.name, child.name), l); l}
       // |> List.map(contract_model(subgraph))
-      |> List.map((child: Subgraph.contract) => Jg_types.Tobj([("name", Tstr(child.name))]))
+      |> List.map((child: Subgraph.Contract.t) => Jg_types.Tobj([("name", Tstr(child.name))]))
     ))
   ])
 };
@@ -67,7 +67,7 @@ let contract_model = (subgraph, contract: Subgraph.contract) => {
 let handler_model = (subgraph, contract, actions) => {
   let field_updates = actions
     |> List.filter_map(fun 
-      | Subgraph.UpdateField(field_name) => Subgraph.field_of_contract(contract, field_name)
+      | Subgraph.UpdateField(field_name) => Subgraph.Contract.field(contract, field_name)
         |> Option.map(((typ, getter_name)) => (field_name, typ, getter_name))
       | _ => None
     )
@@ -110,7 +110,7 @@ let call_handler_model = (subgraph, contract, call: Subgraph.call, actions) => {
   ])
 };
 
-let data_source_model = (subgraph, contract: Subgraph.contract) => {
+let data_source_model = (subgraph, contract: Subgraph.Contract.t) => {
   Jg_types.Tobj([
     ("name", Tstr(contract.name)),
     ("network", Tstr(contract.network)),
@@ -137,7 +137,7 @@ let data_source_model = (subgraph, contract: Subgraph.contract) => {
   ])
 };
 
-let template_model = (subgraph, contract: Subgraph.contract) => {
+let template_model = (subgraph, contract: Subgraph.Contract.t) => {
   Jg_types.Tobj([
     ("name", Tstr(contract.name)),
     ("network", Tstr(contract.network)),
@@ -162,9 +162,9 @@ let template_model = (subgraph, contract: Subgraph.contract) => {
 let subgraph_model = (subgraph) => {
   Jg_types.Tobj([
     ("dataSources", Tlist(subgraph
-      |> List.filter_map((contract: Subgraph.contract) => contract.instances != [] ? Some(data_source_model(subgraph, contract)) : None))),
+      |> List.filter_map((contract: Subgraph.Contract.t) => contract.instances != [] ? Some(data_source_model(subgraph, contract)) : None))),
     ("templates", Tlist(subgraph
-      |> List.filter_map((contract: Subgraph.contract) => contract.instances == [] ? Some(template_model(subgraph, contract)) : None)))
+      |> List.filter_map((contract: Subgraph.Contract.t) => contract.instances == [] ? Some(template_model(subgraph, contract)) : None)))
   ])
 };
 
@@ -175,7 +175,7 @@ let schema_model = (subgraph) => subgraph_model(subgraph)
   |> (obj) => [("subgraph", obj)];
 
 let data_sources_model = (subgraph) => subgraph
-  |> List.filter_map((contract: Subgraph.contract) => 
+  |> List.filter_map((contract: Subgraph.Contract.t) => 
     if (contract.instances != []) {
       (
         contract.name,
@@ -190,7 +190,7 @@ let data_sources_model = (subgraph) => subgraph
   );
 
 let templates_model = (subgraph) => subgraph
-  |> List.filter_map((contract: Subgraph.contract) => 
+  |> List.filter_map((contract: Subgraph.Contract.t) => 
     if (contract.instances == []) {
       (
         contract.name,
