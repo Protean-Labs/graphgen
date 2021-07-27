@@ -1,6 +1,7 @@
 {
+
   "name": "graphgen",
-  "version": "0.0.2-development",
+  "version": "0.0.7-development",
   "description": "Subgraph Generation Tool",
   "license": "MIT",
   "esy": {
