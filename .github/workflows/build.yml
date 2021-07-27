@@ -23,8 +23,31 @@ jobs:
         with:
           cache-key: ${{ hashFiles('esy.lock/index.json') }}
 
-  Draft-Release:
+  Integration-test:
     needs: Build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: 14
+    - name: Run graphgen on UniswapV2 test file
+      run:
+          npm run graphgen test/IUniswapV2.sol 
+    - name: Install Graph-cli
+      run:
+          npm install @graphprotocol/graph-cli @graphprotocol/graph-ts
+
+    - name: Build Uniswap generated subgraph
+      run: |
+          cd subgraph/
+          npx graph build subgraph.yaml
+
+
+  Draft-Release:
+    needs: [Build, Integration-test]
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
