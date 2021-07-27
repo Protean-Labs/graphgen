@@ -168,13 +168,13 @@ let subgraph_model = (subgraph) => {
   ])
 };
 
-let manifest_model = (subgraph) => subgraph_model(subgraph)
+let manifest_models = (subgraph) => subgraph_model(subgraph)
   |> (obj) => [("subgraph", obj)];
 
-let schema_model = (subgraph) => subgraph_model(subgraph)
+let schema_models = (subgraph) => subgraph_model(subgraph)
   |> (obj) => [("subgraph", obj)];
 
-let data_sources_model = (subgraph) => subgraph
+let data_sources_models = (subgraph) => subgraph
   |> List.filter_map((contract: Subgraph.Contract.t) => 
     if (contract.instances != []) {
       (
@@ -189,7 +189,7 @@ let data_sources_model = (subgraph) => subgraph
     else None
   );
 
-let templates_model = (subgraph) => subgraph
+let templates_models = (subgraph) => subgraph
   |> List.filter_map((contract: Subgraph.Contract.t) => 
     if (contract.instances == []) {
       (

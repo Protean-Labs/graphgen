@@ -7,3 +7,4 @@ esy.lock/
 *.ts
 _release/
 graphgen.install
+node_modules
