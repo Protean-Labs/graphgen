@@ -34,7 +34,6 @@ jobs:
     needs: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
         with:
@@ -49,7 +48,6 @@ jobs:
     needs: Build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
       - uses: actions/checkout@v2
       # Setup .npmrc file to publish to GitHub Packages
       - uses: actions/setup-node@v2
