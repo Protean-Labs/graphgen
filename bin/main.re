@@ -1,6 +1,9 @@
+open Cmdliner;
+
 open Graphgenlib;
 open Parsing;
 
+Printexc.record_backtrace(true);
 let logger = Easy_logging.Logging.make_logger("GraphGen", Debug, [Cli(Debug)]);
 
 let load_file = (filename) => {
@@ -32,28 +35,49 @@ let generate = (ast: Ast.t) => {
     | Error(msg) => logger#error("%s", msg)
 };
 
-let () = {
-  Printexc.record_backtrace(true);
-  if (Array.length(Sys.argv) != 2) {
-    failwith("Usage: graphgen [FILE_OR_DIR]")
-  } else {
-    switch (Bos.OS.(Dir.exists(Fpath.v(Sys.argv[1])), File.exists(Fpath.v(Sys.argv[1])))) {
-    | (Ok(true), Ok(false)) => failwith("Not implemented")
-    | (Ok(false), Ok(true)) => {
-      let file = load_file(Sys.argv[1]);
-      try (Ok(Parser.source_unit(Lexer.token, Lexing.from_string(file)))) {
-        | Lexer.ParsingError(err) => Error(err)
-        // | Parser.Error => Error("Unhandled parser error")
-        // | Parser.MenhirBasics.Error(err) => Error(err)
-        | exn => Error(Printexc.to_string(exn) ++ ": " ++ Printexc.get_backtrace())
-      }
-      |> fun
-        | Error(msg) => print_endline(msg)
-        | Ok(ast) => 
-          generate(ast)
-          // |> fun | Ok(_) => () | Error(`Msg(err)) => failwith(err)
+let graphgen = (_, _, source) => {
+  
+
+  switch (Bos.OS.(Dir.exists(Fpath.v(source)), File.exists(Fpath.v(source)))) {
+  | (Ok(true), Ok(false)) => failwith("Not implemented")
+  | (Ok(false), Ok(true)) => {
+    let file = load_file(source);
+    try (Ok(Parser.source_unit(Lexer.token, Lexing.from_string(file)))) {
+      | Lexer.ParsingError(err) => Error(err)
+      // | Parser.Error => Error("Unhandled parser error")
+      // | Parser.MenhirBasics.Error(err) => Error(err)
+      | exn => Error(Printexc.to_string(exn) ++ ": " ++ Printexc.get_backtrace())
     }
-    | _ => failwith("Invalid filename" ++ Sys.argv[1])
-    }
+    |> fun
+      | Error(msg) => print_endline(msg)
+      | Ok(ast) => 
+        generate(ast)
+        // |> fun | Ok(_) => () | Error(`Msg(err)) => failwith(err)
+  }
+  | _ => failwith("Invalid filename" ++ source)
   }
 };
+
+let description = {
+  let doc = "Subgraph description"
+  Arg.(value & opt(string, "PLACEHOLDER") & info(["d", "description"], ~doc))
+};
+
+let repository = {
+  let doc = "Subgraph repository"
+  Arg.(value & opt(string, "PLACEHOLDER") & info(["r", "repository"], ~doc))
+};
+
+let intf_path = {
+  let doc = "Solidity interface file or directory containing multiple interface files"
+  Arg.(required & pos(~rev=true, 0, some(string), None) & info([], ~doc))
+};
+
+let graphgen_t = Term.(const(graphgen) $ description $ repository $ intf_path);
+
+let info = {
+  let doc = "Generate a subgraph from annotated solidity interfaces"
+  Term.info("graphgen", ~doc, ~exits=Term.default_exits)
+};
+
+let () = Term.exit @@ Term.eval((graphgen_t, info));

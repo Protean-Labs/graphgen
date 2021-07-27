@@ -1,5 +1,4 @@
 {
-
   "name": "graphgen",
   "version": "0.0.7-development",
   "description": "Subgraph Generation Tool",
@@ -12,13 +11,16 @@
       "rewritePrefix": true,
       "releasedBinaries": [ "graphgen.exe" ]
     },
-    "buildEnv": {
-      "ODOC_SYNTAX": "re"
-    }
+    "buildEnv": { "ODOC_SYNTAX": "re" }
   },
-  "scripts": { "doc": "esy dune build @doc-private", "graphgen": "esy x graphgen.exe", "test": "esy x test.exe" },
+  "scripts": {
+    "doc": "esy dune build @doc-private",
+    "graphgen": "esy x graphgen.exe",
+    "test": "esy x test.exe"
+  },
   "dependencies": {
     "@esy-ocaml/reason": "^3.7.0",
+    "@opam/cmdliner": "1.0.4",
     "@opam/easy_logging": "0.8.1",
     "@opam/fpath": "0.7.3",
     "@opam/jingoo": "1.4.3",
