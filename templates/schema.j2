@@ -22,8 +22,8 @@ type Transaction @entity {
   to: Bytes
   blockNumber: BigInt!
   blockTimestamp: BigInt!
-  {% if ns.has_events %} events: [Event!]! @derivedFrom(field: "tx") {% endif %}
-  {% if ns.has_calls %} calls: [Call!]! @derivedFrom(field: "tx") {% endif %}
+  {% if ns.has_events %}events: [Event!]! @derivedFrom(field: "tx") {% endif %}
+  {% if ns.has_calls %}calls: [Call!]! @derivedFrom(field: "tx") {% endif %}
 }
 
 {% if ns.has_events -%}

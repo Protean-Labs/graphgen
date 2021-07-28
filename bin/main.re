@@ -69,6 +69,7 @@ let graphgen = (desc, repo, target_path) => {
     | Ok() => ()
 };
 
+// Command-line arguments
 let description = {
   let doc = "Subgraph description"
   Arg.(value & opt(string, "PLACEHOLDER") & info(["d", "description"], ~doc))
