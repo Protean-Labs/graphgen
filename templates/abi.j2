@@ -1,0 +1,39 @@
+{
+  "abi": [{% for event in contract.events %}
+    {
+      "type": "event",
+      "name": "{{ event.name }}",
+      "anonymous": false,
+      "inputs": [{% for field in event.fields %}
+        {
+          "indexed": {{ field.indexed }},
+          "internalType": "{{ field.type }}",
+          "name": "{{ field.name }}",
+          "type": "{{ field.type }}"
+        }{% if not loop.last %},{% endif %}{% endfor %}
+      ]
+    }{% if not loop.last %},{% endif %}{% endfor %}{% if contract.functions != [] %},{% for f in contract.functions %}
+    {
+      "type": "function",
+      "name": "{{ f.name }}",
+      "stateMutability": "{{ f.stateMutability }}",
+      "inputs": {% if f.inputs == [] %}[]{% else %}[{% for field in f.inputs %}
+        {
+          "internalType": "{{ field.type }}",
+          "name": "{{ field.name }}",
+          "type": "{{ field.type }}"
+        }{% if not loop.last %},{% endif %}{% endfor %}
+      ]{% endif %},
+      "outputs": {% if f.outputs == [] %}[]{% else %}[{% for field in f.outputs %}
+        {
+          "internalType": "{{ field.type }}",
+          "name": "{{ field.name }}",
+          "type": "{{ field.type }}"
+        }{% if not loop.last %},{% endif %}{% endfor %}
+      ]{% endif %}
+    }{% if not loop.last %},{% endif %}{% endfor %}{% endif %}
+  ]
+}
+
+
+
