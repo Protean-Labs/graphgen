@@ -3,15 +3,12 @@ description: {{ subgraph.description }}
 repository: {{ subgraph.repository }}
 schema:
   file: ./schema.graphql
-dataSources:
-{% for dataSource in subgraph.dataSources -%}
-{%- set dataSource = dataSource -%}
-{% for (address, startBlock) in dataSource.instances -%}  
+dataSources:{% for dataSource in subgraph.dataSources %}{% set dataSource = dataSource %}{% for (address, startBlock) in dataSource.instances %}  
   - kind: ethereum/contract
     name: {{ dataSource.name }}
     network: {{ dataSource.network }}
     source:
-      address: \'{{ address }}\'
+      address: '{{ address }}'
       abi: {{ dataSource.contract.name }}
       startBlock: {{ startBlock }}
     mapping:
@@ -47,8 +44,7 @@ dataSources:
       {%- endif -%}
 {%- endfor -%}
 {%- endfor %}
-templates:
-{% for template in subgraph.templates -%}
+templates:{% for template in subgraph.templates %}
   - kind: ethereum/contract
     name: {{ template.name }}
     network: {{ template.network }}

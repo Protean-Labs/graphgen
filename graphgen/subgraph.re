@@ -251,9 +251,14 @@ module Builder = {
       f(intf_elements, [])
     };
 
+    let fmt_address = (address) => {
+      let regex = Str.regexp(".*\\(0x[A-Fa-f0-9]+\\).*");
+      Str.replace_first(regex, "\\1", address)
+    };
+
     let fmt_instances = (instances) => instances
       |> Option.value(~default=[]) 
-      |> List.map((instance: Ast.instance) => (instance.address, instance.startBlock));
+      |> List.map((instance: Ast.instance) => (fmt_address(instance.address), instance.startBlock));
     
     // TODO: Set network field based on tags
     let rec to_subgraph = (ast: list(Ast.interface), acc) => {
