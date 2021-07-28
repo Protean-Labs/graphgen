@@ -213,6 +213,12 @@ module Builder = {
     f(intf_elements, [])
   };
 
+  let fmt_repo = (repo) => {
+    let regex = Str.regexp_string("https://github.com/[-A-Za-z0-9_]/[-A-Za-z0-9_]");
+    if (Str.string_match(regex, repo, 0)) repo
+    else [%string "https://github.com/%{repo}"]
+  };
+
   let make = (~desc=?, ~repo=?, full_ast: Ast.t) => {
     let get_fields = (intf_elements) => {
       open Ast;
@@ -244,7 +250,7 @@ module Builder = {
 
     {
       description:  switch (desc) { | Some(desc) => desc | None => logger#warning("Description not provided, using PLACEHOLDER"); "PLACEHOLDER"},
-      repository:   switch (repo) { | Some(desc) => desc | None => logger#warning("Repository name not provided, using PLACEHOLDER"); "PLACEHOLDER"},
+      repository:   switch (repo) { | Some(repo) => fmt_repo(repo) | None => logger#warning("Repository name not provided, using PLACEHOLDER"); "PLACEHOLDER"},
       contracts: to_subgraph(full_ast, [])
     }
   };

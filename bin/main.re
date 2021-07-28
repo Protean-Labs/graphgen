@@ -9,29 +9,52 @@ let logger = Easy_logging.Logging.make_logger("GraphGen", Debug, [Cli(Debug)]);
 module File = Bos.OS.File;
 module Dir = Bos.OS.Dir;
 
+let is_solidity = (path) => {
+  let regex = Str.regexp("[-A-Za-z0-9_]+.sol");
+  Str.string_match(regex, path, 0)
+};
+
 let graphgen = (desc, repo, target_path) => {
-  let (>>=) = Result.bind;
-  let (>|=) = (res, f) => Result.map(f, res);
-  let fmt_err = Result.map_error((`Msg(msg)) => msg);
+  open Rresult.R.Infix;
+  let fmt_err = fun | Error(`Msg(msg)) => Result.error(msg) | Ok(x) => Result.ok(x);
 
   let generate_manifest = Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_models)
   let generate_schema = Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.schema_models)
   let generate_data_sources = Generator.multi_file("templates/data_source.j2", (key) => [%string "subgraph/src/mappings/%{String.uncapitalize_ascii key}.ts"], Models.data_sources_models)
   let generate_templates = Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{String.uncapitalize_ascii key}.ts"], Models.templates_models)
 
-  let generate_from_file = (path) => {
-    fmt_err @@ File.read(path)            >>= (source) => 
-    parse(source)                         >|= 
-    Subgraph.Builder.make(~desc, ~repo)   >>= (subgraph) =>
-    Generator.generate_directories()      >>= (_) => 
-    generate_manifest(subgraph)           >>= (_) =>
-    generate_schema(subgraph)             >>= (_) =>
-    generate_data_sources(subgraph)       >>= (_) =>
-    generate_templates(subgraph)
+  let read_and_parse = (path) => {
+    fmt_err @@ File.read(path)  >>= (source) => 
+    parse(source)
   };
 
-  let generate_from_dir = (_) => {
-    failwith("Not implemented")
+  let generate_from_ast = (ast) => {
+    Subgraph.Builder.make(~desc, ~repo, ast)    |>  (subgraph) =>
+    Generator.generate_directories()            >>= (_) => 
+    generate_manifest(subgraph)                 >>= (_) =>
+    generate_schema(subgraph)                   >>= (_) =>
+    generate_data_sources(subgraph)             >>= (_) =>
+    generate_templates(subgraph)
+  }
+
+  let generate_from_file = (path) => {
+    read_and_parse(path)    >>= (ast) =>
+    generate_from_ast(ast)
+  };
+
+  let generate_from_dir = (path) => {
+    let f = (acc, path) => {
+      if (is_solidity(Fpath.filename(path))) {
+        acc                   >>= (acc) =>
+        read_and_parse(path)  >>| (ast) =>
+        List.concat([acc, ast])
+      } 
+      else acc
+    };
+
+    fmt_err @@ Dir.contents(path)     >>= (files) =>
+    List.fold_left(f, Ok([]), files)  >>= (ast) =>
+    generate_from_ast(ast)
   };
 
   let path = Fpath.v(target_path);
