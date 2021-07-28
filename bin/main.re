@@ -1,4 +1,5 @@
 open Cmdliner;
+open Rresult;
 
 open Graphgenlib;
 open Parsing;
@@ -15,8 +16,7 @@ let is_solidity = (path) => {
 };
 
 let graphgen = (desc, repo, target_path) => {
-  open Rresult.R.Infix;
-  let fmt_err = fun | Error(`Msg(msg)) => Result.error(msg) | Ok(x) => Result.ok(x);
+  open R.Infix;
 
   let generate_manifest = Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_models)
   let generate_schema = Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.schema_models)
@@ -24,7 +24,7 @@ let graphgen = (desc, repo, target_path) => {
   let generate_templates = Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{String.uncapitalize_ascii key}.ts"], Models.templates_models)
 
   let read_and_parse = (path) => {
-    fmt_err @@ File.read(path)  >>= (source) => 
+    File.read(path)  >>= (source) => 
     parse(source)
   };
 
@@ -52,7 +52,7 @@ let graphgen = (desc, repo, target_path) => {
       else acc
     };
 
-    fmt_err @@ Dir.contents(path)     >>= (files) =>
+    Dir.contents(path)                >>= (files) =>
     List.fold_left(f, Ok([]), files)  >>= (ast) =>
     generate_from_ast(ast)
   };
@@ -62,10 +62,10 @@ let graphgen = (desc, repo, target_path) => {
   switch (Bos.OS.(Dir.exists(path), File.exists(path))) {
   | (Ok(true), Ok(false)) => generate_from_dir(path)
   | (Ok(false), Ok(true)) => generate_from_file(path)
-  | _ => Result.error([%string "Invalid path: %{target_path}"])
+  | _ => R.error_msg([%string "Invalid path: %{target_path}"])
   }
   |> fun
-    | Error(msg) => logger#error("%s", msg)
+    | Error(`Msg(msg)) => logger#error("%s", msg)
     | Ok() => ()
 };
 

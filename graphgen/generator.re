@@ -1,4 +1,5 @@
 open Jingoo;
+open Rresult;
 
 module File = Bos.OS.File;
 module Dir = Bos.OS.Dir;
@@ -49,7 +50,7 @@ let generate_directories = () => {
   |> List.fold_left((res, path) => Result.bind(res, _ => Dir.create(~path=true, Fpath.v(path))), Result.ok(true))
   |> Result.map_error((`Msg(msg)) => {
       logger#error("Creating directories: %s", msg);
-      msg
+      R.msg(msg)
   })
 };
 
@@ -60,7 +61,7 @@ let generate = (template_path, dest_path, models) => {
   |> File.write(Fpath.v(dest_path))
   |> Result.map_error((`Msg(msg)) => {
     logger#error("Writing file %s: %s", dest_path, msg);
-    msg
+    R.msg(msg)
   })
 };
 
