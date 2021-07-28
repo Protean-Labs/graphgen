@@ -142,14 +142,14 @@ let contract_related_contracts = (subgraph, contract) => {
 };
 
 module Builder = {
-  let fmt_call = (name, inputs, outputs): call => {
+  let fmt_call = (name, inputs, outputs, state_mutability): call => {
     let inputs = inputs
       |> List.map((Ast.{typ, name, _}) => (Option.value(name, ~default="arg"), typ));
 
     let outputs = outputs
       |> List.map((Ast.{typ, name, _}) => (Option.value(name, ~default="arg"), typ));
-    
-    {name, state_mutability: Parsing.Ast.View, inputs, outputs}
+
+    {name, state_mutability, inputs, outputs}
   };
 
   let fmt_event = (name, params: list(Ast.event_param)): event => {
@@ -205,9 +205,9 @@ module Builder = {
     let rec f = (intf_elements, acc) => {
       switch (intf_elements) {
       | [] => acc
-      | [FunctionDef(_, inputs, outputs, Some(GGHandler({name: Some(n), actions}))), ...rest] 
-      | [FunctionDef(n, inputs, outputs, Some(GGHandler({name: None, actions}))), ...rest] => 
-        let call = fmt_call(n, inputs, outputs);
+      | [FunctionDef(_, inputs, outputs, Some(GGHandler({name: Some(n), actions})), state_mut), ...rest] 
+      | [FunctionDef(n, inputs, outputs, Some(GGHandler({name: None, actions})), state_mut), ...rest] => 
+        let call = fmt_call(n, inputs, outputs, state_mut);
         f(rest, [Call(call, fmt_call_handler_actions(full_ast, call, actions)), ...acc])
       | [EventDef(_, fields, Some(GGHandler({name: Some(n), actions}))), ...rest] 
       | [EventDef(n, fields, Some(GGHandler({name: None, actions}))), ...rest] =>
@@ -227,7 +227,7 @@ module Builder = {
   };
 
   let all_calls = Parsing.Ast.(List.filter_map(fun
-    | FunctionDef(name, inputs, outputs, _) => fmt_call(name, inputs, outputs) |> Option.some
+    | FunctionDef(name, inputs, outputs, _, state_mut) => fmt_call(name, inputs, outputs, state_mut) |> Option.some
     | _ => None
   ));
 
@@ -242,7 +242,7 @@ module Builder = {
       let rec f = (intf_elements, acc) => {
         switch (intf_elements) {
         | [] => acc
-        | [FunctionDef(getter_name, [], [output], Some(GGField({name, _}))), ...rest] => 
+        | [FunctionDef(getter_name, [], [output], Some(GGField({name, _})), _), ...rest] => 
           f(rest, [(Option.value(name, ~default=getter_name), output.typ, getter_name), ...acc])        
         | [_, ...rest] => f(rest, acc)
         };

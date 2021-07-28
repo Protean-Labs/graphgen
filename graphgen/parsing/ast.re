@@ -69,6 +69,7 @@ let rec string_of_typ = fun
   | ArrayT(typ) => [%string "%{string_of_typ typ}[]"]
 ;
 
+[@deriving show]
 type state_mutability = 
   | Pure 
   | View 
@@ -106,7 +107,7 @@ type fun_param = {
 
 [@deriving show]
 type intf_element =
-  | FunctionDef(string, list(fun_param), list(fun_param), option(gg_tag))
+  | FunctionDef(string, list(fun_param), list(fun_param), option(gg_tag), state_mutability)
   | FallbackDef
   | ReceiveDef
   | StructDef
@@ -191,14 +192,14 @@ let tcheck = (ast) => {
     let rec scan_intf = (intf_elements, tenv) => {
       switch (intf_elements) {
       | [] => tenv
-      | [FunctionDef(_, _, _, Some(GGHandler({name: Some(n), _}))), ...rest] 
-      | [FunctionDef(n, _, _, Some(GGHandler({name: None, _}))), ...rest] => 
+      | [FunctionDef(_, _, _, Some(GGHandler({name: Some(n), _})), _), ...rest] 
+      | [FunctionDef(n, _, _, Some(GGHandler({name: None, _})), _), ...rest] => 
         scan_intf(rest, [(n, `Call), ...tenv])
       | [EventDef(_, _, Some(GGHandler({name: Some(n), _}))), ...rest] 
       | [EventDef(n, _, Some(GGHandler({name: None, _}))), ...rest] => 
         scan_intf(rest, [(n, `Event), ...tenv])
-      | [FunctionDef(_, _, _, Some(GGField({name: Some(n), _}))), ...rest] 
-      | [FunctionDef(n, _, _, Some(GGField({name: None, _}))), ...rest] => 
+      | [FunctionDef(_, _, _, Some(GGField({name: Some(n), _})), _), ...rest] 
+      | [FunctionDef(n, _, _, Some(GGField({name: None, _})), _), ...rest] => 
         scan_intf(rest, [(n, `Field), ...tenv])
       | [_, ...rest] => scan_intf(rest, tenv)
       }
