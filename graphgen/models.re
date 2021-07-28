@@ -159,14 +159,56 @@ let template_model = (subgraph, contract: Subgraph.Contract.t) => {
   ])
 };
 
-let subgraph_model = (subgraph) => {
+let subgraph_model = (subgraph) =>
   Jg_types.Tobj([
     ("dataSources", Tlist(subgraph
       |> List.filter_map((contract: Subgraph.Contract.t) => contract.instances != [] ? Some(data_source_model(subgraph, contract)) : None))),
     ("templates", Tlist(subgraph
       |> List.filter_map((contract: Subgraph.Contract.t) => contract.instances == [] ? Some(template_model(subgraph, contract)) : None)))
-  ])
-};
+  ]);
+
+let event_abi_model = (event: Subgraph.event) =>
+  Jg_types.Tobj([
+    ("name", Tstr(event.name)),
+    ("fields", Tlist(event.fields
+      |> List.map(((name, typ, indexed)) => Jg_types.Tobj([
+        ("name", Tstr(name)),
+        ("type", Tstr(Parsing.Ast.string_of_typ(typ))),
+        ("indexed", Tbool(indexed))
+      ]))
+    ))
+  ]);
+
+let function_abi_model = (call: Subgraph.call) => 
+  Jg_types.Tobj([
+    ("name", Tstr(call.name)),
+    ("stateMutability", Tstr(Parsing.Ast.string_of_state_mut(call.state_mutability))),
+    ("inputs", Tlist(call.inputs
+      |> List.map(((name, typ)) => Jg_types.Tobj([
+        ("name", Tstr(name)),
+        ("type", Tstr(Parsing.Ast.string_of_typ(typ)))
+      ]))
+    )),
+    ("outputs", Tlist(call.outputs
+      |> List.map(((name, typ)) => Jg_types.Tobj([
+        ("name", Tstr(name)),
+        ("type", Tstr(Parsing.Ast.string_of_typ(typ)))
+      ]))
+    ))
+  ]);
+
+let contract_abi_model = (contract: Subgraph.Contract.t) =>
+  Jg_types.Tobj([
+    ("events", Tlist(contract.all_events
+      |> List.map(event_abi_model)
+    )),
+    ("functions", Tlist(contract.all_calls
+      |> List.map(function_abi_model)
+    ))
+  ]);
+
+let abi_models = (subgraph) => subgraph
+  |> List.map((contract: Subgraph.Contract.t) => (contract.name, [("contract", contract_abi_model(contract))]));
 
 let manifest_models = (subgraph) => subgraph_model(subgraph)
   |> (obj) => [("subgraph", obj)];

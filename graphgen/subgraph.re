@@ -9,9 +9,11 @@ type event = {
 
 type call = {
   name: string,
-  inputs: list((string, Ast.typ)),
-  outputs: list((string, Ast.typ))
+  state_mutability: Parsing.Ast.state_mutability,
+  inputs: list((string, Parsing.Ast.typ)),
+  outputs: list((string, Parsing.Ast.typ))
 };
+
 
 type action = 
   | StoreEvent
@@ -32,8 +34,13 @@ module Contract = {
     instances: list((string, int)),
     raw_name: string,
     fields: list((string, Ast.typ, string)),
-    handlers: list(handler)
+    handlers: list(handler),
+    all_calls: list(call),
+    all_events: list(event)
   };
+
+  let make = (name, network, instances, raw_name, fields, handlers, all_calls, all_events) => 
+    {name, network, instances, raw_name, fields, handlers, all_calls, all_events};
 
   let field = (contract, field_name) => contract.fields
     |> List.find_map(((name, typ, getter_name)) => 
@@ -138,7 +145,7 @@ module Builder = {
     let outputs = outputs
       |> List.map((Ast.{typ, name, _}) => (Option.value(name, ~default="arg"), typ));
     
-    {name, inputs, outputs}
+    {name, state_mutability: Parsing.Ast.View, inputs, outputs}
   };
 
   let fmt_event = (name, params: list(Ast.event_param)): event => {
@@ -209,8 +216,17 @@ module Builder = {
     f(intf_elements, [])
   };
 
-  let make = (full_ast: Ast.t) => {
+  let all_calls = Parsing.Ast.(List.filter_map(fun
+    | FunctionDef(name, inputs, outputs, _) => fmt_call(name, inputs, outputs) |> Option.some
+    | _ => None
+  ));
 
+  let all_events = Parsing.Ast.(List.filter_map(fun
+    | EventDef(name, fields, _) => fmt_event(name, fields) |> Option.some
+    | _ => None
+  ));
+
+  let make = (full_ast: Ast.t) => {
     let get_fields = (intf_elements) => {
       open Ast;
       let rec f = (intf_elements, acc) => {
@@ -224,17 +240,36 @@ module Builder = {
 
       f(intf_elements, [])
     };
+
+    let fmt_instances = (instances) => instances
+      |> Option.value(~default=[]) 
+      |> List.map((instance: Ast.instance) => (instance.address, instance.startBlock));
     
     // TODO: Set network field based on tags
     let rec to_subgraph = (ast: list(Ast.interface), acc): t => {
       switch (ast) {
       | [] => acc
+
       | [{raw_name, elements, tag: Some(GGSource({name: None, instances, _}))}, ...rest] => 
-        let instances = instances |> Option.value(~default=[]) |> List.map((instance: Ast.instance) => (instance.address, instance.startBlock));
-        to_subgraph(rest, [{raw_name, name: raw_name, network: "mainnet", instances, fields: get_fields(elements), handlers: get_handlers(full_ast, elements)}, ...acc])
-      | [{raw_name, elements, tag: Some(GGSource({name: Some(n), instances, _}))}, ...rest] => 
-        let instances = instances |> Option.value(~default=[]) |> List.map((instance: Ast.instance) => (instance.address, instance.startBlock));
-        to_subgraph(rest, [{raw_name, name: n, network: "mainnet", instances, fields: get_fields(elements), handlers: get_handlers(full_ast, elements)}, ...acc])
+        fmt_instances(instances)            |> (instances) => 
+        get_fields(elements)                |> (fields) =>
+        get_handlers(full_ast, elements)    |> (handlers) =>
+        all_calls(elements)                 |> (all_calls) => 
+        all_events(elements)                |> (all_events) => 
+        Contract.make(raw_name, "mainnet", instances, raw_name, fields, handlers, all_calls, all_events)
+        |> List.cons(_, acc)
+        |> to_subgraph(rest)
+
+      | [{raw_name, elements, tag: Some(GGSource({name: Some(name), instances, _}))}, ...rest] => 
+        fmt_instances(instances)            |> (instances) => 
+        get_fields(elements)                |> (fields) =>
+        get_handlers(full_ast, elements)    |> (handlers) =>
+        all_calls(elements)                 |> (all_calls) => 
+        all_events(elements)                |> (all_events) => 
+        Contract.make(name, "mainnet", instances, raw_name, fields, handlers, all_calls, all_events)
+        |> List.cons(_, acc)
+        |> to_subgraph(rest)
+
       | [_, ...rest] => to_subgraph(rest, acc)
       }
     };
