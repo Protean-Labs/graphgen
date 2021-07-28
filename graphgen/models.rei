@@ -1,3 +1,5 @@
+let abi_models: Subgraph.t => list((string, Generator.models));
+
 /** [manifest_models(sg)] returns Jingoo models generated from the subgraph [sg] 
     used to generate the subgraph manifest from the associated Jinja2 template. */
 let manifest_models: Subgraph.t => Generator.models;

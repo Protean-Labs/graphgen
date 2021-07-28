@@ -69,6 +69,20 @@ let rec string_of_typ = fun
   | ArrayT(typ) => [%string "%{string_of_typ typ}[]"]
 ;
 
+type state_mutability = 
+  | Pure 
+  | View 
+  | Nonpayable 
+  | Payable
+;
+
+let string_of_state_mut = fun
+  | Pure => "pure"
+  | View => "view"
+  | Nonpayable => "nonpayable"
+  | Payable => "payable"
+;
+
 [@deriving show]
 type event_param = {
   typ: typ,

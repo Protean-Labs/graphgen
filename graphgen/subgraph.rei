@@ -19,6 +19,7 @@ let event_signature: event => string;
 /** Type of smart contract function calls. */
 type call = {
   name: string,
+  state_mutability: Parsing.Ast.state_mutability,
   inputs: list((string, Parsing.Ast.typ)),
   outputs: list((string, Parsing.Ast.typ))
 };
@@ -68,7 +69,9 @@ module Contract: {
     instances: list((string, int)),
     raw_name: string,
     fields: list((string, Parsing.Ast.typ, string)),
-    handlers: list(handler)
+    handlers: list(handler),
+    all_calls: list(call),
+    all_events: list(event)
   };
 
   /** [field(contract, field_name)] returns a tuple [Some((typ, getter))] 
