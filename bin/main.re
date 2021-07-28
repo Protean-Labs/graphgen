@@ -17,8 +17,8 @@ let generate = (ast: Ast.t) => {
   Generator.multi_file("templates/abi.j2", (key) => [%string "subgraph/abis/%{key}.json"], Models.abi_models, subgraph);
   Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_models, subgraph);
   Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.schema_models, subgraph);
-  Generator.multi_file("templates/data_source.j2", (key) => [%string "subgraph/src/mappings/%{String.uncapitalize_ascii key}.ts"], Models.data_sources_models, subgraph);
-  Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{String.uncapitalize_ascii key}.ts"], Models.templates_models, subgraph);
+  Generator.multi_file("templates/data_source.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.data_sources_models, subgraph);
+  Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.templates_models, subgraph);
 
   // let (>>=) = Result.bind;
   
