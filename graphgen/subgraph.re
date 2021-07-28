@@ -235,6 +235,12 @@ module Builder = {
     | EventDef(name, fields, _) => fmt_event(name, fields) |> Option.some
     | _ => None
   ));
+  
+  let fmt_repo = (repo) => {
+    let regex = Str.regexp_string("https://github.com/[-A-Za-z0-9_]/[-A-Za-z0-9_]");
+    if (Str.string_match(regex, repo, 0)) repo
+    else [%string "https://github.com/%{repo}"]
+  };
 
   let make = (~desc=?, ~repo=?, full_ast: Ast.t) => {
     let get_fields = (intf_elements) => {
