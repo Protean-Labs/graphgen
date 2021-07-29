@@ -85,8 +85,9 @@ module Contract = {
 };
 
 type t = {
+  github_user: string,
+  subgraph_name: string,
   description: string,
-  repository: string,
   contracts: list(Contract.t)
 };
 
@@ -242,7 +243,7 @@ module Builder = {
     else [%string "https://github.com/%{repo}"]
   };
 
-  let make = (~desc=?, ~repo=?, full_ast: Ast.t) => {
+  let make = (~github_user="PLACEHOLDER", ~subgraph_name="PLACEHOLDER", ~desc="PLACEHOLDER", full_ast: Ast.t) => {
     let get_fields = (intf_elements) => {
       open Ast;
       let rec f = (intf_elements, acc) => {
@@ -296,8 +297,9 @@ module Builder = {
     };
 
     {
-      description:  switch (desc) { | Some(desc) => desc | None => logger#warning("Description not provided, using PLACEHOLDER"); "PLACEHOLDER"},
-      repository:   switch (repo) { | Some(repo) => fmt_repo(repo) | None => logger#warning("Repository name not provided, using PLACEHOLDER"); "PLACEHOLDER"},
+      github_user,
+      subgraph_name,
+      description: desc,
       contracts: to_subgraph(full_ast, [])
     }
   };

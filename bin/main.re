@@ -15,8 +15,8 @@ let is_solidity = (path) => {
   Str.string_match(regex, path, 0)
 };
 
-let graphgen = (desc, repo, target_path) => {
-  open Rresult.R.Infix;
+let graphgen = (github_user, subgraph_name, desc, target_path) => {
+  open R.Infix;
 
   let generate_manifest = Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_models)
   let generate_schema = Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.schema_models)
@@ -29,7 +29,7 @@ let graphgen = (desc, repo, target_path) => {
   };
 
   let generate_from_ast = (ast) => {
-    Subgraph.Builder.make(~desc, ~repo, ast)    |>  (subgraph) =>
+    Subgraph.Builder.make(~github_user, ~subgraph_name, ~desc, ast)    |>  (subgraph) =>
     Generator.generate_directories()            >>= (_) => 
     generate_manifest(subgraph)                 >>= (_) =>
     generate_schema(subgraph)                   >>= (_) =>
@@ -75,9 +75,14 @@ let description = {
   Arg.(value & opt(string, "PLACEHOLDER") & info(["d", "description"], ~doc))
 };
 
-let repository = {
-  let doc = "Subgraph repository"
-  Arg.(value & opt(string, "PLACEHOLDER") & info(["r", "repository"], ~doc))
+let github_user = {
+  let doc = "The Graph Github user"
+  Arg.(value & opt(string, "PLACEHOLDER") & info(["u", "user"], ~doc))
+};
+
+let subgraph_name = {
+  let doc = "The name of the subgraph"
+  Arg.(value & opt(string, "PLACEHOLDER") & info(["n", "name"], ~doc))
 };
 
 let path = {
@@ -85,7 +90,7 @@ let path = {
   Arg.(required & pos(~rev=true, 0, some(string), None) & info([], ~doc))
 };
 
-let graphgen_t = Term.(const(graphgen) $ description $ repository $ path);
+let graphgen_t = Term.(const(graphgen) $ github_user $ subgraph_name $ description $ path);
 
 let info = {
   let doc = "Generate a subgraph from annotated solidity interfaces"
