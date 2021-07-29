@@ -46,10 +46,11 @@ jobs:
     - name: Install Graph-cli & dependencies
       run: |
           cd subgraph/
-          npm instal
+          npm ci
 
     - name: Build Uniswap generated subgraph
       run: |
+          cd subgraph/
           npm run codegen
           npm run build
 
