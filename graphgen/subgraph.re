@@ -230,7 +230,7 @@ module Builder = {
     | EventDef(name, fields, _) => fmt_event(name, fields) |> Option.some
     | _ => None
   ));
-  
+
   let make = (~github_user="PLACEHOLDER", ~subgraph_name="PLACEHOLDER", ~desc="PLACEHOLDER", full_ast: Ast.t) => {
     let get_fields = (intf_elements) => {
       open Ast;
