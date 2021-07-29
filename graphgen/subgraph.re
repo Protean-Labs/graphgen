@@ -237,12 +237,6 @@ module Builder = {
     | _ => None
   ));
   
-  let fmt_repo = (repo) => {
-    let regex = Str.regexp_string("https://github.com/[-A-Za-z0-9_]/[-A-Za-z0-9_]");
-    if (Str.string_match(regex, repo, 0)) repo
-    else [%string "https://github.com/%{repo}"]
-  };
-
   let make = (~github_user="PLACEHOLDER", ~subgraph_name="PLACEHOLDER", ~desc="PLACEHOLDER", full_ast: Ast.t) => {
     let get_fields = (intf_elements) => {
       open Ast;
