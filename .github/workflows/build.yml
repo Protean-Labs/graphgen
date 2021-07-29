@@ -44,7 +44,7 @@ jobs:
       run:
           npm run graphgen test/IUniswapV2.sol 
     - name: Install Graph-cli & dependencies
-      run:
+      run: |
           cd subgraph/
           npm instal
 
