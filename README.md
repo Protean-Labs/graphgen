@@ -33,15 +33,15 @@
   </a>
   <a href="https://www.npmjs.com/@protean-labs/graphgen">
     <img src="https://img.shields.io/npm/v/@protean-labs/graphgen.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen" alt="GraphGen on npm" />
-  </a>&nbsp;
+  </a>
   <a href="https://www.npmjs.com/@protean-labs/graphgen">
     <img src="https://img.shields.io/npm/dt/@protean-labs/graphgen" alt="Graphgen downloads on npm" />
   </a>
     <a href="https://discord.gg/protean-labs">
-    <img src="https://img.shields.io/discord/789917050922336357.svg?logo=discord&logoColor=fff&label=Discord&color=7389d8" alt="Discord conversation" />
+    <img src="https://img.shields.io/discord/789917050922336357.svg?logo=discord&logoColor=fff&label=Discord&color=7389d8" alt="Discord conversation"/>
   </a>
   <a href="https://twitter.com/intent/follow?screen_name=proteancrypto">
-    <img src="https://img.shields.io/twitter/follow/proteancrypto?style=social" alt="Follow @proteancrypto" />
+    <img src="https://img.shields.io/twitter/follow/proteancrypto?style=social" alt="Follow @proteancrypto"/>
   </a>
 </p>
 
