@@ -43,14 +43,15 @@ jobs:
     - name: Run graphgen on UniswapV2 test file
       run:
           npm run graphgen test/IUniswapV2.sol 
-    - name: Install Graph-cli
+    - name: Install Graph-cli & dependencies
       run:
-          npm install @graphprotocol/graph-cli @graphprotocol/graph-ts
+          cd subgraph/
+          npm instal
 
     - name: Build Uniswap generated subgraph
       run: |
-          cd subgraph/
-          npx graph build subgraph.yaml
+          npm run codegen
+          npm run build
 
 
   Draft-Release:
