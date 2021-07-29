@@ -14,19 +14,20 @@ let generate = (ast: Ast.t) => {
   print_endline(Ast.show(ast));
   Generator.generate_directories();
   let subgraph = Subgraph.Builder.make(ast);
+  Generator.multi_file("templates/abi.j2", (key) => [%string "subgraph/abis/%{key}.json"], Models.abi_models, subgraph);
   Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_models, subgraph);
   Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.schema_models, subgraph);
-  Generator.multi_file("templates/data_source.j2", (key) => [%string "subgraph/src/mappings/%{String.uncapitalize_ascii key}.ts"], Models.data_sources_models, subgraph);
-  Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{String.uncapitalize_ascii key}.ts"], Models.templates_models, subgraph);
+  Generator.multi_file("templates/data_source.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.data_sources_models, subgraph);
+  Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.templates_models, subgraph);
 
-  let (>>=) = Result.bind;
+  // let (>>=) = Result.bind;
   
   Package.make("PLACEHOLDER", "PLACEHOLDER", "PLACEHOLDER") 
   |> Package.to_file
-  >>= (() => 
-    List.map(Abi.make, ast)
-    |> List.iter(Abi.to_file(_, "subgraph/abis"))
-    |> _ => Ok())
+  // >>= (() => 
+  //   List.map(Abi.make, ast)
+  //   |> List.iter(Abi.to_file(_, "subgraph/abis"))
+  //   |> _ => Ok())
   |> fun
     | Ok() => ()
     | Error(msg) => logger#error("%s", msg)

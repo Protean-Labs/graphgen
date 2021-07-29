@@ -8,6 +8,10 @@
   let make_event_param typ indexed name = {typ; indexed; name}
   let make_fun_param typ data_loc name = {typ; data_loc; name}
   
+  let fmt_state_mut state_mut = 
+    List.filter_map (function x -> x) state_mut
+    |> function [] -> Nonpayable | mut::_ -> mut
+
   let regexp = Str.regexp {|\\n|}
 
   let parse_gg_source_params params =
@@ -204,9 +208,9 @@ parameter_list:
 ;
 
 state_mutability:
-  | PURE;       { 16 }
-  | VIEW;       { 16 }
-  | PAYABLE;    { 16 }
+  | PURE;       { Pure }
+  | VIEW;       { View }
+  | PAYABLE;    { Payable }
 ;
 
 override_specifier:
@@ -216,18 +220,19 @@ override_specifier:
 
 function_definition:
   | FUNCTION; id = fun_def_subrule1; 
-    LPAREN; inputs = loption(parameter_list); RPAREN; list(fun_def_subrule2);  
-    outputs = loption(fun_def_subrule3); fun_def_subrule4;                                   { function tag -> FunctionDef (id, inputs, outputs, tag) }
+    LPAREN; inputs = loption(parameter_list); RPAREN; state_mut = list(fun_def_subrule2);  
+    outputs = loption(fun_def_subrule3); fun_def_subrule4;                                   
+    { function tag -> FunctionDef (id, inputs, outputs, tag, fmt_state_mut state_mut) }
 %inline fun_def_subrule1:
   | id = identifier;       { id }
   | FALLBACK;              { "fallback" }
   | RECEIVE;               { "receive" }
 %inline fun_def_subrule2:
-  | visibility;           { 18 }
-  | state_mutability;     { 18 }
-  // | modifier_invocation;  { 18 }
-  // | VIRTUAL;              { 18 }
-  | override_specifier;   { 18 } 
+  | visibility;                       { None }
+  | state_mut = state_mutability;     { Some state_mut }
+  // | modifier_invocation;  { () }
+  // | VIRTUAL;              { () }
+  | override_specifier;               { None } 
 %inline fun_def_subrule3:
   | RETURNS; LPAREN; params = parameter_list; RPAREN;    { params }
 %inline fun_def_subrule4:
@@ -237,13 +242,14 @@ function_definition:
 
 fallback_function_definition:
   | FALLBACK; LPAREN; inputs = loption(parameter_list); RPAREN; 
-    list(fb_fun_def_subrule1); outputs = loption(fb_fun_def_subrule2); fb_fun_def_subrule3;   { function tag -> FunctionDef ("fallback", inputs, outputs, tag) }
+    state_mut = list(fb_fun_def_subrule1); outputs = loption(fb_fun_def_subrule2); fb_fun_def_subrule3;   
+    { function tag -> FunctionDef ("fallback", inputs, outputs, tag, fmt_state_mut state_mut) }
 %inline fb_fun_def_subrule1:
-  | EXTERNAL;               { 2 }
-  | state_mutability;       { 2 }
-  // | modifier_invocation;    { 2 }
-  // | VIRTUAL;                { 2 }
-  | override_specifier;     { 2 }
+  | EXTERNAL;                       { None }
+  | state_mut = state_mutability;   { Some state_mut }
+  // | modifier_invocation;         { None }
+  // | VIRTUAL;                     { None }
+  | override_specifier;             { None }
 %inline fb_fun_def_subrule2:
   | RETURNS; LPAREN; params = parameter_list; RPAREN;    { params }
 %inline fb_fun_def_subrule3:
@@ -252,7 +258,7 @@ fallback_function_definition:
 ;
 
 receive_function_definition:
-  | RECEIVE; LPAREN; RPAREN; list(receive_fun_def_subrule1); receive_fun_def_subrule2;  { function tag -> FunctionDef ("receive", [], [], tag) }
+  | RECEIVE; LPAREN; RPAREN; list(receive_fun_def_subrule1); receive_fun_def_subrule2;  { function tag -> FunctionDef ("receive", [], [], tag, Payable) }
 %inline receive_fun_def_subrule1:
   | EXTERNAL;                   { 1 }
   // | PAYABLE;                    { 1 }

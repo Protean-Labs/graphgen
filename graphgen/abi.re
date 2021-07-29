@@ -144,7 +144,7 @@ type t = {
 
 let abi_of_element = (el: Ast.intf_element) => {
   switch el {
-    | FunctionDef(name,inputs,outputs,tags) => Some(`Function(Function.make(name, inputs, outputs, tags)))
+    | FunctionDef(name,inputs,outputs,tags,_) => Some(`Function(Function.make(name, inputs, outputs, tags)))
     | EventDef(name,params,tags) => Some(`Event(Event.make(name, params, tags)))
     | _ => None
   };

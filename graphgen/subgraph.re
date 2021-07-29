@@ -9,9 +9,11 @@ type event = {
 
 type call = {
   name: string,
-  inputs: list((string, Ast.typ)),
-  outputs: list((string, Ast.typ))
+  state_mutability: Parsing.Ast.state_mutability,
+  inputs: list((string, Parsing.Ast.typ)),
+  outputs: list((string, Parsing.Ast.typ))
 };
+
 
 type action = 
   | StoreEvent
@@ -32,8 +34,13 @@ module Contract = {
     instances: list((string, int)),
     raw_name: string,
     fields: list((string, Ast.typ, string)),
-    handlers: list(handler)
+    handlers: list(handler),
+    all_calls: list(call),
+    all_events: list(event)
   };
+
+  let make = (name, network, instances, raw_name, fields, handlers, all_calls, all_events) => 
+    {name, network, instances, raw_name, fields, handlers, all_calls, all_events};
 
   let field = (contract, field_name) => contract.fields
     |> List.find_map(((name, typ, getter_name)) => 
@@ -131,14 +138,14 @@ let contract_related_contracts = (subgraph, contract) => {
 };
 
 module Builder = {
-  let fmt_call = (name, inputs, outputs): call => {
+  let fmt_call = (name, inputs, outputs, state_mutability): call => {
     let inputs = inputs
       |> List.map((Ast.{typ, name, _}) => (Option.value(name, ~default="arg"), typ));
 
     let outputs = outputs
       |> List.map((Ast.{typ, name, _}) => (Option.value(name, ~default="arg"), typ));
-    
-    {name, inputs, outputs}
+
+    {name, state_mutability, inputs, outputs}
   };
 
   let fmt_event = (name, params: list(Ast.event_param)): event => {
@@ -194,9 +201,9 @@ module Builder = {
     let rec f = (intf_elements, acc) => {
       switch (intf_elements) {
       | [] => acc
-      | [FunctionDef(_, inputs, outputs, Some(GGHandler({name: Some(n), actions}))), ...rest] 
-      | [FunctionDef(n, inputs, outputs, Some(GGHandler({name: None, actions}))), ...rest] => 
-        let call = fmt_call(n, inputs, outputs);
+      | [FunctionDef(_, inputs, outputs, Some(GGHandler({name: Some(n), actions})), state_mut), ...rest] 
+      | [FunctionDef(n, inputs, outputs, Some(GGHandler({name: None, actions})), state_mut), ...rest] => 
+        let call = fmt_call(n, inputs, outputs, state_mut);
         f(rest, [Call(call, fmt_call_handler_actions(full_ast, call, actions)), ...acc])
       | [EventDef(_, fields, Some(GGHandler({name: Some(n), actions}))), ...rest] 
       | [EventDef(n, fields, Some(GGHandler({name: None, actions}))), ...rest] =>
@@ -209,14 +216,23 @@ module Builder = {
     f(intf_elements, [])
   };
 
-  let make = (full_ast: Ast.t) => {
+  let all_calls = Parsing.Ast.(List.filter_map(fun
+    | FunctionDef(name, inputs, outputs, _, state_mut) => fmt_call(name, inputs, outputs, state_mut) |> Option.some
+    | _ => None
+  ));
 
+  let all_events = Parsing.Ast.(List.filter_map(fun
+    | EventDef(name, fields, _) => fmt_event(name, fields) |> Option.some
+    | _ => None
+  ));
+
+  let make = (full_ast: Ast.t) => {
     let get_fields = (intf_elements) => {
       open Ast;
       let rec f = (intf_elements, acc) => {
         switch (intf_elements) {
         | [] => acc
-        | [FunctionDef(getter_name, [], [output], Some(GGField({name, _}))), ...rest] => 
+        | [FunctionDef(getter_name, [], [output], Some(GGField({name, _})), _), ...rest] => 
           f(rest, [(Option.value(name, ~default=getter_name), output.typ, getter_name), ...acc])        
         | [_, ...rest] => f(rest, acc)
         };
@@ -224,17 +240,41 @@ module Builder = {
 
       f(intf_elements, [])
     };
+
+    let fmt_address = (address) => {
+      let regex = Str.regexp(".*\\(0x[A-Fa-f0-9]+\\).*");
+      Str.replace_first(regex, "\\1", address)
+    };
+
+    let fmt_instances = (instances) => instances
+      |> Option.value(~default=[]) 
+      |> List.map((instance: Ast.instance) => (fmt_address(instance.address), instance.startBlock));
     
     // TODO: Set network field based on tags
     let rec to_subgraph = (ast: list(Ast.interface), acc): t => {
       switch (ast) {
       | [] => acc
+
       | [{raw_name, elements, tag: Some(GGSource({name: None, instances, _}))}, ...rest] => 
-        let instances = instances |> Option.value(~default=[]) |> List.map((instance: Ast.instance) => (instance.address, instance.startBlock));
-        to_subgraph(rest, [{raw_name, name: raw_name, network: "mainnet", instances, fields: get_fields(elements), handlers: get_handlers(full_ast, elements)}, ...acc])
-      | [{raw_name, elements, tag: Some(GGSource({name: Some(n), instances, _}))}, ...rest] => 
-        let instances = instances |> Option.value(~default=[]) |> List.map((instance: Ast.instance) => (instance.address, instance.startBlock));
-        to_subgraph(rest, [{raw_name, name: n, network: "mainnet", instances, fields: get_fields(elements), handlers: get_handlers(full_ast, elements)}, ...acc])
+        fmt_instances(instances)            |> (instances) => 
+        get_fields(elements)                |> (fields) =>
+        get_handlers(full_ast, elements)    |> (handlers) =>
+        all_calls(elements)                 |> (all_calls) => 
+        all_events(elements)                |> (all_events) => 
+        Contract.make(raw_name, "mainnet", instances, raw_name, fields, handlers, all_calls, all_events)
+        |> List.cons(_, acc)
+        |> to_subgraph(rest)
+
+      | [{raw_name, elements, tag: Some(GGSource({name: Some(name), instances, _}))}, ...rest] => 
+        fmt_instances(instances)            |> (instances) => 
+        get_fields(elements)                |> (fields) =>
+        get_handlers(full_ast, elements)    |> (handlers) =>
+        all_calls(elements)                 |> (all_calls) => 
+        all_events(elements)                |> (all_events) => 
+        Contract.make(name, "mainnet", instances, raw_name, fields, handlers, all_calls, all_events)
+        |> List.cons(_, acc)
+        |> to_subgraph(rest)
+
       | [_, ...rest] => to_subgraph(rest, acc)
       }
     };
