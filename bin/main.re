@@ -86,8 +86,8 @@ let subgraph_name = {
 };
 
 let path = {
-  let doc = "Solidity interface file or directory containing multiple interface files"
-  Arg.(required & pos(~rev=true, 0, some(string), None) & info([], ~doc))
+  let doc = "Solidity interface file or directory containing multiple interface files annotated with graphgen tags"
+  Arg.(required & pos(~rev=true, 0, some(string), None) & info([], ~docv="SOURCE", ~doc))
 };
 
 let graphgen_t = Term.(const(graphgen) $ github_user $ subgraph_name $ description $ path);
