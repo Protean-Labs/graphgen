@@ -1,60 +1,104 @@
+open Cmdliner;
+open Rresult;
+
 open Graphgenlib;
 open Parsing;
 
+Printexc.record_backtrace(true);
 let logger = Easy_logging.Logging.make_logger("GraphGen", Debug, [Cli(Debug)]);
 
-let load_file = (filename) => {
-  let ch = open_in(filename);
-  let s = really_input_string(ch, in_channel_length(ch));
-  close_in(ch);
-  s
+module File = Bos.OS.File;
+module Dir = Bos.OS.Dir;
+
+let is_solidity = (path) => {
+  let regex = Str.regexp("[-A-Za-z0-9_]+.sol");
+  Str.string_match(regex, path, 0)
 };
 
-let generate = (ast: Ast.t) => {
-  print_endline(Ast.show(ast));
-  Generator.generate_directories();
-  let subgraph = Subgraph.Builder.make(ast);
-  Generator.multi_file("templates/abi.j2", (key) => [%string "subgraph/abis/%{key}.json"], Models.abi_models, subgraph);
-  Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_models, subgraph);
-  Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.schema_models, subgraph);
-  Generator.multi_file("templates/data_source.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.data_sources_models, subgraph);
-  Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.templates_models, subgraph);
+let graphgen = (github_user, subgraph_name, desc, target_path) => {
+  let generate_package_json = Generator.single_file("templates/package_json.j2", "subgraph/package.json", Models.package_json_models)
+  let generate_manifest = Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_models)
+  let generate_schema = Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.schema_models)
+  let generate_util_ts = Generator.single_file("templates/util_ts.j2", "subgraph/src/util.ts", Models.util_ts_models)
+  let generate_abi = Generator.multi_file("templates/abi.j2", (key) => [%string "subgraph/abis/%{key}.json"], Models.abi_models)
+  let generate_data_sources = Generator.multi_file("templates/data_source.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.data_sources_models)
+  let generate_templates = Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.templates_models)
 
-  // let (>>=) = Result.bind;
-  
-  Package.make("PLACEHOLDER", "PLACEHOLDER", "PLACEHOLDER") 
-  |> Package.to_file
-  // >>= (() => 
-  //   List.map(Abi.make, ast)
-  //   |> List.iter(Abi.to_file(_, "subgraph/abis"))
-  //   |> _ => Ok())
-  |> fun
-    | Ok() => ()
-    | Error(msg) => logger#error("%s", msg)
-};
+  let read_and_parse = (path) => {
+    File.read(path)  >>= (source) => 
+    parse(source)
+  };
 
-let () = {
-  Printexc.record_backtrace(true);
-  if (Array.length(Sys.argv) != 2) {
-    failwith("Usage: graphgen [FILE_OR_DIR]")
-  } else {
-    switch (Bos.OS.(Dir.exists(Fpath.v(Sys.argv[1])), File.exists(Fpath.v(Sys.argv[1])))) {
-    | (Ok(true), Ok(false)) => failwith("Not implemented")
-    | (Ok(false), Ok(true)) => {
-      let file = load_file(Sys.argv[1]);
-      try (Ok(Parser.source_unit(Lexer.token, Lexing.from_string(file)))) {
-        | Lexer.ParsingError(err) => Error(err)
-        // | Parser.Error => Error("Unhandled parser error")
-        // | Parser.MenhirBasics.Error(err) => Error(err)
-        | exn => Error(Printexc.to_string(exn) ++ ": " ++ Printexc.get_backtrace())
-      }
-      |> fun
-        | Error(msg) => print_endline(msg)
-        | Ok(ast) => 
-          generate(ast)
-          // |> fun | Ok(_) => () | Error(`Msg(err)) => failwith(err)
-    }
-    | _ => failwith("Invalid filename" ++ Sys.argv[1])
-    }
+  let generate_from_ast = (ast) => {
+    Subgraph.Builder.make(~github_user, ~subgraph_name, ~desc, ast)    |>  (subgraph) =>
+    Generator.generate_directories()            >>= (_) => 
+    generate_package_json(subgraph)             >>= (_) =>
+    generate_manifest(subgraph)                 >>= (_) =>
+    generate_schema(subgraph)                   >>= (_) =>
+    generate_util_ts(subgraph)                  >>= (_) =>
+    generate_abi(subgraph)                      >>= (_) =>
+    generate_data_sources(subgraph)             >>= (_) =>
+    generate_templates(subgraph)
   }
+
+  let generate_from_file = (path) => {
+    read_and_parse(path)    >>= (ast) =>
+    generate_from_ast(ast)
+  };
+
+  let generate_from_dir = (path) => {
+    let f = (acc, path) => {
+      if (is_solidity(Fpath.filename(path))) {
+        acc                   >>= (acc) =>
+        read_and_parse(path)  >>| (ast) =>
+        List.concat([acc, ast])
+      } 
+      else acc
+    };
+
+    Dir.contents(path)                >>= (files) =>
+    List.fold_left(f, Ok([]), files)  >>= (ast) =>
+    generate_from_ast(ast)
+  };
+
+  let path = Fpath.v(target_path);
+
+  switch (Bos.OS.(Dir.exists(path), File.exists(path))) {
+  | (Ok(true), Ok(false)) => generate_from_dir(path)
+  | (Ok(false), Ok(true)) => generate_from_file(path)
+  | _ => R.error_msg([%string "Invalid path: %{target_path}"])
+  }
+  |> fun
+    | Error(`Msg(msg)) => logger#error("%s", msg)
+    | Ok() => ()
 };
+
+// Command-line arguments
+let description = {
+  let doc = "Subgraph description"
+  Arg.(value & opt(string, "PLACEHOLDER") & info(["d", "description"], ~doc))
+};
+
+let github_user = {
+  let doc = "The Graph Github user"
+  Arg.(value & opt(string, "PLACEHOLDER") & info(["u", "user"], ~doc))
+};
+
+let subgraph_name = {
+  let doc = "The name of the subgraph"
+  Arg.(value & opt(string, "PLACEHOLDER") & info(["n", "name"], ~doc))
+};
+
+let path = {
+  let doc = "Solidity interface file or directory containing multiple interface files annotated with graphgen tags"
+  Arg.(required & pos(~rev=true, 0, some(string), None) & info([], ~docv="SOURCE", ~doc))
+};
+
+let graphgen_t = Term.(const(graphgen) $ github_user $ subgraph_name $ description $ path);
+
+let info = {
+  let doc = "Generate a subgraph from annotated solidity interfaces"
+  Term.info("graphgen", ~doc, ~exits=Term.default_exits)
+};
+
+let () = Term.exit @@ Term.eval((graphgen_t, info));

@@ -84,9 +84,14 @@ module Contract = {
     };
 };
 
-type t = list(Contract.t);
+type t = {
+  github_user: string,
+  subgraph_name: string,
+  description: string,
+  contracts: list(Contract.t)
+};
 
-let contract_of_name = (subgraph: t, name) => subgraph
+let contract_of_name = (subgraph: t, name) => subgraph.contracts
   |> List.find_opt((contract: Contract.t) => contract.name == name)
 ;
 
@@ -98,7 +103,7 @@ let child_contracts = (subgraph: t, contract) => contract
   })
 ;
 
-let parent_contract = (subgraph, contract: Contract.t) => subgraph
+let parent_contract = (subgraph, contract: Contract.t) => subgraph.contracts
   |> List.find_opt(contract' => Contract.new_entities(contract') 
     |> List.exists(((name, _, _)) => name == contract.name)
   )
@@ -226,7 +231,7 @@ module Builder = {
     | _ => None
   ));
 
-  let make = (full_ast: Ast.t) => {
+  let make = (~github_user="PLACEHOLDER", ~subgraph_name="PLACEHOLDER", ~desc="PLACEHOLDER", full_ast: Ast.t) => {
     let get_fields = (intf_elements) => {
       open Ast;
       let rec f = (intf_elements, acc) => {
@@ -251,7 +256,7 @@ module Builder = {
       |> List.map((instance: Ast.instance) => (fmt_address(instance.address), instance.startBlock));
     
     // TODO: Set network field based on tags
-    let rec to_subgraph = (ast: list(Ast.interface), acc): t => {
+    let rec to_subgraph = (ast: list(Ast.interface), acc) => {
       switch (ast) {
       | [] => acc
 
@@ -279,6 +284,11 @@ module Builder = {
       }
     };
 
-    to_subgraph(full_ast, [])
+    {
+      github_user,
+      subgraph_name,
+      description: desc,
+      contracts: to_subgraph(full_ast, [])
+    }
   };
 }

@@ -99,8 +99,13 @@ module Contract: {
   let events: (~stored_only:bool=?) => t => list(event);
 };
 
-/** The type of a subgraph: a list of {!Contract.t} values. */
-type t = list(Contract.t);
+/** The type of a subgraph. */
+type t = {
+  github_user: string,
+  subgraph_name: string,
+  description: string,
+  contracts: list(Contract.t)
+};
 
 /** [contract_of_name(sg, name)] searches the subgraph [sg] for a contract with name [name] and
     returns [Some(contract)] if such a contract exists or [None] otherwise. */
@@ -137,6 +142,6 @@ let contract_related_entities: t => Contract.t => list(string);
 let contract_related_contracts: t => Contract.t => list(string);
 
 module Builder: {
-  /** [make(ast)] builds and returns a {!Subgraph.t} value from the abstract syntax tree. */
-  let make: Parsing.Ast.t => t;
+  /** [make(~github_user, ~subgraph_name, ~desc, ast)] builds and returns a {!Subgraph.t} value from the abstract syntax tree. */
+  let make: (~github_user:string=?) => (~subgraph_name:string=?) => (~desc:string=?) => Parsing.Ast.t => t;
 };

@@ -159,11 +159,14 @@ let template_model = (subgraph, contract: Subgraph.Contract.t) => {
   ])
 };
 
-let subgraph_model = (subgraph) =>
+let subgraph_model = (subgraph: Subgraph.t) =>
   Jg_types.Tobj([
-    ("dataSources", Tlist(subgraph
+    ("github_user", Tstr(subgraph.github_user)),
+    ("subgraph_name", Tstr(subgraph.subgraph_name)),
+    ("description", Tstr(subgraph.description)),
+    ("dataSources", Tlist(subgraph.contracts
       |> List.filter_map((contract: Subgraph.Contract.t) => contract.instances != [] ? Some(data_source_model(subgraph, contract)) : None))),
-    ("templates", Tlist(subgraph
+    ("templates", Tlist(subgraph.contracts
       |> List.filter_map((contract: Subgraph.Contract.t) => contract.instances == [] ? Some(template_model(subgraph, contract)) : None)))
   ]);
 
@@ -207,16 +210,21 @@ let contract_abi_model = (contract: Subgraph.Contract.t) =>
     ))
   ]);
 
-let abi_models = (subgraph) => subgraph
-  |> List.map((contract: Subgraph.Contract.t) => (contract.name, [("contract", contract_abi_model(contract))]));
-
 let manifest_models = (subgraph) => subgraph_model(subgraph)
   |> (obj) => [("subgraph", obj)];
 
 let schema_models = (subgraph) => subgraph_model(subgraph)
   |> (obj) => [("subgraph", obj)];
 
-let data_sources_models = (subgraph) => subgraph
+let package_json_models = (subgraph) => subgraph_model(subgraph)
+  |> (obj) => [("subgraph", obj)];
+
+let abi_models = (subgraph: Subgraph.t) => subgraph.contracts
+  |> List.map((contract: Subgraph.Contract.t) => (contract.name, [("contract", contract_abi_model(contract))]));
+
+let util_ts_models = (_) => [];
+
+let data_sources_models = (subgraph: Subgraph.t) => subgraph.contracts
   |> List.filter_map((contract: Subgraph.Contract.t) => 
     if (contract.instances != []) {
       (
@@ -231,7 +239,7 @@ let data_sources_models = (subgraph) => subgraph
     else None
   );
 
-let templates_models = (subgraph) => subgraph
+let templates_models = (subgraph: Subgraph.t) => subgraph.contracts
   |> List.filter_map((contract: Subgraph.Contract.t) => 
     if (contract.instances == []) {
       (

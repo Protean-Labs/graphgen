@@ -1,14 +1,15 @@
 {
-  "name": "opyn-v1-subgraph",
+  "name": "{{ subgraph.name }}",
   "version": "1.0.0",
+  "repository": "https://github.com/{{ subgraph.repository }}",
   "license": "MIT",
   "scripts": {
     "codegen": "graph codegen --output-dir src/types/",
-    "create-local": "graph create cvauclair/opyn-v1 --node http://127.0.0.1:8020",
+    "create-local": "graph create {{ subgraph.repository }} --node http://127.0.0.1:8020",
     "build": "graph build",
-    "deploy-local": "graph deploy cvauclair/opyn-v1 --debug --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
-    "deploy": "graph deploy cvauclair/opyn-v1 --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --debug",
-    "deploy-staging": "graph deploy $THE_GRAPH_GITHUB_USER/$THE_GRAPH_SUBGRAPH_NAME /Protean --ipfs https://api.staging.thegraph.com/ipfs/ --node https://api.staging.thegraph.com/deploy/",
+    "deploy-local": "graph deploy {{ subgraph.repository }} --debug --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
+    "deploy": "graph deploy {{ subgraph.repository }} --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --debug",
+    "deploy-staging": "graph deploy {{ subgraph.repository }} /Protean --ipfs https://api.staging.thegraph.com/ipfs/ --node https://api.staging.thegraph.com/deploy/",
     "watch-local": "graph deploy graphprotocol/opyn-v1 --watch --debug --node http://127.0.0.1:8020/ --ipfs http://localhost:5001"
   },
   "devDependencies": {
