@@ -51,7 +51,8 @@ jobs:
         with:
           path: /home/runner/work/graphgen/graphgen/_release/
           key: ${{ runner.os }}-build
-          run: cd /home/runner/work/graphgen/graphgen/_release/
+        
+      - run: cd /home/runner/work/graphgen/graphgen/_release/
       
       - uses: JS-DevTools/npm-publish@v1
         with:
@@ -78,9 +79,9 @@ jobs:
         with:
           path: /home/runner/work/graphgen/graphgen/_release/
           key: ${{ runner.os }}-build
-          run: cd /home/runner/work/graphgen/graphgen/_release/
           
-      
+      - run: cd /home/runner/work/graphgen/graphgen/_release/
+          
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
