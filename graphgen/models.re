@@ -222,6 +222,8 @@ let package_json_models = (subgraph) => subgraph_model(subgraph)
 let abi_models = (subgraph: Subgraph.t) => subgraph.contracts
   |> List.map((contract: Subgraph.Contract.t) => (contract.name, [("contract", contract_abi_model(contract))]));
 
+let util_ts_models = (_) => [];
+
 let data_sources_models = (subgraph: Subgraph.t) => subgraph.contracts
   |> List.filter_map((contract: Subgraph.Contract.t) => 
     if (contract.instances != []) {

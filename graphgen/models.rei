@@ -10,6 +10,8 @@ let schema_models: Subgraph.t => Generator.models;
 
 let abi_models: Subgraph.t => list((string, Generator.models));
 
+let util_ts_models: Subgraph.t => Generator.models;
+
 /** [data_sources_models(sg)] returns a list of tuples [(key, models)], one 
     for each dataSource in the subgraph [sg]. [key] is a string indicating 
     the name of the dataSource. [models] is the Jingoo models generated from 

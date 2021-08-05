@@ -19,6 +19,7 @@ let graphgen = (github_user, subgraph_name, desc, target_path) => {
   let generate_package_json = Generator.single_file("templates/package_json.j2", "subgraph/package.json", Models.package_json_models)
   let generate_manifest = Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_models)
   let generate_schema = Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.schema_models)
+  let generate_util_ts = Generator.single_file("templates/util_ts.j2", "subgraph/src/util.ts", Models.util_ts_models)
   let generate_abi = Generator.multi_file("templates/abi.j2", (key) => [%string "subgraph/abis/%{key}.json"], Models.abi_models)
   let generate_data_sources = Generator.multi_file("templates/data_source.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.data_sources_models)
   let generate_templates = Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.templates_models)
@@ -34,6 +35,7 @@ let graphgen = (github_user, subgraph_name, desc, target_path) => {
     generate_package_json(subgraph)             >>= (_) =>
     generate_manifest(subgraph)                 >>= (_) =>
     generate_schema(subgraph)                   >>= (_) =>
+    generate_util_ts(subgraph)                  >>= (_) =>
     generate_abi(subgraph)                      >>= (_) =>
     generate_data_sources(subgraph)             >>= (_) =>
     generate_templates(subgraph)
