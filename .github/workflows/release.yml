@@ -50,7 +50,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /home/runner/work/graphgen/graphgen/_release/
-          key: ${{ runner.os }}-build
+          key: ${{ runner.OS }}-npm-cache-${{ hashFiles('**/_release/package.json') }}
         
       - run: cd /home/runner/work/graphgen/graphgen/_release/
       
@@ -78,7 +78,8 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /home/runner/work/graphgen/graphgen/_release/
-          key: ${{ runner.os }}-build
+          key: ${{ runner.OS }}-npm-cache-${{ hashFiles('**/_release/package.json') }}
+
           
       - run: cd /home/runner/work/graphgen/graphgen/_release/
           
