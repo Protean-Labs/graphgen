@@ -29,6 +29,13 @@ jobs:
             cp package.json package_old.json
             jq '.name |= "@protean-labs/graphgen"' package_old.json  | tee package.json
             rm package_old.json
+            
+      - name: Cache Build
+        uses: actions/cache@v2
+        with:
+          path: /home/runner/work/graphgen/graphgen/_release/
+          key: ${{ runner.os }}-build
+
 
   Publish-npm:
     needs: Build
@@ -38,11 +45,19 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: 16
-
+      
+      - name: Retrieve build cache
+        uses: actions/cache@v2
+        with:
+          path: /home/runner/work/graphgen/graphgen/_release/
+          key: ${{ runner.os }}-build
+          run: cd /home/runner/work/graphgen/graphgen/_release/
+      
       - uses: JS-DevTools/npm-publish@v1
         with:
          token: ${{ secrets.NPM_TOKEN }}
          package: /home/runner/work/graphgen/graphgen/_release/package.json
+
 
   Publish-gpr:
     needs: Build
@@ -57,6 +72,15 @@ jobs:
           # Defaults to the user or organization that owns the workflow file
           # scope: '@protean-labs'
       # Publish to GitHub Packages
+      
+      - name: Retrieve build cache
+        uses: actions/cache@v2
+        with:
+          path: /home/runner/work/graphgen/graphgen/_release/
+          key: ${{ runner.os }}-build
+          run: cd /home/runner/work/graphgen/graphgen/_release/
+          
+      
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
