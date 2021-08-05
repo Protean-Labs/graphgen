@@ -1,14 +1,16 @@
 {
   "name": "graphgen",
-  "version": "0.1.0",
+  "version": "0.0.8-development",
   "description": "Subgraph Generation Tool",
-  "license": "MIT",
+  "license": "Apache 2.0",
   "esy": {
     "build": "dune build -p graphgen",
     "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
     "release": {
       "rewritePrefix": true,
-      "releasedBinaries": [ "graphgen.exe" ]
+      "releasedBinaries": [
+        "graphgen.exe"
+      ]
     }
   },
   "scripts": {
@@ -22,5 +24,11 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "dependencies": {
+    "semantic-release": "^17.4.4"
+  },
+  "release": {
+    "branches": ["main", "next"]
   }
 }
