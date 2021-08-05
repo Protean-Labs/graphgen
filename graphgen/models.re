@@ -210,14 +210,17 @@ let contract_abi_model = (contract: Subgraph.Contract.t) =>
     ))
   ]);
 
-let abi_models = (subgraph: Subgraph.t) => subgraph.contracts
-  |> List.map((contract: Subgraph.Contract.t) => (contract.name, [("contract", contract_abi_model(contract))]));
-
 let manifest_models = (subgraph) => subgraph_model(subgraph)
   |> (obj) => [("subgraph", obj)];
 
 let schema_models = (subgraph) => subgraph_model(subgraph)
   |> (obj) => [("subgraph", obj)];
+
+let package_json_models = (subgraph) => subgraph_model(subgraph)
+  |> (obj) => [("subgraph", obj)];
+
+let abi_models = (subgraph: Subgraph.t) => subgraph.contracts
+  |> List.map((contract: Subgraph.Contract.t) => (contract.name, [("contract", contract_abi_model(contract))]));
 
 let data_sources_models = (subgraph: Subgraph.t) => subgraph.contracts
   |> List.filter_map((contract: Subgraph.Contract.t) => 

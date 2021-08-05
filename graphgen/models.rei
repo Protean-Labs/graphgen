@@ -1,4 +1,4 @@
-let abi_models: Subgraph.t => list((string, Generator.models));
+let package_json_models: Subgraph.t => Generator.models;
 
 /** [manifest_models(sg)] returns Jingoo models generated from the subgraph [sg] 
     used to generate the subgraph manifest from the associated Jinja2 template. */
@@ -7,6 +7,8 @@ let manifest_models: Subgraph.t => Generator.models;
 /** [schema_models(sg)] returns Jingoo models generated from the subgraph [sg]
     used to generate the GraphQL schema from the associated Jinja2 template. */
 let schema_models: Subgraph.t => Generator.models;
+
+let abi_models: Subgraph.t => list((string, Generator.models));
 
 /** [data_sources_models(sg)] returns a list of tuples [(key, models)], one 
     for each dataSource in the subgraph [sg]. [key] is a string indicating 
