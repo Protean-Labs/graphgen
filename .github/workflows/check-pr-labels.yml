@@ -22,4 +22,3 @@ jobs:
           valid-labels: 'bug, enhancement, fix, bugfix, feature, chore'
           invalid-labels: 'invalid, do not merge'
           pull-request-number: '${{ github.event.pull_request.number }}'
-          disable-reviews: false
