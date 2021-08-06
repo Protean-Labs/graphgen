@@ -25,6 +25,7 @@ let graphgen = (github_user, subgraph_name, desc, target_path) => {
   let generate_templates = Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.templates_models)
 
   let read_and_parse = (path) => {
+    logger#debug("Parsing %s...", Fpath.filename(path));
     File.read(path)  >>= (source) => 
     parse(source)
   };

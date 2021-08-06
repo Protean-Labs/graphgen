@@ -96,7 +96,7 @@
 
 
 // Literals
-%token <string> NON_EMPTY_STRING
+%token <string> STRING
 %token FROM
 
 // Symbols and operators
@@ -133,8 +133,9 @@ source_unit:
 ;
 
 pragma:
-  | PRAGMA; SOLIDITY; VERSION;          { logger#debug "Pragma solidity"; 0 }
-  | PRAGMA; EXPERIMENTAL; identifier;   { logger#debug "Pragma experimental"; 0 }
+  | PRAGMA; SOLIDITY; VERSION;          { logger#debug "Pragma solidity"; () }
+  | PRAGMA; EXPERIMENTAL; identifier;   { logger#debug "Pragma experimental"; () }
+;
 
 comments:
   | COMMENT_BLOCK;    { logger#debug "Comment without GG_TAG"; 1 }
@@ -147,21 +148,22 @@ gg_tag:
 ;
 
 import_directive:
-  | IMPORT; path; SEMICOLON;                             { 1 }
-  | IMPORT; path; AS; identifier;                        { 1 }
-  | symbol_aliases; FROM; path;                          { 1 }
-  | TIMES; AS; identifier; FROM; path;                   { 1 }
+  | IMPORT; path; SEMICOLON;                            { () }
+  | IMPORT; path; AS; identifier;                       { () }
+  | symbol_aliases; FROM; path;                         { () }
+  | TIMES; AS; identifier; FROM; path;                  { () }
+  | IMPORT; LBRACE; identifier; RBRACE; FROM; path;     { () } 
 ;
 
 path:
-  | NON_EMPTY_STRING;                                                   { 2 }
+  | STRING;   { () }
 ;
 
 symbol_aliases:
-  | LBRACE; separated_nonempty_list(COMMA, subrule); RBRACE;          { 3 }
+  | LBRACE; separated_nonempty_list(COMMA, subrule); RBRACE;          { () }
 %inline subrule:
-  | identifier; AS; identifier;                                       { 3 }
-  | identifier;                                                       { 3 }
+  | identifier; AS; identifier;                                       { () }
+  | identifier;                                                       { () }
 ;
 
 interface_definition:
@@ -173,7 +175,7 @@ interface_definition:
 ;
 
 inheritance_specifier:
-  | identifier_path;                                            { 7 }
+  | identifier_path;    { () }
 ;
 
 contract_body_element:
@@ -191,14 +193,14 @@ contract_body_element:
 ;
 
 identifier_path:
-  | separated_nonempty_list(DOT, identifier)                                      { 10 }
+  | separated_nonempty_list(DOT, identifier)      { () }
 ;
 
 visibility:
-  | INTERNAL;       { 12 }
-  | EXTERNAL;       { 12 }
-  | PRIVATE;        { 12 }
-  | PUBLIC;         { 12 }
+  | INTERNAL;       { () }
+  | EXTERNAL;       { () }
+  | PRIVATE;        { () }
+  | PUBLIC;         { () }
 ;
 
 parameter_list:
@@ -287,14 +289,15 @@ event_parameter:
 ;
 
 event_definition:
-  | EVENT; id = identifier; LPAREN; params = separated_list(COMMA, event_parameter); RPAREN; option(ANON); SEMICOLON;   { function x -> EventDef (id, params, x) }
+  | EVENT; id = identifier; LPAREN; params = separated_list(COMMA, event_parameter); RPAREN; option(ANON); SEMICOLON;   
+    { function x -> EventDef (id, params, x) }
 ;
 
 type_name:
   | typ = elementary_type_name;              { typ }
   // | function_type_name;                               { 1 }
   // | mapping_type;                                     { 1 }
-  // | identifier_path;                                  { 1 }
+  | identifier_path;                         { AddressT }
   | typ = type_name; LBRACK; RBRACK;         { ArrayT (typ) }
 ;
 

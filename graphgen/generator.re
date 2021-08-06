@@ -57,6 +57,7 @@ let generate_directories = () => {
 type models = list((string, Jingoo.Jg_types.tvalue));
 
 let generate = (template_path, dest_path, models) => {
+  logger#info("Generating %s...", dest_path);
   Jg_template.from_file(template_path, ~env={...Jg_types.std_env, filters: [uncapitalize_filter, counter_name_filter]}, ~models)
   |> File.write(Fpath.v(dest_path))
   |> Result.map_error((`Msg(msg)) => {

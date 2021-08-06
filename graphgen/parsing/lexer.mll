@@ -3,7 +3,7 @@
   open Easy_logging
   exception ParsingError of string
 
-  let logger = Logging.make_logger "Lexer" Info [Cli Debug]
+  let logger = Logging.make_logger "Lexer" Debug [Cli Debug]
 }
 
 (* let pragma_token = ['a'-'z' 'A'-'Z' '0'-'9' '_' '$' '.' ':' '^']+ *)
@@ -27,14 +27,17 @@ rule token = parse
  "--" [^'\n']* '\n' { Lexing.new_line lexbuf; token lexbuf }
 | newline           { Lexing.new_line lexbuf; token lexbuf }
 | white             { token lexbuf }
+
+(* Comments *)
 | "/*"              { logger#debug "Comment block start"; gg_tag lexbuf }
-| "//"              { logger#debug "Comment line"; Lexing.new_line lexbuf; token lexbuf }
+| "/**"             { logger#debug "Comment block start"; gg_tag lexbuf }
+| "//"              { logger#debug "Comment line"; read_single_line_comment lexbuf }
 
 (* Reserved key words *)
 (* Pragma *)
 | "pragma"          { logger#debug "pragma"; PRAGMA }
 | "solidity"        { logger#debug "pragma solidity"; SOLIDITY }
-| "experimental"    { logger#debug "pragma experimental"; SOLIDITY }
+| "experimental"    { logger#debug "pragma experimental"; EXPERIMENTAL }
 
 | "import"          { logger#debug "import"; IMPORT }
 | "interface"       { logger#debug "interface"; INTERFACE }
@@ -86,7 +89,11 @@ rule token = parse
 | '{'               { logger#debug "LBRACE"; LBRACE }
 | '}'               { logger#debug "RBRACE"; RBRACE }
 | ','               { logger#debug "COMMA"; COMMA }
+| '.'               { logger#debug "DOT"; DOT }
 | ';'               { logger#debug "SEMICOLON"; SEMICOLON }
+
+| '"'               { logger#debug "String start"; read_string_dquote "" lexbuf }
+| '\''              { logger#debug "String start"; read_string_squote "" lexbuf }
 
 (* Identifiers *)
 | identifier as id  { logger#debug "identifier: %s" id; IDENTIFIER (id) }
@@ -95,15 +102,39 @@ rule token = parse
 (* End *)
 | eof               { EOF }
 | _                 { raise (ParsingError ("Illegal string character: " ^ Lexing.lexeme lexbuf)) }
+
+and read_single_line_comment = parse
+| newline           { Lexing.new_line lexbuf; token lexbuf }
+| eof               { EOF }
+| _                 { read_single_line_comment lexbuf }
+
+and read_multi_line_comment = parse
+| "*/"              { Lexing.new_line lexbuf; token lexbuf }
+| eof               { EOF }
+| _                 { read_multi_line_comment lexbuf }
+
 and gg_tag = parse
  "--" [^'\n']* '\n' { Lexing.new_line lexbuf; gg_tag lexbuf }
 | newline           { Lexing.new_line lexbuf; gg_tag lexbuf }
 | white             { gg_tag lexbuf }
-| "@gg:source"      { logger#debug "@gg:source"; GG_SOURCE (comment_block "" lexbuf) }
-| "@gg:handler"     { logger#debug "@gg:handler"; GG_HANDLER (comment_block "" lexbuf) }
-| "@gg:field"       { logger#debug "@gg:field"; GG_FIELD (comment_block "" lexbuf) }
-| _                 { logger#debug "Not a GG_TAG"; COMMENT_BLOCK (comment_block "" lexbuf)}
-and comment_block acc = parse
+| "@gg:source"      { logger#debug "@gg:source"; GG_SOURCE (read_gg_tag_block "" lexbuf) }
+| "@gg:handler"     { logger#debug "@gg:handler"; GG_HANDLER (read_gg_tag_block "" lexbuf) }
+| "@gg:field"       { logger#debug "@gg:field"; GG_FIELD (read_gg_tag_block "" lexbuf) }
+| _                 { logger#debug "Not a GG_TAG"; read_multi_line_comment lexbuf }
+
+and read_gg_tag_block buf = parse
 (* GraphGen tags *)
-|  "*/"             { logger#debug "Comment block end"; acc }
-| _ as c            { comment_block (acc ^ Char.escaped c) lexbuf }
+|  "*/"             { logger#debug "Comment block end"; buf }
+| _ as c            { read_gg_tag_block (buf ^ Char.escaped c) lexbuf }
+
+and read_string_dquote buf = parse
+| '"'               { STRING (buf) }
+| '\\' 'n'          { read_string_dquote (buf ^ Char.escaped '\n') lexbuf }
+| eof               { raise (ParsingError ("String is not terminated")) }
+| _ as c            { read_string_dquote (buf ^ Char.escaped c) lexbuf }
+
+and read_string_squote buf = parse
+| '\''              { STRING (buf) }
+| '\\' 'n'          { read_string_squote (buf ^ Char.escaped '\n') lexbuf }
+| eof               { raise (ParsingError ("String is not terminated")) }
+| _ as c            { read_string_squote (buf ^ Char.escaped c) lexbuf }
