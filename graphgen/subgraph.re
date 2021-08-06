@@ -1,3 +1,5 @@
+open Rresult;
+
 open Parsing;
 
 let logger = Easy_logging.Logging.make_logger("Subgraph", Debug, [Cli(Debug)]);
@@ -13,7 +15,6 @@ type call = {
   inputs: list((string, Parsing.Ast.typ)),
   outputs: list((string, Parsing.Ast.typ))
 };
-
 
 type action = 
   | StoreEvent
@@ -53,7 +54,20 @@ module Contract = {
       | Event(_, actions) => actions
         |> List.filter_map(fun | NewEntity(name, raw_name, field) => Some((name, raw_name, field)) | _ => None)
         |> Option.some
-      | _ => None
+      | Call(_, actions) => actions
+        |> List.filter_map(fun | NewEntity(name, raw_name, field) => Some((name, raw_name, field)) | _ => None)
+        |> Option.some
+    )
+    |> List.flatten;
+
+  let update_fields = (contract) => contract.handlers
+    |> List.filter_map(fun
+      | Event(_, actions) => actions
+        |> List.filter_map(fun | UpdateField(name) => Some(name) | _ => None)
+        |> Option.some
+      | Call(_, actions) => actions
+        |> List.filter_map(fun | UpdateField(name) => Some(name) | _ => None)
+        |> Option.some
     )
     |> List.flatten;
 
@@ -82,6 +96,8 @@ module Contract = {
       contract.handlers
       |> List.filter_map(fun | Event(event, _) => Some(event) | _ => None)
     };
+
+  let has_field = (c, name) => List.exists(((name', _, _)) => name == name', c.fields);
 };
 
 type t = {
@@ -290,5 +306,15 @@ module Builder = {
       description: desc,
       contracts: to_subgraph(full_ast, [])
     }
+  }
+
+  let validate = (sg) => {
+    let validate_field_updates = (c) => 
+      List.fold_left((acc, field) => 
+        acc >>= () => 
+        Contract.has_field(c, field) ? R.ok() : R.error_msg([%string "Entity %{c.name} has no field named %{field}"]), 
+      R.ok(), Contract.update_fields(c));
+
+    List.fold_left((acc, c) => acc >>= () => validate_field_updates(c), R.ok(), sg.contracts)
   };
-}
+};

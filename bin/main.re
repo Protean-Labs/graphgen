@@ -32,13 +32,14 @@ let graphgen = (github_user, subgraph_name, desc, target_path) => {
 
   let generate_from_ast = (ast) => {
     Subgraph.Builder.make(~github_user, ~subgraph_name, ~desc, ast)    |>  (subgraph) =>
+    Subgraph.Builder.validate(subgraph)         >>= () =>
     Generator.generate_directories()            >>= (_) => 
-    generate_package_json(subgraph)             >>= (_) =>
-    generate_manifest(subgraph)                 >>= (_) =>
-    generate_schema(subgraph)                   >>= (_) =>
-    generate_util_ts(subgraph)                  >>= (_) =>
-    generate_abi(subgraph)                      >>= (_) =>
-    generate_data_sources(subgraph)             >>= (_) =>
+    generate_package_json(subgraph)             >>= () =>
+    generate_manifest(subgraph)                 >>= () =>
+    generate_schema(subgraph)                   >>= () =>
+    generate_util_ts(subgraph)                  >>= () =>
+    generate_abi(subgraph)                      >>= () =>
+    generate_data_sources(subgraph)             >>= () =>
     generate_templates(subgraph)
   }
 
