@@ -6,27 +6,31 @@
   from the abstract syntax tree (see {!Parsing.Ast}) produced by the parser.
 |}]
 
-/** Type of smart contract events. */
-type event = {
-  name: string,
-  fields: list((string, Parsing.Ast.typ, bool))
+module Event: {
+  /** Type of smart contract events. */
+  type t = {
+    name: string,
+    fields: list((string, Parsing.Ast.typ, bool))
+  };
+
+  /** [signature(e)] returns a {!string} containing the signature of the function
+      represented by the {!Event.t} [e] to be used in the subgraph manifest. */
+  let signature: t => string;
 };
 
-/** [event_signature(e)] returns a {!string} containing the signature of the function
-    represented by the {!event} [e] to be used in the subgraph manifest. */
-let event_signature: event => string;
+module Call: {
+  /** Type of smart contract function calls. */
+  type t = {
+    name: string,
+    state_mutability: Parsing.Ast.state_mutability,
+    inputs: list((string, Parsing.Ast.typ)),
+    outputs: list((string, Parsing.Ast.typ))
+  };
 
-/** Type of smart contract function calls. */
-type call = {
-  name: string,
-  state_mutability: Parsing.Ast.state_mutability,
-  inputs: list((string, Parsing.Ast.typ)),
-  outputs: list((string, Parsing.Ast.typ))
+  /** [signature(c)] returns a {!string} containing the signature of the function
+      represented by the {!Call.t} [c] to be used in the subgraph manifest. */
+  let signature: t => string;
 };
-
-/** [call_signature(c)] returns a {!string} containing the signature of the function
-    represented by the {!call} [c] to be used in the subgraph manifest. */
-let call_signature: call => string;
 
 /** The type of a handler action. 
     - [StoreEvent] indicates that the event associated with this action in the 
@@ -58,8 +62,8 @@ type action =
       which indicates what to do when the event is emitted. 
     - [Call(c, actions)] same as [Event] but for a {!call} instead of an {!event}. */
 type handler = 
-  | Event(event, list(action))
-  | Call(call, list(action))
+  | Event(Event.t, list(action))
+  | Call(Call.t, list(action))
 ;
 
 module Contract: {
@@ -70,8 +74,8 @@ module Contract: {
     raw_name: string,
     fields: list((string, Parsing.Ast.typ, string)),
     handlers: list(handler),
-    all_calls: list(call),
-    all_events: list(event)
+    all_calls: list(Call.t),
+    all_events: list(Event.t)
   };
 
   /** [field(contract, field_name)] returns a tuple [Some((typ, getter))] 
@@ -90,13 +94,13 @@ module Contract: {
       [c] that can be indexed as part of the subgraph. If [stored_only] is 
       [true] (default: [false]), then only the calls that are stored as per the 
       comment tags are returned. */
-  let calls: (~stored_only:bool=?) => t => list(call);
+  let calls: (~stored_only:bool=?) => t => list(Call.t);
 
   /** [events(~stored_only, c)] returns the list of events of the contract 
       [c] that can be indexed as part of the subgraph. If [stored_only] is 
       [true] (default: [false]), then only the events that are stored as per the 
       comment tags are returned. */
-  let events: (~stored_only:bool=?) => t => list(event);
+  let events: (~stored_only:bool=?) => t => list(Event.t);
 };
 
 /** The type of a subgraph. */

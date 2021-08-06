@@ -4,16 +4,41 @@ open Parsing;
 
 let logger = Easy_logging.Logging.make_logger("Subgraph", Debug, [Cli(Debug)]);
 
-type event = {
-  name: string,
-  fields: list((string, Ast.typ, bool))
+module Event = {
+  type t = {
+    name: string,
+    fields: list((string, Ast.typ, bool))
+  };
+
+  let signature = (e) => e.fields
+    |> List.map(((_, typ, indexed)) => 
+      Parsing.Ast.string_of_typ(typ)
+      |> (s) => indexed ? [%string "indexed %{s}"] : s
+    )
+    |> String.concat(",")
+    |> (fields) => [%string "%{e.name}(%{fields})"]
+  ;
+
+  let has_field = (e, name) => List.exists(((name', _, _)) => name == name', e.fields);
 };
 
-type call = {
-  name: string,
-  state_mutability: Parsing.Ast.state_mutability,
-  inputs: list((string, Parsing.Ast.typ)),
-  outputs: list((string, Parsing.Ast.typ))
+module Call = {
+  type t = {
+    name: string,
+    state_mutability: Parsing.Ast.state_mutability,
+    inputs: list((string, Parsing.Ast.typ)),
+    outputs: list((string, Parsing.Ast.typ))
+  };
+
+  let signature = (c) => c.inputs
+    |> List.map(((_, typ)) => Parsing.Ast.string_of_typ(typ))
+    |> String.concat(",")
+    |> (fields) => [%string "%{c.name}(%{fields})"]
+  ;
+
+  let has_field = (c, name) => 
+    List.exists(((name', _)) => name == name', c.inputs) &&
+    List.exists(((name', _)) => name == name', c.outputs);
 };
 
 type action = 
@@ -24,8 +49,8 @@ type action =
 ;
 
 type handler = 
-  | Event(event, list(action))
-  | Call(call, list(action))
+  | Event(Event.t, list(action))
+  | Call(Call.t, list(action))
 ;
 
 module Contract = {
@@ -36,8 +61,8 @@ module Contract = {
     raw_name: string,
     fields: list((string, Ast.typ, string)),
     handlers: list(handler),
-    all_calls: list(call),
-    all_events: list(event)
+    all_calls: list(Call.t),
+    all_events: list(Event.t)
   };
 
   let make = (name, network, instances, raw_name, fields, handlers, all_calls, all_events) => 
@@ -125,25 +150,10 @@ let parent_contract = (subgraph, contract: Contract.t) => subgraph.contracts
   )
 ;
 
-let event_signature = (event: event) => event.fields
-  |> List.map(((_, typ, indexed)) => 
-    Parsing.Ast.string_of_typ(typ)
-    |> (s) => indexed ? [%string "indexed %{s}"] : s
-  )
-  |> String.concat(",")
-  |> (fields) => [%string "%{event.name}(%{fields})"]
-;
-
-let call_signature = (call: call) => call.inputs
-  |> List.map(((_, typ)) => Parsing.Ast.string_of_typ(typ))
-  |> String.concat(",")
-  |> (fields) => [%string "%{call.name}(%{fields})"]
-;
-
 let contract_related_entities = (subgraph, contract) => {
   [
-    Contract.events(~stored_only=true, contract) |> List.map((event: event) => event.name),
-    Contract.calls(~stored_only=true, contract) |> List.map((call: call) => call.name),
+    Contract.events(~stored_only=true, contract) |> List.map((event: Event.t) => event.name),
+    Contract.calls(~stored_only=true, contract) |> List.map((call: Call.t) => call.name),
     parent_contract(subgraph, contract) |> (fun | Some(parent: Contract.t) => [parent.name] | None => []),
     child_contracts(subgraph, contract) |> List.map((child: Contract.t) => child.name)
   ]
@@ -159,7 +169,7 @@ let contract_related_contracts = (subgraph, contract) => {
 };
 
 module Builder = {
-  let fmt_call = (name, inputs, outputs, state_mutability): call => {
+  let fmt_call = (name, inputs, outputs, state_mutability): Call.t => {
     let inputs = inputs
       |> List.map((Ast.{typ, name, _}) => (Option.value(name, ~default="arg"), typ));
 
@@ -169,7 +179,7 @@ module Builder = {
     {name, state_mutability, inputs, outputs}
   };
 
-  let fmt_event = (name, params: list(Ast.event_param)): event => {
+  let fmt_event = (name, params: list(Ast.event_param)): Event.t => {
     let fields = params
       |> List.map(({typ, name, indexed}: Ast.event_param) => (Option.value(name, ~default="arg"), typ, indexed));
 
@@ -309,12 +319,65 @@ module Builder = {
   }
 
   let validate = (sg) => {
-    let validate_field_updates = (c) => 
+    let val_field_updates = (c) => 
       List.fold_left((acc, field) => 
         acc >>= () => 
-        Contract.has_field(c, field) ? R.ok() : R.error_msg([%string "Entity %{c.name} has no field named %{field}"]), 
+        Contract.has_field(c, field) ? R.ok() : R.error_msg([%string "%{c.name}: UpdateField: Entity %{c.name} has no field named %{field}"]), 
       R.ok(), Contract.update_fields(c));
 
-    List.fold_left((acc, c) => acc >>= () => validate_field_updates(c), R.ok(), sg.contracts)
+    let val_event_new_entity_field = (c: Contract.t, event, new_entities) => 
+      List.fold_left((acc, (_, field)) => 
+        acc >>= () =>
+        Event.has_field(event, field) ? R.ok() : R.error_msg([%string "%{c.name}.%{event.name}: NewEntity: Event %{event.name} has no field %{field}"]),
+        R.ok(), new_entities
+      );
+
+    let val_call_new_entity_field = (c: Contract.t, call, new_entities) => 
+      List.fold_left((acc, (_, field)) => 
+        acc >>= () =>
+        Call.has_field(call, field) ? R.ok() : R.error_msg([%string "%{c.name}.%{call.name}: NewEntity: Call %{call.name} has no field %{field}"]),
+        R.ok(), new_entities
+      );
+
+    let val_event_new_entity = (c: Contract.t, event: Event.t, new_entities) => 
+      List.fold_left((acc, (_, name)) => 
+        acc >>= () =>
+        contract_of_name(sg, name) == None ? 
+        R.error_msg([%string "%{c.name}.%{event.name}: NewEntity: Entity %{name} does not exist"]) : 
+        R.ok(),
+        R.ok(), new_entities
+      );
+
+    let val_call_new_entity = (c: Contract.t, call: Call.t, new_entities) => 
+      List.fold_left((acc, (_, name)) => 
+        acc >>= () =>
+        contract_of_name(sg, name) == None ? 
+        R.error_msg([%string "%{c.name}.%{call.name}: NewEntity: Entity %{name} does not exist"]) : 
+        R.ok(),
+        R.ok(), new_entities
+      );
+
+    let val_new_entity_handler = (c, handler) =>
+      switch (handler) {
+      | Event(event, actions) => 
+        List.filter_map(fun | NewEntity(name, _, field) => Some((name, field)) | _ => None, actions) |> (new_entities) =>
+        val_event_new_entity_field(c, event, new_entities) >>= () =>
+        val_event_new_entity(c, event, new_entities)
+      | Call(call, actions) =>
+        List.filter_map(fun | NewEntity(name, _, field) => Some((name, field)) | _ => None, actions) |> (new_entities) =>
+        val_call_new_entity_field(c, call, new_entities)    >>= () =>
+        val_call_new_entity(c, call, new_entities)
+      };
+
+
+    let val_new_entities = (c) => 
+      List.fold_left((acc, handler) => 
+        acc     >>= () => 
+        val_new_entity_handler(c, handler),
+      R.ok(), c.handlers);
+
+
+    List.fold_left((acc, c) => acc >>= () => val_field_updates(c), R.ok(), sg.contracts)  >>= () =>
+    List.fold_left((acc, c) => acc >>= () => val_new_entities(c), R.ok(), sg.contracts)
   };
 };
