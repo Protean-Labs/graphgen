@@ -6,6 +6,7 @@
   "esy": {
     "build": "dune build -p graphgen",
     "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
+    "overrideChangelog": "gren changelog --override",
     "release": {
       "rewritePrefix": true,
       "releasedBinaries": [
@@ -25,10 +26,13 @@
   "publishConfig": {
     "access": "public"
   },
-  "dependencies": {
-    "semantic-release": "^17.4.4"
+  "devDependencies": {
+    "github-release-notes": "^0.13.1"
   },
   "release": {
-    "branches": ["main", "next"]
+    "branches": [
+      "main",
+      "next"
+    ]
   }
 }
