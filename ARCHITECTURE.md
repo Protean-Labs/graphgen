@@ -12,13 +12,13 @@ The GraphGen tool is implemented as a simple pipeline (see diagram) that takes a
 The parsing component of GraphGen is implemented in the `Parsing` module, located in `graphgen/parsing/` and can be broken down into three parts: 
 - The lexer (implemented with [Menhir](https://opam.ocaml.org/packages/menhir/), see `graphgen/parsing/lexer.mll`)
 - The parser (implemented with [Menhir](https://opam.ocaml.org/packages/menhir/), see `graphgen/parsing/parser.mly`)
-- The AST defininition (see `graphgen/parsing/ast.re`)
+- The [AST](https://en.wikipedia.org/wiki/Abstract_syntax_tree) (abstract syntax tree) defininition (see `graphgen/parsing/ast.re`)
 
 The grammar parsed by GraphGen is a modified version of the solidity grammar. The two main difference are:
 1. GraphGen's grammar only parses solidity interfaces (and not contracts)
 2. GraphGen's grammar includes the `@gg` tags in the source code's AST
 
-The information written in the `@gg` tag blocks is assumed to be using the yaml format and is parsed using the parser provided by the [yaml](https://opam.ocaml.org/packages/yaml/) package. In a way, GraphGen's parser handles two grammars at once: the solidity grammar of the source code and the yaml grammar of the GraphGen tags.
+The information written in the `@gg` tag blocks is assumed to be using the yaml syntax and is parsed using the parser provided by the [yaml](https://opam.ocaml.org/packages/yaml/) package. In a way, GraphGen's parser handles two grammars at once: the solidity grammar of the source code and the yaml grammar of the GraphGen tags.
 
 ## Subgraph representation
 Once the source files and annotations have been parsed into an AST, GraphGen generates an internal subgraph representation (see `graphgen/subgraph.re/rei`). Without going into too many details, this subgraph representation contains all the information necessary to generate a working subgraph, including the subgraph data sources and templates (not to be confused with Jinja2 templates), the events and functions calls to be handled, what action to take when their handlers are triggered, etc.
