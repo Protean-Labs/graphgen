@@ -71,7 +71,7 @@ let graphgen = (github_user, subgraph_name, desc, target_path) => {
   | _ => R.error_msg([%string "Invalid path: %{target_path}"])
   }
   |> fun
-    | Error(`Msg(msg)) => logger#error("%s", msg)
+    | Error(`Msg(msg)) => {logger#error("%s", msg); exit(-1)}
     | Ok() => ()
 };
 
