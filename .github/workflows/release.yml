@@ -30,11 +30,11 @@ jobs:
             jq '.name |= "@protean-labs/graphgen"' package_old.json  | tee package.json
             rm package_old.json
             
-      - name: Cache Build
+      - name: Cache release
         uses: actions/cache@v2
         with:
           path: /home/runner/work/graphgen/graphgen/_release/
-          key: ${{ runner.os }}-build
+          key: ${{ runner.OS }}-release-cache-${{ hashFiles('**/_release/package.json') }}
 
 
   Publish-npm:
@@ -46,12 +46,12 @@ jobs:
         with:
           node-version: 16
       
-      - name: Retrieve build cache
+      - name: Retrieve release cache
         uses: actions/cache@v2
         with:
           path: /home/runner/work/graphgen/graphgen/_release/
-          key: ${{ runner.os }}-build
-        
+          key: ${{ runner.OS }}-release-cache-${{ hashFiles('**/_release/package.json') }}
+          
       - run: cd /home/runner/work/graphgen/graphgen/_release/
       
       - uses: JS-DevTools/npm-publish@v1
@@ -74,14 +74,15 @@ jobs:
           # scope: '@protean-labs'
       # Publish to GitHub Packages
       
-      - name: Retrieve build cache
+      - name: Retrieve release cache
         uses: actions/cache@v2
         with:
           path: /home/runner/work/graphgen/graphgen/_release/
-          key: ${{ runner.os }}-build
+          key: ${{ runner.OS }}-release-cache-${{ hashFiles('**/_release/package.json') }}
           
       - run: cd /home/runner/work/graphgen/graphgen/_release/
-          
-      - run: npm publish
+      
+      - name: Npm publish to GitHub package repository
+        run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

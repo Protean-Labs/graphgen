@@ -1,0 +1,24 @@
+# This workflow will check that all PRs have at
+# least one label needed by Draft-Release to update the changelog
+# and infer the next SemVer number. 
+
+name: Check PR labels
+on:
+  pull_request_target:
+   types: [opened, labeled, unlabeled, synchronize]
+
+jobs:
+  check_pr_labels:
+    runs-on: ubuntu-latest
+    name: Verify that the PR has a valid label
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Verify PR label action
+        uses: ./
+        id: verify-pr-label
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          valid-labels: 'bug, enhancement, fix, bugfix, feature, chore'
+          invalid-labels: 'invalid, do not merge'
+          pull-request-number: '${{ github.event.pull_request.number }}'
