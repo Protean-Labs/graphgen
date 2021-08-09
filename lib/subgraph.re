@@ -319,12 +319,19 @@ module Builder = {
   }
 
   let validate = (sg) => {
+    /** [val_field_updates(c)] returns [Ok()] if all UpdateField actions are
+        valid for the contract [c] and [Error(msg)] otherwise. */
     let val_field_updates = (c) => 
       List.fold_left((acc, field) => 
         acc >>= () => 
         Contract.has_field(c, field) ? R.ok() : R.error_msg([%string "%{c.name}: UpdateField: Entity %{c.name} has no field named %{field}"]), 
       R.ok(), Contract.update_fields(c));
 
+    /** [val_event_new_entity_field(c, event, new_entities)] returns [Ok()] 
+        if all [NewEntity] actions [new_entities] are valid for 
+        the contract [c] and event [event] and returns [Error(msg)] otherwise. 
+        More specifically, given an action [NewEntity X of Y], this function 
+        checks if the event [event] has a field [Y]. */
     let val_event_new_entity_field = (c: Contract.t, event, new_entities) => 
       List.fold_left((acc, (_, field)) => 
         acc >>= () =>
@@ -332,6 +339,11 @@ module Builder = {
         R.ok(), new_entities
       );
 
+    /** [val_call_new_entity_field(c, call, new_entities)] returns [Ok()] 
+        if all [NewEntity] actions [new_entities] are valid for 
+        the contract [c] and call [call] and returns [Error(msg)] otherwise. 
+        More specifically, given an action [NewEntity X of Y], this function 
+        checks if the call [call] has a field [Y]. */
     let val_call_new_entity_field = (c: Contract.t, call, new_entities) => 
       List.fold_left((acc, (_, field)) => 
         acc >>= () =>
@@ -339,8 +351,13 @@ module Builder = {
         R.ok(), new_entities
       );
 
+    /** [val_event_new_entity(c, event, new_entities)] returns [Ok()] 
+        if all [NewEntity] actions [new_entities] are valid for 
+        the contract [c] and event [event] and returns [Error(msg)] otherwise. 
+        More specifically, given an action [NewEntity X of Y], this function 
+        checks if the entity [X] exists in the subgraph. */
     let val_event_new_entity = (c: Contract.t, event: Event.t, new_entities) => 
-      List.fold_left((acc, (_, name)) => 
+      List.fold_left((acc, (name, _)) => 
         acc >>= () =>
         contract_of_name(sg, name) == None ? 
         R.error_msg([%string "%{c.name}.%{event.name}: NewEntity: Entity %{name} does not exist"]) : 
@@ -348,8 +365,13 @@ module Builder = {
         R.ok(), new_entities
       );
 
+    /** [val_call_new_entity(c, call, new_entities)] returns [Ok()] 
+        if all [NewEntity] actions [new_entities] are valid for 
+        the contract [c] and call [call] and returns [Error(msg)] otherwise. 
+        More specifically, given an action [NewEntity X of Y], this function 
+        checks if the entity [X] exists in the subgraph. */
     let val_call_new_entity = (c: Contract.t, call: Call.t, new_entities) => 
-      List.fold_left((acc, (_, name)) => 
+      List.fold_left((acc, (name, _)) => 
         acc >>= () =>
         contract_of_name(sg, name) == None ? 
         R.error_msg([%string "%{c.name}.%{call.name}: NewEntity: Entity %{name} does not exist"]) : 
@@ -357,6 +379,9 @@ module Builder = {
         R.ok(), new_entities
       );
 
+    /** [val_new_entity_handler(c, handler)] returns [Ok()] if all [NewEntity] 
+        actions that are part of the handler [handler] of contract [c] are valid 
+        and [Error(msg)] otherwise. */
     let val_new_entity_handler = (c, handler) =>
       switch (handler) {
       | Event(event, actions) => 
@@ -369,7 +394,8 @@ module Builder = {
         val_call_new_entity(c, call, new_entities)
       };
 
-
+    /** [val_new_entities(c)] returns [Ok()] if all [NewEntity] 
+        actions that are triggered by contract [c] are valid. */
     let val_new_entities = (c) => 
       List.fold_left((acc, handler) => 
         acc     >>= () => 

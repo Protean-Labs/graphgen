@@ -149,5 +149,7 @@ module Builder: {
   /** [make(~github_user, ~subgraph_name, ~desc, ast)] builds and returns a {!Subgraph.t} value from the abstract syntax tree. */
   let make: (~github_user:string=?) => (~subgraph_name:string=?) => (~desc:string=?) => Parsing.Ast.t => t;
 
+  /** [validate(sg)] returns [Ok()] if the subgraph [sg]'s graphgen tags are
+      valid and [Error(msg)] otherwise. */
   let validate: t => result(unit, [> Rresult.R.msg]);
 };

@@ -1,5 +1,15 @@
+{%- set ns = namespace (has_events=false, has_functions=false, has_both=false) -%}
+{%- if contract.events != [] -%}
+{%- set ns.has_events = true -%}
+{%- endif -%}
+{%- if contract.functions != [] -%}
+{%- set ns.has_functions = true -%}
+{%- endif -%}
+{%- if ns.has_events and ns.has_functions -%}
+{%- set ns.has_both = true -%}
+{%- endif -%}
 {
-  "abi": [{% for event in contract.events %}
+  "abi": [{% if ns.has_events %}{% for event in contract.events %}
     {
       "type": "event",
       "name": "{{ event.name }}",
@@ -12,7 +22,7 @@
           "type": "{{ field.type }}"
         }{% if not loop.last %},{% endif %}{% endfor %}
       ]
-    }{% if not loop.last %},{% endif %}{% endfor %}{% if contract.functions != [] %},{% for f in contract.functions %}
+    }{% if not loop.last %},{% endif %}{% endfor %}{% endif %}{% if ns.has_functions %}{% if ns.has_both %},{% endif %}{% for f in contract.functions %}
     {
       "type": "function",
       "name": "{{ f.name }}",

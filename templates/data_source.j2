@@ -73,7 +73,7 @@ export function getCreate{{ entityName }}Entity(address: Address): {{ entityName
 {% for eventHandler in dataSource.eventHandlers %}
 {% set event = eventHandler.event %}
 {%- if eventHandler.store %}
-function create{{ event.name }}Entity(source: {{ entityName }}Entity, event: {{ event.name }}): {{ event.name }}Entity {
+function create{{ event.name }}Entity(source: {{ entityName }}Entity, event: {{ event.name }}Event): {{ event.name }}Entity {
   let eventEntity = new {{ event.name }}Entity(source.id + "-" + source.{{ event.name | counterName }}.toString())
   {% for (name, t) in event.fields -%}
   eventEntity.{{ name }} = event.params.{{ name }}

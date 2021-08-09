@@ -1,7 +1,7 @@
 open Cmdliner;
 open Rresult;
 
-open Graphgenlib;
+open Libgraphgen;
 open Parsing;
 
 Printexc.record_backtrace(true);

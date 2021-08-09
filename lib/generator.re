@@ -37,12 +37,11 @@ let counter_name_filter = ("counterName", Jg_types.func_arg1_no_kw((value) => {
   |> (s) => Jg_types.Tstr([%string "num%{s}"])
 }));
 
-let generate_directories = () => {
-  // let f = (acc, path) => switch (acc) {
-  //   | Ok(_) => Bos.OS.Dir.create(~path=true, Fpath.v(path))
-  //   | Error(msg) => Error(msg)
-  // };
+let dump_models = (models) =>
+  List.map(((_, o)) => Jg_types.show_tvalue(o), models)
+  |> String.concat("\n");
 
+let generate_directories = () => {
   [
     "subgraph/abis",
     "subgraph/src/mappings"
@@ -57,13 +56,22 @@ let generate_directories = () => {
 type models = list((string, Jingoo.Jg_types.tvalue));
 
 let generate = (template_path, dest_path, models) => {
-  logger#info("Generating %s...", dest_path);
-  Jg_template.from_file(template_path, ~env={...Jg_types.std_env, filters: [uncapitalize_filter, counter_name_filter]}, ~models)
-  |> File.write(Fpath.v(dest_path))
-  |> Result.map_error((`Msg(msg)) => {
-    logger#error("Writing file %s: %s", dest_path, msg);
-    R.msg(msg)
-  })
+  let f = () => {
+    logger#info("Generating %s...", dest_path);
+    Jg_template.from_file(template_path, ~env={...Jg_types.std_env, filters: [uncapitalize_filter, counter_name_filter]}, ~models)
+    |> File.write(Fpath.v(dest_path))
+    |> Result.map_error((`Msg(msg)) => {
+      logger#error("Writing file %s: %s", dest_path, msg);
+      R.msg(msg)
+    });
+  }
+
+  try (f()) {
+    | Failure(msg) => 
+      logger#error("Writing file %s: %s", dest_path, msg);
+      logger#error("Models dump:\n%s", dump_models(models))
+      R.error_msg(msg)
+  }
 };
 
 let single_file = (template_path, dest_path, f, sg) => f(sg)
