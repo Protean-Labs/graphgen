@@ -34,6 +34,7 @@
   <a href="https://www.npmjs.com/@protean-labs/graphgen">
     <img src="https://img.shields.io/npm/v/@protean-labs/graphgen.svg?logo=npm&logoColor=fff&label=NPM+package&color=limegreen" alt="GraphGen on npm" />
   </a>
+  <br>
   <a href="https://www.npmjs.com/@protean-labs/graphgen">
     <img src="https://img.shields.io/npm/dt/@protean-labs/graphgen" alt="Graphgen downloads on npm" />
   </a>
