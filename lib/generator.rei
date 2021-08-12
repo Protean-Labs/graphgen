@@ -1,5 +1,5 @@
-/** [generate_directories()] generates the subgraph directory structure and returns nothing. */
-let generate_directories: unit => result(bool, [> `Msg(string)]);
+/** [generate_directories(output_dir)] generates the subgraph directory structure at location [output_dir] and returns nothing. */
+let generate_directories: string => result(bool, [> `Msg(string)]);
 
 /** Type of Jingoo (Jinja2) models. */
 type models = list((string, Jingoo.Jg_types.tvalue));

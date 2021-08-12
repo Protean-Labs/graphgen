@@ -41,10 +41,10 @@ let dump_models = (models) =>
   List.map(((_, o)) => Jg_types.show_tvalue(o), models)
   |> String.concat("\n");
 
-let generate_directories = () => {
+let generate_directories = (output_dir) => {
   [
-    "subgraph/abis",
-    "subgraph/src/mappings"
+    [%string "%{output_dir}/abis"],
+    [%string"%{output_dir}/src/mappings"]
   ]
   |> List.fold_left((res, path) => Result.bind(res, _ => Dir.create(~path=true, Fpath.v(path))), Result.ok(true))
   |> Result.map_error((`Msg(msg)) => {
