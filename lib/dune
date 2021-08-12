@@ -1,4 +1,4 @@
 (library
- (name graphgenlib)
+ (name libgraphgen)
  (libraries parsing easy_logging yaml yaml.unix fpath jingoo)
  (preprocess (pps ppx_deriving.show ppx_deriving_yaml ppx_string ppx_deriving_yojson)))
