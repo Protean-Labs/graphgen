@@ -1,0 +1,117 @@
+type Transaction @entity {
+  id: ID!   # tx hash
+  txIndex: Int!
+  from: Bytes!
+  to: Bytes
+  blockNumber: BigInt!
+  blockTimestamp: BigInt!
+  events: [Event!]! @derivedFrom(field: "tx") 
+  
+}
+
+interface Event {
+  id: ID!   # CONTRACT_ADDR-PER_EVENT_COUNTER
+  logIndex: BigInt!
+  tx: Transaction!
+}
+
+type Factory @entity {
+  id: ID!   # CONTRACT_ADDR
+
+  
+
+  
+  
+  
+
+  
+
+  
+  numPairs: BigInt!
+  latestPair: Pair
+  pairs: [Pair!]! @derivedFrom(field: "factory")
+  
+}
+
+
+
+
+
+
+
+
+
+type Pair @entity {
+  id: ID!   # CONTRACT_ADDR
+  
+  price1: BigInt!
+  price0: BigInt!
+  token1: Bytes!
+  token0: Bytes!
+  totalSupply: BigInt!
+  decimals: BigInt!
+  symbol: String!
+  name: String!
+  
+
+  numSwaps: BigInt!
+  latestSwap: Swap
+  swaps: [Swap!]! @derivedFrom(field: "pair")
+  numBurns: BigInt!
+  latestBurn: Burn
+  burns: [Burn!]! @derivedFrom(field: "pair")
+  numMints: BigInt!
+  latestMint: Mint
+  mints: [Mint!]! @derivedFrom(field: "pair")
+  
+
+  factory: Factory!
+
+  
+}
+
+
+
+type Swap implements Event @entity {
+  id: ID!   # CONTRACT_ADDR-PER_EVENT_COUNTER
+  logIndex: BigInt!
+  tx: Transaction!
+
+  # Event params
+  sender: Bytes!
+  amount0In: BigInt!
+  amount1In: BigInt!
+  amount0Out: BigInt!
+  amount1Out: BigInt!
+  to: Bytes!
+
+  pair: Pair!
+}
+
+type Burn implements Event @entity {
+  id: ID!   # CONTRACT_ADDR-PER_EVENT_COUNTER
+  logIndex: BigInt!
+  tx: Transaction!
+
+  # Event params
+  sender: Bytes!
+  amount0: BigInt!
+  amount1: BigInt!
+  to: Bytes!
+
+  pair: Pair!
+}
+
+type Mint implements Event @entity {
+  id: ID!   # CONTRACT_ADDR-PER_EVENT_COUNTER
+  logIndex: BigInt!
+  tx: Transaction!
+
+  # Event params
+  sender: Bytes!
+  amount0: BigInt!
+  amount1: BigInt!
+
+  pair: Pair!
+}
+
