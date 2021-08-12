@@ -64,7 +64,33 @@ npx graphgen [CONTRACT_FILE].sol
 
 # Usage
 
-Once the package has been downloaded and built in your subgraph folder, it is recommended to make a copy of you solidity interface files and move the copies to the folder. You should also remove any comments from them to prevent any interference with the parsers. Once this is done, you can start adding annotations according to the following specs:
+```
+NAME
+       graphgen - Generate a subgraph from annotated solidity interfaces
+
+SYNOPSIS
+       graphgen [OPTION]... SOURCE
+
+ARGUMENTS
+       SOURCE (required)
+           Solidity interface file or directory containing multiple interface
+           files annotated with graphgen tags
+
+OPTIONS
+       -d VAL, --description=VAL (absent=PLACEHOLDER)
+           Subgraph description
+
+       --help[=FMT] (default=auto)
+           Show this help in format FMT. The value FMT must be one of `auto',
+           `pager', `groff' or `plain'. With `auto', the format is `pager` or
+           `plain' whenever the TERM env var is `dumb' or undefined.
+
+       -n VAL, --name=VAL (absent=PLACEHOLDER)
+           The name of the subgraph
+
+       -u VAL, --user=VAL (absent=PLACEHOLDER)
+           The Graph Github user
+```
 
 # Getting started
 GraphGen takes as inputs solidity files containing annotated interfaces and outputs a working subgraph. The annotations indicate to GraphGen which contracts should be indexed (as `dataSources` or `templates`), which events and calls to listen to and what to do when one happens, etc.
@@ -83,7 +109,7 @@ Provided the annotations and interfaces are valid, GraphGen will generate a subg
 **IMPORTANT**: GraphGen does not include any functionality from the `graph-cli`. One must therefore run `npm run codegen` and `npm run build` after generating the source files with GraphGen.
 
 # Annotations
-GraphGen supports three kings of annotations, each with their specific parameters:
+GraphGen supports three kinds of annotations, each with their specific parameters:
 - `@gg:source`: Defines a `dataSource` or `template` (depending on parameters). Must precede an interface definition.
 - `@gg:field`: Defines an entity field with an optional default value. Must precede a `view` or `pure` function definition.
 - `@gg:handler`: Defines an event (or call) handler, as well as the logic to be executed when the handler is triggered. Must precede an event (or call) definition.
