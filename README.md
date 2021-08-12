@@ -62,75 +62,129 @@ Basic usage is to call on an already annotated .sol contract file. If installed 
 npx graphgen [CONTRACT_FILE].sol
 ``` 
 
-
 # Usage
 
 Once the package has been downloaded and built in your subgraph folder, it is recommended to make a copy of you solidity interface files and move the copies to the folder. You should also remove any comments from them to prevent any interference with the parsers. Once this is done, you can start adding annotations according to the following specs:
 
-## Annotations
+# Getting started
+GraphGen takes as inputs solidity files containing annotated interfaces and outputs a working subgraph. The annotations indicate to GraphGen which contracts should be indexed (as `dataSources` or `templates`), which events and calls to listen to and what to do when one happens, etc.
 
-UniswapV2 is used as an example here to show possible annotations. You can find the complete file under `test/IUniswapV2.sol`
+Given a solidity file containing annotated interfaces, or a directory containing multiple such files, the following command is used to generate the subgraph:
+`npx graphgen -o OUTPUT_DIR FILE_OR_DIR`.
 
-- Source -
-  Specifies the usual DataSources found in most subgraphs. It is possible to generate both unique sources and source templates which are usually used for contract factories.
+Provided the annotations and interfaces are valid, GraphGen will generate a subgraph (located in in `OUTPUT_DIR/`) with the following files:
+- `subgraph.yaml`: Subgraph manifest
+- `package.json`: Package.json
+- `schema.graphql`: Graphql schema
+- `src/mappings/X.ts`: Typescript mappings for each indexed contracts `X`
+- `src/utils.ts`: Utility functions used in generated mappings
+- `abis/X.json`: Solidity ABIs for each indexed subgraph `X`
 
-```Solidity
+**IMPORTANT**: GraphGen does not include any functionality from the `graph-cli`. One must therefore run `npm run codegen` and `npm run build` after generating the source files with GraphGen.
+
+# Annotations
+GraphGen supports three kings of annotations, each with their specific parameters:
+- `@gg:source`: Defines a `dataSource` or `template` (depending on parameters). Must precede an interface definition.
+- `@gg:field`: Defines an entity field with an optional default value. Must precede a `view` or `pure` function definition.
+- `@gg:handler`: Defines an event (or call) handler, as well as the logic to be executed when the handler is triggered. Must precede an event (or call) definition.
+
+**IMPORTANT**: All GraphGen annotations must directly precede their associated code block and be written inside a comment block delimited by `/*` and `*/`.
+
+## `@gg:source`
+### Parameters
+- `name`: `STRING` - (optional) Name used for the entity type representing this interface and all other references to it. Defaults to interface name.
+- `instances`: `[INSTANCE]` - (optional) A list of instances. Defaults to empty list, indicating that this interface maps to a subgraph template.
+
+Where `INSTANCE` has two parameters:
+- `address`: `STRING` - The address of the contract implementing the interface.
+- `startBlock`: `INTEGER` - The block at which to start the indexing of this contract.
+  
+
+### Example
+Template:
+```solidity
 /* @gg:source
-  name: Pair
-  onInit:
-    - UpdateField name
-    - UpdateField symbol
-    - UpdateField decimals
-    - UpdateField totalSupply
-    - UpdateField token0
-    - UpdateField token1
+  name: MySuperContract 
 */
-interface IUniswapV2Pair {
-    event Approval(address indexed owner, address indexed spender, uint value);
-    event Transfer(address indexed from, address indexed to, uint value);
-    ...
+interface MyContract {
+  ...
 }
 ```
 
-- Handler
-  - StoreCall
-  - StoreEvent
-  - UpdateField
-  - NewEntity
-
-```Solidity
-    /* @gg:handler 
-        actions:
-          - StoreEvent
-          - UpdateField totalSupply
-     */
-    event Burn(address indexed sender, uint amount0, uint amount1, address indexed to);
-
-    /* @gg:handler 
-        actions:
-          - StoreEvent
-          - UpdateField price0
-          - UpdateField price1
-     */
-    event Swap(
-        address indexed sender,
-        uint amount0In,
-        uint amount1In,
-        uint amount0Out,
-        uint amount1Out,
-        address indexed to
-    );
+DataSource:
+```solidity
+/* @gg:source
+  instances:
+    - address: '0xaa7fb1c8ce6f18d4fd4aabb61a2193d4d441c54f'
+      startBlock: 8335916 
+*/
+interface MyContract {
+  ...
+}
 ```
 
-- Fields - They specify the attributes of each entity that is tracked by the subgraph.
+## `@gg:field`
+### Parameters
+- `name`: `STRING` - (optional) Name used as the name of the entity field. Defaults to the name of the function.
+- `default`: `STRING` - (optional) Default value for the field, used in case of errors. Defaults to predefined values for each type (e.g.: 0 for BigInt, "" for String).
 
-```Solidity
-    /* @gg:field */
-    function name() external pure returns (string memory);
-    
-    /* @gg:field */
-    function symbol() external pure returns (string memory);
+### Example
+```solidity
+/* @gg:source
+  name: MySuperContract 
+*/
+interface MyContract {
+  /* @gg:field */
+  function totalSupply() external view returns (uint);
 
+  /* @gg:field
+    name: speedOfLight
+  */
+  function c() external pure returns (uint);
+}
+```
+
+## `@gg:handler`:
+### Parameters
+- `name`: `STRING` - (optional) Name used for the entity type representing this event (or call) and all other references to it. Defaults to event (or call) name.
+- `actions`: `[STRING]` - List of handler actions, see below for more information.
+
+### Handler actions
+Actions are commands (encoded as simple strings) that tell GraphGen what kind of logic should be executed when a certain event (or call) handler is triggered. GraphGen currently supports four distinct actions:
+- `StoreEvent`: When the handler is associated with an event, this action command tells GraphGen to: 1) Create a new entity type for the event; 2) Store each of those events; and 3) Add edges between the emitter contract entity and the event entities.
+- `StoreCall`: Same as `StoreEvent`, but for storing function calls. (Note: `StoreEvent` and `StoreCall` might get merged into a single action command in the future).
+- `UpdateField X`: This action command tells GraphGen that whenever the handler is triggered, the field `X` (of the emitter contract entity) should be updated. The field `X` must be defined using a `@gg:field` annotation on the same interface.
+- `NewEntity X of Y`: This action command tells GraphGen that whenever the handler is triggered, a new template contract entity of type `X` should be created, using the field `Y` of the event (or call) as the address and id of this new entity. `X` must be defined using a `@gg:source` annotation. 
+
+### Example
+```solidity
+/* @gg:source
+  name: MySuperContract 
+*/
+interface MyContract {
+  /* @gg:field */
+  function totalSupply() external view returns (uint);
+
+  /* @gg:handler 
+    actions:
+      - StoreEvent
+      - UpdateField totalSupply
+  */
+  event Mint(uint amount);
+
+  /* @gg:handler 
+    name: AdminChange
+    actions:
+      - StoreCall
+  */
+  function changeAdmin(address newAdmin) external returns (bool);
+
+  /* @gg:handler 
+    actions:
+      - NewEntity ERC20 from token
+  */
+  event NewToken(address indexed token);
+}
 ```
 
 ## CLI
