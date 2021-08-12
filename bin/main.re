@@ -1,7 +1,7 @@
 open Cmdliner;
 open Rresult;
 
-open Graphgenlib;
+open Libgraphgen;
 open Parsing;
 
 Printexc.record_backtrace(true);
@@ -25,19 +25,21 @@ let graphgen = (github_user, subgraph_name, desc, target_path) => {
   let generate_templates = Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.templates_models)
 
   let read_and_parse = (path) => {
+    logger#debug("Parsing %s...", Fpath.filename(path));
     File.read(path)  >>= (source) => 
     parse(source)
   };
 
   let generate_from_ast = (ast) => {
     Subgraph.Builder.make(~github_user, ~subgraph_name, ~desc, ast)    |>  (subgraph) =>
+    Subgraph.Builder.validate(subgraph)         >>= () =>
     Generator.generate_directories()            >>= (_) => 
-    generate_package_json(subgraph)             >>= (_) =>
-    generate_manifest(subgraph)                 >>= (_) =>
-    generate_schema(subgraph)                   >>= (_) =>
-    generate_util_ts(subgraph)                  >>= (_) =>
-    generate_abi(subgraph)                      >>= (_) =>
-    generate_data_sources(subgraph)             >>= (_) =>
+    generate_package_json(subgraph)             >>= () =>
+    generate_manifest(subgraph)                 >>= () =>
+    generate_schema(subgraph)                   >>= () =>
+    generate_util_ts(subgraph)                  >>= () =>
+    generate_abi(subgraph)                      >>= () =>
+    generate_data_sources(subgraph)             >>= () =>
     generate_templates(subgraph)
   }
 
@@ -69,7 +71,7 @@ let graphgen = (github_user, subgraph_name, desc, target_path) => {
   | _ => R.error_msg([%string "Invalid path: %{target_path}"])
   }
   |> fun
-    | Error(`Msg(msg)) => logger#error("%s", msg)
+    | Error(`Msg(msg)) => {logger#error("%s", msg); exit(-1)}
     | Ok() => ()
 };
 

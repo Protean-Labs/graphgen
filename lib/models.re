@@ -2,11 +2,11 @@ open Jingoo;
 
 let logger = Easy_logging.Logging.make_logger("Generator.Models", Debug, [Cli(Debug)]);
 
-let event_model = (event: Subgraph.event) => {
+let event_model = (event: Subgraph.Event.t) => {
   logger#debug("Generating %s event model", event.name);
   Jg_types.Tobj([
     ("name", Tstr(event.name)),
-    ("signature", Tstr(Subgraph.event_signature(event))),
+    ("signature", Tstr(Subgraph.Event.signature(event))),
     ("fields", Tlist(
       event.fields
       |> List.map(((name, typ, _)) => Jg_types.Tset([Tstr(name), Tstr(Graphql.(convert_ast_type(typ) |> string_of_typ))]))
@@ -14,11 +14,11 @@ let event_model = (event: Subgraph.event) => {
   ])
 };
 
-let call_model = (call: Subgraph.call) => {
+let call_model = (call: Subgraph.Call.t) => {
   logger#debug("Generating %s call model", call.name);
   Jg_types.Tobj([
     ("name", Tstr(call.name)),
-    ("signature", Tstr(Subgraph.call_signature(call))),
+    ("signature", Tstr(Subgraph.Call.signature(call))),
     ("inputs", Tlist(
       call.inputs
       |> List.map(((name, typ)) => Jg_types.Tset([Tstr(name), Tstr(Graphql.(convert_ast_type(typ) |> string_of_typ))]))
@@ -84,7 +84,7 @@ let handler_model = (subgraph, contract, actions) => {
   (field_updates, new_entities)
 }
 
-let event_handler_model = (subgraph, contract, event: Subgraph.event, actions) => {
+let event_handler_model = (subgraph, contract, event: Subgraph.Event.t, actions) => {
   let store = List.exists(fun | Subgraph.StoreEvent => true | _ => false, actions);
   logger#debug("Generating %s event handler model (store = %b)", event.name, store);
   let (field_updates, new_entities) = handler_model(subgraph, contract, actions);
@@ -97,7 +97,7 @@ let event_handler_model = (subgraph, contract, event: Subgraph.event, actions) =
   ])
 };
 
-let call_handler_model = (subgraph, contract, call: Subgraph.call, actions) => {
+let call_handler_model = (subgraph, contract, call: Subgraph.Call.t, actions) => {
   let store = List.exists(fun | Subgraph.StoreCall => true | _ => false, actions);
   logger#debug("Generating %s call handler model (store = %b)", call.name, store);
   let (field_updates, new_entities) = handler_model(subgraph, contract, actions);
@@ -170,7 +170,7 @@ let subgraph_model = (subgraph: Subgraph.t) =>
       |> List.filter_map((contract: Subgraph.Contract.t) => contract.instances == [] ? Some(template_model(subgraph, contract)) : None)))
   ]);
 
-let event_abi_model = (event: Subgraph.event) =>
+let event_abi_model = (event: Subgraph.Event.t) =>
   Jg_types.Tobj([
     ("name", Tstr(event.name)),
     ("fields", Tlist(event.fields
@@ -182,7 +182,7 @@ let event_abi_model = (event: Subgraph.event) =>
     ))
   ]);
 
-let function_abi_model = (call: Subgraph.call) => 
+let function_abi_model = (call: Subgraph.Call.t) => 
   Jg_types.Tobj([
     ("name", Tstr(call.name)),
     ("stateMutability", Tstr(Parsing.Ast.string_of_state_mut(call.state_mutability))),

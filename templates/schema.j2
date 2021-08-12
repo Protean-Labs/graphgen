@@ -78,10 +78,8 @@ type {{ eventHandler.event.name }} implements Event @entity {
   logIndex: BigInt!
   tx: Transaction!
 
-  # Event params
-  {%- for (name, type) in eventHandler.event.fields -%}
-  {{ name }}: {{ type }}!
-  {%- endfor -%}
+  # Event params {% for (name, type) in eventHandler.event.fields %}
+  {{ name }}: {{ type }}! {% endfor %}
 
   {{ contract.name | uncapitalize }}: {{ contract.name }}!
 }

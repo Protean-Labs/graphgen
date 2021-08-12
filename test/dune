@@ -1,4 +1,4 @@
 (executable
  (name test)
- (libraries graphgenlib ounit2)
+ (libraries libgraphgen ounit2)
  (preprocess (pps ppx_deriving_yaml ppx_compare)))

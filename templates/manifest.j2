@@ -23,11 +23,9 @@ dataSources:{% for dataSource in subgraph.dataSources %}{% set dataSource = data
         {%- endfor %}
       abis:
         - name: {{ dataSource.contract.name }}
-          file: ./abis/{{ dataSource.contract.name }}.json
-        {% for contract in dataSource.relatedContracts -%}
+          file: ./abis/{{ dataSource.contract.name }}.json{% for contract in dataSource.relatedContracts %}
         - name: {{ contract.name }}
-          file: ./abis/{{ contract.name }}.json
-        {%- endfor %}
+          file: ./abis/{{ contract.name }}.json{% endfor %}
       {% if dataSource.eventHandlers != [] -%}
       eventHandlers:
       {%- for eventHandler in dataSource.eventHandlers %}
