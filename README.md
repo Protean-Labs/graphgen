@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <strong> Conceived by Protean Labs </strong> <br>
+  <strong> Designed by Protean Labs </strong> <br>
   <a href="https://www.protean.so/graphgen"><strong>www.protean.so</strong></a>
   <br>
 </p>
@@ -85,7 +85,6 @@ UniswapV2 is used as an example here to show possible annotations. You can find 
     - UpdateField token0
     - UpdateField token1
 */
-
 interface IUniswapV2Pair {
     event Approval(address indexed owner, address indexed spender, uint value);
     event Transfer(address indexed from, address indexed to, uint value);
