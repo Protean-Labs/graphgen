@@ -1,6 +1,6 @@
 {
   "name": "graphgen",
-  "version": "0.0.8-development",
+  "version": "0.0.9-development",
   "description": "Subgraph Generation Tool",
   "license": "Apache 2.0",
   "esy": {
