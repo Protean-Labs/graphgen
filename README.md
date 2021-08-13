@@ -88,8 +88,15 @@ OPTIONS
        -n VAL, --name=VAL (absent=PLACEHOLDER)
            The name of the subgraph
 
+       -o VAL, --output-dir=VAL (absent=subgraph)
+           The name of the output directory to which the subgraph will be
+           generated
+
        -u VAL, --user=VAL (absent=PLACEHOLDER)
            The Graph Github user
+
+       -v, --verbose
+           Verbose output
 ```
 
 # Getting started
