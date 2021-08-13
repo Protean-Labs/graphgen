@@ -22,7 +22,7 @@ jobs:
         with:
           cache-key: ${{ hashFiles('esy.lock/index.json') }}
 
-  Integration-test:
+  Integration-test-singlefile:
     needs: Build
     runs-on: ubuntu-latest
     
@@ -53,6 +53,36 @@ jobs:
           npm run codegen
           npm run build
 
+  Integration-test-multifile:
+    needs: Build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/setup-node@v2
+      with:
+        node-version: 16
+    
+    - name: Install esy
+      run: npm install -g esy && ls
+
+    - uses: esy/github-action@v1
+      with:
+        cache-key: ${{ hashFiles('esy.lock/index.json') }}    
+        
+    - name: Run graphgen on Aave test directory
+      run:
+          npm run graphgen test/Aave 
+    - name: Install Graph-cli & dependencies
+      run: |
+          cd subgraph/
+          npm install
+
+    - name: Build Uniswap generated subgraph
+      run: |
+          cd subgraph/
+          npm run codegen
+          npm run build
 
   Draft-Release:
     needs: [Build, Integration-test]

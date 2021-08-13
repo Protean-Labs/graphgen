@@ -392,8 +392,8 @@ module Builder = {
     let val_event_new_entity = (c: Contract.t, event: Event.t, new_entities) => 
       List.fold_left((acc, (name, _)) => 
         acc >>= () =>
-        contract_of_name(sg, name) == None ? 
-        R.error_msg([%string "%{c.name}.%{event.name}: NewEntity: Entity %{name} does not exist"]) : 
+        contract_of_name(sg, name) == None ?
+        R.error_msg([%string "%{c.name}.%{event.name}: NewEntity: Entity %{name} does not exist"]) :
         R.ok(),
         R.ok(), new_entities
       );
