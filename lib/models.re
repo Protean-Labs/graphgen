@@ -162,7 +162,7 @@ let template_model = (subgraph, contract: Subgraph.Contract.t) => {
 let subgraph_model = (subgraph: Subgraph.t) =>
   Jg_types.Tobj([
     ("github_user", Tstr(subgraph.github_user)),
-    ("subgraph_name", Tstr(subgraph.subgraph_name)),
+    ("name", Tstr(subgraph.subgraph_name)),
     ("description", Tstr(subgraph.description)),
     ("dataSources", Tlist(subgraph.contracts
       |> List.filter_map((contract: Subgraph.Contract.t) => contract.instances != [] ? Some(data_source_model(subgraph, contract)) : None))),
