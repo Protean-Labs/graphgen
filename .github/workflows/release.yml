@@ -1,5 +1,8 @@
 name: Release
 
+env:
+  RELEASE_DIR: /home/runner/work/graphgen/graphgen/_release/
+
 on:
   workflow_dispatch:
   release:
@@ -26,7 +29,7 @@ jobs:
         # The folder containing the jinja templates needs to be included in the release
         run: |
             esy npm-release 
-            cd /home/runner/work/graphgen/graphgen/
+            cd ${{ env.RELEASE_DIR }}/..
             cp -r templates/ _release/bin/ 
             
             cd _release/
@@ -37,8 +40,8 @@ jobs:
       - name: Cache release
         uses: actions/cache@v2
         with:
-          path: /home/runner/work/graphgen/graphgen/_release/
-          key: ${{ runner.OS }}-release-cache-${{ hashFiles('**/_release/package.json') }}
+          path: ${{ env.RELEASE_DIR }}
+          key: ${{ runner.OS }}-release-cache-${{ hashFiles(${{ env.RELEASE_DIR }} + 'package.json') }}
 
 
   Publish-npm:
@@ -54,14 +57,14 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /home/runner/work/graphgen/graphgen/_release/
-          key: ${{ runner.OS }}-release-cache-${{ hashFiles('**/_release/package.json') }}
-          
+          key: ${{ runner.OS }}-release-cache-${{ hashFiles(${{ env.RELEASE_DIR }} + 'package.json') }}
+           
       - run: cd /home/runner/work/graphgen/graphgen/_release/
       
       - uses: JS-DevTools/npm-publish@v1
         with:
          token: ${{ secrets.NPM_TOKEN }}
-         package: /home/runner/work/graphgen/graphgen/_release/package.json
+         package: ${{ env.RELEASE_DIR }}/package.json
 
 
   Publish-gpr:
@@ -82,7 +85,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /home/runner/work/graphgen/graphgen/_release/
-          key: ${{ runner.OS }}-release-cache-${{ hashFiles('**/_release/package.json') }}
+          key: ${{ runner.OS }}-release-cache-${{ hashFiles(${{ env.RELEASE_DIR }} + 'package.json') }}
           
       - run: cd /home/runner/work/graphgen/graphgen/_release/
       
