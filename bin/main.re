@@ -15,14 +15,14 @@ let is_solidity = (path) => {
   Str.string_match(regex, path, 0)
 };
 
-let graphgen = (github_user, subgraph_name, desc, target_path) => {
-  let generate_package_json = Generator.single_file("templates/package_json.j2", "subgraph/package.json", Models.package_json_models)
-  let generate_manifest = Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_models)
-  let generate_schema = Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.schema_models)
-  let generate_util_ts = Generator.single_file("templates/util_ts.j2", "subgraph/src/util.ts", Models.util_ts_models)
-  let generate_abi = Generator.multi_file("templates/abi.j2", (key) => [%string "subgraph/abis/%{key}.json"], Models.abi_models)
-  let generate_data_sources = Generator.multi_file("templates/data_source.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.data_sources_models)
-  let generate_templates = Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.templates_models)
+let graphgen = (github_user, subgraph_name, desc, output_dir, target_path) => {
+  let generate_package_json = Generator.single_file("templates/package_json.j2", [%string "%{output_dir}/package.json"], Models.package_json_models)
+  let generate_manifest = Generator.single_file("templates/manifest.j2", [%string "%{output_dir}/subgraph.yaml"], Models.manifest_models)
+  let generate_schema = Generator.single_file("templates/schema.j2", [%string "%{output_dir}/schema.graphql"], Models.schema_models)
+  let generate_util_ts = Generator.single_file("templates/util_ts.j2", [%string "%{output_dir}/src/util.ts"], Models.util_ts_models)
+  let generate_abi = Generator.multi_file("templates/abi.j2", (key) => [%string "%{output_dir}/abis/%{key}.json"], Models.abi_models)
+  let generate_data_sources = Generator.multi_file("templates/data_source.j2", (key) => [%string "%{output_dir}/src/mappings/%{key}.ts"], Models.data_sources_models)
+  let generate_templates = Generator.multi_file("templates/template.j2", (key) => [%string "%{output_dir}/src/mappings/%{key}.ts"], Models.templates_models)
 
   let read_and_parse = (path) => {
     logger#debug("Parsing %s...", Fpath.filename(path));
@@ -33,7 +33,7 @@ let graphgen = (github_user, subgraph_name, desc, target_path) => {
   let generate_from_ast = (ast) => {
     Subgraph.Builder.make(~github_user, ~subgraph_name, ~desc, ast)    |>  (subgraph) =>
     Subgraph.Builder.validate(subgraph)         >>= () =>
-    Generator.generate_directories()            >>= (_) => 
+    Generator.generate_directories(output_dir)  >>= (_) => 
     generate_package_json(subgraph)             >>= () =>
     generate_manifest(subgraph)                 >>= () =>
     generate_schema(subgraph)                   >>= () =>
@@ -91,12 +91,17 @@ let subgraph_name = {
   Arg.(value & opt(string, "PLACEHOLDER") & info(["n", "name"], ~doc))
 };
 
+let output_dir = {
+  let doc = "The name of the output directory to which the subgraph will be generated"
+  Arg.(value & opt(string, "subgraph") & info(["o", "output-dir"], ~doc))
+};
+
 let path = {
   let doc = "Solidity interface file or directory containing multiple interface files annotated with graphgen tags"
   Arg.(required & pos(~rev=true, 0, some(string), None) & info([], ~docv="SOURCE", ~doc))
 };
 
-let graphgen_t = Term.(const(graphgen) $ github_user $ subgraph_name $ description $ path);
+let graphgen_t = Term.(const(graphgen) $ github_user $ subgraph_name $ description $ output_dir $ path);
 
 let info = {
   let doc = "Generate a subgraph from annotated solidity interfaces"
