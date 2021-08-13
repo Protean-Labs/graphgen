@@ -19,7 +19,17 @@ module Event = {
     |> (fields) => [%string "%{e.name}(%{fields})"]
   ;
 
-  let has_field = (e, name) => List.exists(((name', _, _)) => name == name', e.fields);
+  let field = (e, name) => 
+    List.find_opt(((name', _, _)) => name' == name, e.fields);
+
+  let has_field = (e, name) => 
+    List.exists(((name', _, _)) => name' == name, e.fields);
+
+  let has_field_of_type = (c, name, typ) =>
+    switch (field(c, name)) {
+    | Some((_, t, _)) when t == typ => true
+    | _ => false
+    };
 };
 
 module Call = {
@@ -36,9 +46,22 @@ module Call = {
     |> (fields) => [%string "%{c.name}(%{fields})"]
   ;
 
+  let field = (c, name) => 
+    List.find_opt(((name', _)) => name' == name, c.inputs)  |> (maybe_field) =>
+    switch (maybe_field) { 
+    | None => List.find_opt(((name', _)) => name' == name, c.outputs) 
+    | some_field => some_field
+    };
+
   let has_field = (c, name) => 
     List.exists(((name', _)) => name == name', c.inputs) &&
     List.exists(((name', _)) => name == name', c.outputs);
+
+  let has_field_of_type = (c, name, typ) =>
+    switch (field(c, name)) {
+    | Some((_, t)) when t == typ => true
+    | _ => false
+    };
 };
 
 type action = 
@@ -167,6 +190,8 @@ let contract_related_contracts = (subgraph, contract) => {
   ]
   |> List.flatten
 };
+
+let is_empty = (sg) => List.length(sg.contracts) == 0;
 
 module Builder = {
   let fmt_call = (name, inputs, outputs, state_mutability): Call.t => {
@@ -335,7 +360,12 @@ module Builder = {
     let val_event_new_entity_field = (c: Contract.t, event, new_entities) => 
       List.fold_left((acc, (_, field)) => 
         acc >>= () =>
-        Event.has_field(event, field) ? R.ok() : R.error_msg([%string "%{c.name}.%{event.name}: NewEntity: Event %{event.name} has no field %{field}"]),
+        Event.has_field(event, field) ?
+        switch (Event.field(event, field)) { 
+        | Some((_, Ast.AddressT, _)) => R.ok() 
+        | _ => R.error_msg([%string "%{c.name}.%{event.name}: NewEntity: Field %{field} is not of type address"])
+        } : 
+        R.error_msg([%string "%{c.name}.%{event.name}: NewEntity: Event %{event.name} has no field %{field}"]),
         R.ok(), new_entities
       );
 
@@ -347,7 +377,12 @@ module Builder = {
     let val_call_new_entity_field = (c: Contract.t, call, new_entities) => 
       List.fold_left((acc, (_, field)) => 
         acc >>= () =>
-        Call.has_field(call, field) ? R.ok() : R.error_msg([%string "%{c.name}.%{call.name}: NewEntity: Call %{call.name} has no field %{field}"]),
+        Call.has_field(call, field) ?
+        switch (Call.field(call, field)) {
+        | Some((_, Ast.AddressT)) => R.ok()
+        | _ => R.error_msg([%string "%{c.name}.%{call.name}: NewEntity: Field %{field} is not of type address"])
+        } :
+        R.error_msg([%string "%{c.name}.%{call.name}: NewEntity: Call %{call.name} has no field %{field}"]),
         R.ok(), new_entities
       );
 
@@ -359,8 +394,8 @@ module Builder = {
     let val_event_new_entity = (c: Contract.t, event: Event.t, new_entities) => 
       List.fold_left((acc, (name, _)) => 
         acc >>= () =>
-        contract_of_name(sg, name) == None ? 
-        R.error_msg([%string "%{c.name}.%{event.name}: NewEntity: Entity %{name} does not exist"]) : 
+        contract_of_name(sg, name) == None ?
+        R.error_msg([%string "%{c.name}.%{event.name}: NewEntity: Entity %{name} does not exist"]) :
         R.ok(),
         R.ok(), new_entities
       );

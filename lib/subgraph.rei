@@ -16,6 +16,10 @@ module Event: {
   /** [signature(e)] returns a {!string} containing the signature of the function
       represented by the {!Event.t} [e] to be used in the subgraph manifest. */
   let signature: t => string;
+
+  let has_field: t => string => bool;
+
+  let has_field_of_type: t => string => Parsing.Ast.typ => bool;
 };
 
 module Call: {
@@ -30,6 +34,10 @@ module Call: {
   /** [signature(c)] returns a {!string} containing the signature of the function
       represented by the {!Call.t} [c] to be used in the subgraph manifest. */
   let signature: t => string;
+
+  let has_field: t => string => bool;
+
+  let has_field_of_type: t => string => Parsing.Ast.typ => bool;
 };
 
 /** The type of a handler action. 
@@ -144,6 +152,10 @@ let contract_related_entities: t => Contract.t => list(string);
     include the contract [c] itself, [c]'s parent contract (if any), [c]'s child contracts 
     and any other contract which are necessary for the handlers of contract [c]. */
 let contract_related_contracts: t => Contract.t => list(string);
+
+/** [is_empty(sg)] returns [true] if the subgraph [sg] is empty (i.e.: no annotations were 
+found or nothing was generated) and [false] otherwise. */
+let is_empty: t => bool;
 
 module Builder: {
   /** [make(~github_user, ~subgraph_name, ~desc, ast)] builds and returns a {!Subgraph.t} value from the abstract syntax tree. */
