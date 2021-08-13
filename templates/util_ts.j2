@@ -1,22 +1,35 @@
-import { BigInt, BigDecimal, Address } from '@graphprotocol/graph-ts'
+import { 
+  BigInt, 
+  BigDecimal, 
+  Address, 
+  EthereumTransaction, 
+  EthereumBlock 
+} from '@graphprotocol/graph-ts'
+
+import {
+  Transaction
+} from './types/schema'
+
 export const BigIntZero =  BigInt.fromI32(0)
 export const BigIntOne =  BigInt.fromI32(1)
 export const BigDecimalZero = BigDecimal.fromString('0')
 export const BigDecimalOne = BigDecimal.fromString('1')
 
-export function createTransaction(tx: Transaction, block: Block): void {
+export function createTransaction(tx: EthereumTransaction, block: EthereumBlock): Transaction {
   let txEntity = new Transaction(tx.hash.toHexString().toString())
   txEntity.txIndex = tx.index
-  txEntity.from = tx.from.toHexString().toString()
-  txEntity.to = tx.to.toHexString().toString()
+  txEntity.from = tx.from
+  txEntity.to = tx.to
   txEntity.blockNumber = block.number
-  txEntity.blockTimesatmp = block.timestamp
+  txEntity.blockTimestamp = block.timestamp
   txEntity.save()
+  return txEntity
 }
 
-export function getCreateTransaction(tx: Transaction, block: Block): void {
+export function getCreateTransaction(tx: EthereumTransaction, block: EthereumBlock): Transaction {
   let txEntity = Transaction.load(tx.hash.toHexString().toString())
   if (txEntity == null) {
-    createTransaction(tx, block)
+    txEntity = createTransaction(tx, block)
   }
+  return txEntity as Transaction
 }

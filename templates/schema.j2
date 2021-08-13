@@ -17,7 +17,7 @@
 {%- endfor -%}
 type Transaction @entity {
   id: ID!   # tx hash
-  txIndex: Int!
+  txIndex: BigInt!
   from: Bytes!
   to: Bytes
   blockNumber: BigInt!
