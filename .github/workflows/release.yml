@@ -23,12 +23,15 @@ jobs:
           
       - name: Prepare release
         # Workaround to fix released package name to be in the scope of the @Protean-labs repo
+        # The folder containing the jinja templates needs to be included in the release
         run: |
             esy npm-release 
             cd /home/runner/work/graphgen/graphgen/_release/
             cp package.json package_old.json
             jq '.name |= "@protean-labs/graphgen"' package_old.json  | tee package.json
             rm package_old.json
+            
+            cp -r templates/ _release/bin/       
             
       - name: Cache release
         uses: actions/cache@v2
