@@ -28,7 +28,7 @@ type Transaction @entity {
 
 {% if ns.has_events -%}
 interface Event {
-  id: ID!   # CONTRACT_ADDR-PER_EVENT_COUNTER
+  id: ID!   # [CONTRACT_ADDR]-[EVENT_NAME]-[PER_EVENT_COUNTER]
   logIndex: BigInt!
   tx: Transaction!
 }
@@ -36,7 +36,7 @@ interface Event {
 
 {%- if ns.has_calls %}
 interface Call {
-  id: ID!   # CONTRACT_ADDR-PER_CALL_COUNTER
+  id: ID!   # [CONTRACT_ADDR]-[CALL_NAME]-[PER_CALL_COUNTER]
   tx: Transaction!
 }
 {% endif -%}

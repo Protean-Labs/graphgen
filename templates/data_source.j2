@@ -74,7 +74,7 @@ export function getCreate{{ entityName }}Entity(address: Address): {{ entityName
 {% set event = eventHandler.event %}
 {%- if eventHandler.store %}
 function create{{ event.name }}Entity(source: {{ entityName }}Entity, event: {{ event.name }}Event): {{ event.name }}Entity {
-  let eventEntity = new {{ event.name }}Entity(source.id + "-" + source.{{ event.name | counterName }}.toString())
+  let eventEntity = new {{ event.name }}Entity(source.id + "-{{ event.name | upper }}-" + source.{{ event.name | counterName }}.toString())
   eventEntity.logIndex = event.logIndex
   eventEntity.tx = getCreateTransaction(event.transaction, event.block).id
   {% for (name, t) in event.fields -%}
@@ -122,7 +122,7 @@ export function handle{{ event.name }}(event: {{ event.name }}Event): void {
 {% set call_ = callHandler.call_ %}
 {%- if callHandler.store %}
 function create{{ call_.name }}Entity(source: {{ entityName }}Entity, call: {{ call_.name }}): {{ call_.name }}Entity {
-  let callEntity = new {{ call_.name }}Entity(source.id + "-" + source.{{ call_.name | counterName }}.toString())
+  let callEntity = new {{ call_.name }}Entity(source.id + "-{{ call_.name | upper }}-" + source.{{ call_.name | counterName }}.toString())
   callEntity.tx = getCreateTransaction(call.transaction, call.block).id
   {% for (name, t) in call_.fields %}
   callEntity.{{ name }} = call_.params.{{ name }}
