@@ -30,8 +30,14 @@ let graphgen = (github_user, subgraph_name, desc, output_dir, target_path) => {
     parse(source)
   };
 
+  let error_on_empty = (sg) =>
+    Subgraph.is_empty(sg) ? 
+    R.error_msg("Empty subgraph: No annotations detected") : 
+    R.ok();
+
   let generate_from_ast = (ast) => {
     Subgraph.Builder.make(~github_user, ~subgraph_name, ~desc, ast)    |>  (subgraph) =>
+    error_on_empty(subgraph)                    >>= () =>
     Subgraph.Builder.validate(subgraph)         >>= () =>
     Generator.generate_directories(output_dir)  >>= (_) => 
     generate_package_json(subgraph)             >>= () =>

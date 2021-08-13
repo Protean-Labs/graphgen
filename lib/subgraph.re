@@ -168,6 +168,8 @@ let contract_related_contracts = (subgraph, contract) => {
   |> List.flatten
 };
 
+let is_empty = (sg) => List.length(sg.contracts) == 0;
+
 module Builder = {
   let fmt_call = (name, inputs, outputs, state_mutability): Call.t => {
     let inputs = inputs

@@ -1,15 +1,6 @@
-/* @gg:source
-  name: Curation
-  instances:
-    
-*/
 interface ICuration {
   // Events
 
-  /* @gg:handler 
-      actions:
-        - StoreEvent
-  */
   event Signalled(
     address indexed curator,
     bytes32 indexed subgraphDeploymentID,
@@ -18,10 +9,6 @@ interface ICuration {
     uint256 curationTax
   );
 
-  /* @gg:handler 
-      actions:
-        - StoreEvent
-  */
   event Burned(
     address indexed curator,
     bytes32 indexed subgraphDeploymentID,
@@ -78,6 +65,5 @@ interface ICuration {
       view
       returns (uint256);
 
-  /* @gg:field */
   function curationTaxPercentage() external view returns (uint32);
 }
