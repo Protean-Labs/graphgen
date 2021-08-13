@@ -16,6 +16,10 @@ module Event: {
   /** [signature(e)] returns a {!string} containing the signature of the function
       represented by the {!Event.t} [e] to be used in the subgraph manifest. */
   let signature: t => string;
+
+  let has_field: t => string => bool;
+
+  let has_field_of_type: t => string => Parsing.Ast.typ => bool;
 };
 
 module Call: {
@@ -30,6 +34,10 @@ module Call: {
   /** [signature(c)] returns a {!string} containing the signature of the function
       represented by the {!Call.t} [c] to be used in the subgraph manifest. */
   let signature: t => string;
+
+  let has_field: t => string => bool;
+
+  let has_field_of_type: t => string => Parsing.Ast.typ => bool;
 };
 
 /** The type of a handler action. 
