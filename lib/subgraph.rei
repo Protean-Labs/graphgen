@@ -153,6 +153,10 @@ let contract_related_entities: t => Contract.t => list(string);
     and any other contract which are necessary for the handlers of contract [c]. */
 let contract_related_contracts: t => Contract.t => list(string);
 
+/** [is_empty(sg)] returns [true] if the subgraph [sg] is empty (i.e.: no annotations were 
+found or nothing was generated) and [false] otherwise. */
+let is_empty: t => bool;
+
 module Builder: {
   /** [make(~github_user, ~subgraph_name, ~desc, ast)] builds and returns a {!Subgraph.t} value from the abstract syntax tree. */
   let make: (~github_user:string=?) => (~subgraph_name:string=?) => (~desc:string=?) => Parsing.Ast.t => t;
