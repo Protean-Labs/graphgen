@@ -213,20 +213,8 @@ interface MyContract {
 }
 ```
 
-## CLI
-
-`graphgen --graph_account --subgraph_name --path_to_folder`
-
 ## Example
 See `example/README.md`
-
-## Generated Subgraph
-
-- Subgraph Manifest
-- Package.json
-- Graphql Interface
-- Typescript mappings and utils files
-- abis
 
 # Technologies
 
