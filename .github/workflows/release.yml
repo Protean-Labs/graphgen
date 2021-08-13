@@ -41,7 +41,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.RELEASE_DIR }}
-          key: ${{ runner.OS }}-release-cache-${{ hashFiles(${{ env.RELEASE_DIR }} + 'package.json') }}
+          key: ${{ runner.OS }}-release-cache-${{ hashFiles('**/package.json') }}
 
 
   Publish-npm:
@@ -57,7 +57,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /home/runner/work/graphgen/graphgen/_release/
-          key: ${{ runner.OS }}-release-cache-${{ hashFiles(${{ env.RELEASE_DIR }} + 'package.json') }}
+          key: ${{ runner.OS }}-release-cache-${{ hashFiles('**/package.json') }}
            
       - run: cd /home/runner/work/graphgen/graphgen/_release/
       
@@ -85,7 +85,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /home/runner/work/graphgen/graphgen/_release/
-          key: ${{ runner.OS }}-release-cache-${{ hashFiles(${{ env.RELEASE_DIR }} + 'package.json') }}
+          key: ${{ runner.OS }}-release-cache-${{ hashFiles('**/package.json') }}
           
       - run: cd /home/runner/work/graphgen/graphgen/_release/
       
