@@ -15,7 +15,9 @@ let is_solidity = (path) => {
   Str.string_match(regex, path, 0)
 };
 
-let graphgen = (github_user, subgraph_name, desc, target_path) => {
+let graphgen = (github_user, subgraph_name, desc, verbose, target_path) => {
+  verbose ? Logging.set_logging_level(Debug) : Logging.set_logging_level(Info);
+
   let generate_package_json = Generator.single_file("templates/package_json.j2", "subgraph/package.json", Models.package_json_models)
   let generate_manifest = Generator.single_file("templates/manifest.j2", "subgraph/subgraph.yaml", Models.manifest_models)
   let generate_schema = Generator.single_file("templates/schema.j2", "subgraph/schema.graphql", Models.schema_models)
@@ -25,7 +27,7 @@ let graphgen = (github_user, subgraph_name, desc, target_path) => {
   let generate_templates = Generator.multi_file("templates/template.j2", (key) => [%string "subgraph/src/mappings/%{key}.ts"], Models.templates_models)
 
   let read_and_parse = (path) => {
-    logger#debug("Parsing %s...", Fpath.filename(path));
+    logger#info("Parsing %s...", Fpath.filename(path));
     File.read(path)  >>= (source) => 
     parse(source)
   };
@@ -91,12 +93,17 @@ let subgraph_name = {
   Arg.(value & opt(string, "PLACEHOLDER") & info(["n", "name"], ~doc))
 };
 
+let verbose_flag = {
+  let doc = "Verbose output"
+  Arg.(value & flag & info(["v", "verbose"], ~doc))
+};
+
 let path = {
   let doc = "Solidity interface file or directory containing multiple interface files annotated with graphgen tags"
   Arg.(required & pos(~rev=true, 0, some(string), None) & info([], ~docv="SOURCE", ~doc))
 };
 
-let graphgen_t = Term.(const(graphgen) $ github_user $ subgraph_name $ description $ path);
+let graphgen_t = Term.(const(graphgen) $ github_user $ subgraph_name $ description $ verbose_flag $ path);
 
 let info = {
   let doc = "Generate a subgraph from annotated solidity interfaces"
