@@ -1,6 +1,6 @@
 specVersion: 0.0.2
 description: {{ subgraph.description }}
-repository: https://github.com/{{ subgraph.github_user }}/{{ subgraph.subgraph_name }}
+repository: https://github.com/{{ subgraph.github_user }}/{{ subgraph.name }}
 schema:
   file: ./schema.graphql
 dataSources:{% for dataSource in subgraph.dataSources %}{% set dataSource = dataSource %}{% for (address, startBlock) in dataSource.instances %}  

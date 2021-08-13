@@ -1,16 +1,16 @@
 {
   "name": "{{ subgraph.name }}",
   "version": "1.0.0",
-  "repository": "https://github.com/{{ subgraph.repository }}",
+  "repository": "https://github.com/{{ subgraph.github_user }}/{{ subgraph.name }}",
   "license": "MIT",
   "scripts": {
     "codegen": "graph codegen --output-dir src/types/",
-    "create-local": "graph create {{ subgraph.repository }} --node http://127.0.0.1:8020",
+    "create-local": "graph create {{ subgraph.github_user }}/{{ subgraph.name }} --node http://127.0.0.1:8020",
     "build": "graph build",
-    "deploy-local": "graph deploy {{ subgraph.repository }} --debug --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
-    "deploy": "graph deploy {{ subgraph.repository }} --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --debug",
-    "deploy-staging": "graph deploy {{ subgraph.repository }} /Protean --ipfs https://api.staging.thegraph.com/ipfs/ --node https://api.staging.thegraph.com/deploy/",
-    "watch-local": "graph deploy graphprotocol/opyn-v1 --watch --debug --node http://127.0.0.1:8020/ --ipfs http://localhost:5001"
+    "deploy-local": "graph deploy {{ subgraph.github_user }}/{{ subgraph.name }} --debug --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
+    "deploy": "graph deploy {{ subgraph.github_user }}/{{ subgraph.name }} --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --debug",
+    "deploy-staging": "graph deploy {{ subgraph.github_user }}/{{ subgraph.name }} --ipfs https://api.staging.thegraph.com/ipfs/ --node https://api.staging.thegraph.com/deploy/",
+    "watch-local": "graph deploy {{ subgraph.github_user }}/{{ subgraph.name }} --watch --debug --node http://127.0.0.1:8020/ --ipfs http://localhost:5001"
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.16.0",
