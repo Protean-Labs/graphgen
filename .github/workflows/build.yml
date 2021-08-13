@@ -85,7 +85,10 @@ jobs:
           npm run build
 
   Draft-Release:
-    needs: [Build, Integration-test]
+    needs: 
+      - Build 
+      - Integration-test-singlefile
+      - Integration-test-multifile
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
