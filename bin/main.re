@@ -15,6 +15,21 @@ let is_solidity = (path) => {
   Str.string_match(regex, path, 0)
 };
 
+let get_templates_dir = () => {
+  // TODO: Check
+  // [
+  //   "node_modules/graphgen/templates",
+  //   "$npm_config_prefix/graphgen/templates",
+  //   "templates/"
+  // ]
+  // |> List.fold_left((acc, path) =>
+  //   switch (acc) { | Error(_) as err => }
+  // , R.error_msg("Templates directory not found"))
+
+  // Bos.OS.Dir.exists(Fpath.v("node_modules/graphgen/templates"))   >>= (local) =>
+  // local ? 
+};
+
 let graphgen = (github_user, subgraph_name, desc, verbose, output_dir, target_path) => {
   verbose ? Logging.set_logging_level(Debug) : Logging.set_logging_level(Info);
 
@@ -121,5 +136,7 @@ let info = {
   let doc = "Generate a subgraph from annotated solidity interfaces"
   Term.info("graphgen", ~doc, ~exits=Term.default_exits)
 };
+
+Sys.getenv("PWD") |> print_endline;
 
 let () = Term.exit @@ Term.eval((graphgen_t, info));
