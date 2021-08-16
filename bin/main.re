@@ -18,13 +18,13 @@ let is_solidity = (path) => {
 let get_templates_dir = () => {
   // TODO: Check paths for templates
   let paths = [
-    "node_modules/graphgen/templates",
+    "node_modules/@protean-labs/graphgen/bin/templates",
     "templates"
   ];
   
   Sys.getenv_opt("npm_config_prefix") |> (maybe_npm_path) => 
   switch (maybe_npm_path) {
-  | Some(path) => [[%string "%{path}/graphgen/templates"], ...paths]
+  | Some(path) => [[%string "%{path}/@protean-labs/graphgen/bin/templates"], ...paths]
   | None => paths
   }
   |> Util.existing_path
