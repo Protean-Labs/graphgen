@@ -16,30 +16,40 @@ let is_solidity = (path) => {
 };
 
 let get_templates_dir = () => {
-  // TODO: Check
-  // [
-  //   "node_modules/graphgen/templates",
-  //   "$npm_config_prefix/graphgen/templates",
-  //   "templates/"
-  // ]
-  // |> List.fold_left((acc, path) =>
-  //   switch (acc) { | Error(_) as err => }
-  // , R.error_msg("Templates directory not found"))
-
-  // Bos.OS.Dir.exists(Fpath.v("node_modules/graphgen/templates"))   >>= (local) =>
-  // local ? 
+  // TODO: Check paths for templates
+  let paths = [
+    "node_modules/graphgen/templates",
+    "templates"
+  ];
+  
+  Sys.getenv_opt("npm_config_prefix") |> (maybe_npm_path) => 
+  switch (maybe_npm_path) {
+  | Some(path) => [[%string "%{path}/graphgen/templates"], ...paths]
+  | None => paths
+  }
+  |> Util.existing_path
 };
 
 let graphgen = (github_user, subgraph_name, desc, verbose, output_dir, target_path) => {
   verbose ? Logging.set_logging_level(Debug) : Logging.set_logging_level(Info);
 
-  let generate_package_json = Generator.single_file("templates/package_json.j2", [%string "%{output_dir}/package.json"], Models.package_json_models)
-  let generate_manifest = Generator.single_file("templates/manifest.j2", [%string "%{output_dir}/subgraph.yaml"], Models.manifest_models)
-  let generate_schema = Generator.single_file("templates/schema.j2", [%string "%{output_dir}/schema.graphql"], Models.schema_models)
-  let generate_util_ts = Generator.single_file("templates/util_ts.j2", [%string "%{output_dir}/src/util.ts"], Models.util_ts_models)
-  let generate_abi = Generator.multi_file("templates/abi.j2", (key) => [%string "%{output_dir}/abis/%{key}.json"], Models.abi_models)
-  let generate_data_sources = Generator.multi_file("templates/data_source.j2", (key) => [%string "%{output_dir}/src/mappings/%{key}.ts"], Models.data_sources_models)
-  let generate_templates = Generator.multi_file("templates/template.j2", (key) => [%string "%{output_dir}/src/mappings/%{key}.ts"], Models.templates_models)
+  let templates_dir = 
+    switch (get_templates_dir()) {
+    | Error(`Msg(msg)) => 
+      logger#serror(msg);
+      exit(1);
+    | Ok(path) => 
+      logger#info("Found templates directory at %s", path);
+      path
+    };
+
+  let generate_package_json = Generator.single_file([%string "%{templates_dir}/package_json.j2"], [%string "%{output_dir}/package.json"], Models.package_json_models)
+  let generate_manifest = Generator.single_file([%string "%{templates_dir}/manifest.j2"], [%string "%{output_dir}/subgraph.yaml"], Models.manifest_models)
+  let generate_schema = Generator.single_file([%string "%{templates_dir}/schema.j2"], [%string "%{output_dir}/schema.graphql"], Models.schema_models)
+  let generate_util_ts = Generator.single_file([%string "%{templates_dir}/util_ts.j2"], [%string "%{output_dir}/src/util.ts"], Models.util_ts_models)
+  let generate_abi = Generator.multi_file([%string "%{templates_dir}/abi.j2"], (key) => [%string "%{output_dir}/abis/%{key}.json"], Models.abi_models)
+  let generate_data_sources = Generator.multi_file([%string "%{templates_dir}/data_source.j2"], (key) => [%string "%{output_dir}/src/mappings/%{key}.ts"], Models.data_sources_models)
+  let generate_templates = Generator.multi_file([%string "%{templates_dir}/template.j2"], (key) => [%string "%{output_dir}/src/mappings/%{key}.ts"], Models.templates_models)
 
   let read_and_parse = (path) => {
     logger#info("Parsing %s...", Fpath.filename(path));
@@ -129,14 +139,11 @@ let path = {
   Arg.(required & pos(~rev=true, 0, some(string), None) & info([], ~docv="SOURCE", ~doc))
 };
 
-// let graphgen_t = Term.(const(graphgen) $ github_user $ subgraph_name $ description $ verbose_flag $ path);
 let graphgen_t = Term.(const(graphgen) $ github_user $ subgraph_name $ description $ verbose_flag $ output_dir $ path);
 
 let info = {
   let doc = "Generate a subgraph from annotated solidity interfaces"
   Term.info("graphgen", ~doc, ~exits=Term.default_exits)
 };
-
-Sys.getenv("PWD") |> print_endline;
 
 let () = Term.exit @@ Term.eval((graphgen_t, info));
