@@ -1,8 +1,6 @@
 {
   "name": "graphgen",
-  "version": "0.0.10-development",
   "description": "Subgraph Generation Tool",
-  "license": "Apache 2.0",
   "esy": {
     "build": "dune build -p graphgen",
     "buildDev":
