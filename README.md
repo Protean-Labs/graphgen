@@ -1,7 +1,7 @@
 <h1 align="center">GraphGen - A subgraph generator for The Graph Network</h1>
 
 <p align="center">
-  <img src="assets/img/graphgen.png" alt="graphgen-logo" width="120px" height="120px"/>
+  <img src="https://github.com/cvauclair/graphgen/blob/main/assets/img/graphgen.png?raw=true" alt="graphgen-logo" width="120px" height="120px"/>
   <br>
   <i>Graphgen aims to facilitate subgraph development by abstracting away simple but common subgraph writing patterns
     <br>  and automating the set up of peripherals.</i>
