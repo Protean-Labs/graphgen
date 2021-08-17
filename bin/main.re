@@ -24,7 +24,7 @@ let get_templates_dir = () => {
   
   Sys.getenv_opt("npm_config_prefix") |> (maybe_npm_path) => 
   switch (maybe_npm_path) {
-  | Some(path) => [[%string "%{path}/@protean-labs/graphgen/bin/templates"], ...paths]
+  | Some(path) => [[%string "%{path}/lib/node_modules/@protean-labs/graphgen/bin/templates"], ...paths]
   | None => paths
   }
   |> Util.existing_path
