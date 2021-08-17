@@ -16,18 +16,22 @@ let is_solidity = (path) => {
 };
 
 let get_templates_dir = () => {
-  // TODO: Check paths for templates
+  // Magic to get the path of the binary
+  let bin_location = 
+    Sys.executable_name                       |> (bin_location) =>
+    String.split_on_char('/', bin_location)   |> (path_list) =>
+    List.mapi((i, s) => i == List.length(path_list) - 1 ? "templates" : s, path_list) |> (path_list') => 
+    String.concat("/", path_list');
+
   let paths = [
+    bin_location,
     "node_modules/@protean-labs/graphgen/bin/templates",
     "templates"
   ];
-  
-  Sys.getenv_opt("npm_config_prefix") |> (maybe_npm_path) => 
-  switch (maybe_npm_path) {
-  | Some(path) => [[%string "%{path}/lib/node_modules/@protean-labs/graphgen/bin/templates"], ...paths]
-  | None => paths
-  }
-  |> Util.existing_path
+
+  Sys.getenv_opt("npm_config_prefix")               |> (maybe_npm_path) => 
+  Option.value(~default=paths) @@ Option.map(path => [[%string "%{path}/lib/node_modules/@protean-labs/graphgen/bin/templates"], ...paths], maybe_npm_path) |> (paths) =>
+  Util.existing_path(paths)
 };
 
 let graphgen = (github_user, subgraph_name, desc, verbose, output_dir, target_path) => {
