@@ -17,3 +17,17 @@ let existing_path = (paths) =>
     R.error_msg("Directory not found"),
     paths
   );
+
+let rec first_n = (l, n) =>
+  switch (l, n) {
+  | ([], _) => []
+  | (_, n) when n == 0 => []
+  | ([hd, ...rest], n) => 
+    [hd, ...first_n(rest, n - 1)]
+  };
+
+let remove_last_n = (l, n) =>
+  switch (List.length(l) - n) {
+  | len when len <= 0 => []
+  | len => first_n(l, len)
+  };
