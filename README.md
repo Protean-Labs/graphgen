@@ -11,7 +11,6 @@
 <p align="center">
   <strong> Designed by Protean Labs </strong> <br>
   <!-- <a href="https://www.protean.so/graphgen"><strong>www.protean.so</strong></a> -->
-  <br>
 </p>
 
 <p align="center">
@@ -42,25 +41,32 @@
     <img src="https://img.shields.io/discord/789917050922336357.svg?logo=discord&logoColor=fff&label=Discord&color=7389d8" alt="Discord conversation"/>
   </a>
   <a href="https://twitter.com/intent/follow?screen_name=proteancrypto">
-    <img src="https://img.shields.io/twitter/follow/proteancrypto?style=social" alt="Follow @proteancrypto"/>
+    <img src="https://img.shields.io/twitter/follow/protean_labs?style=social" alt="Follow @proteancrypto"/>
   </a>
+</p>
+
+<p align="center">
+  <strong> Supported by The Graph Foundation through a wave two <a href="https://thegraph.com/blog/wave-two-funding"> ecosystem grant </a>  <strong>
 </p>
 
 # Getting started
 
 Graphgen is released on the npm.js registry and Github package registry. 
 
-You can install Graphgen globally with:
+You can install Graphgen **globally** with:
 
 ```
 npm i -g @protean-lab/graphgen
 ```
 
-Basic usage is to call on an already annotated .sol contract file. If installed globally, use npx to call the executable if your $PATH is not already set.
+Basic usage is to call on an already annotated .sol contract file. If installed globally, use npx to call the executable if your $PATH is not already set. This will generate a ``subgraph/`` folder, containing the output files, where you called the command.
 
 ```
 npx graphgen [CONTRACT_FILE].sol
 ``` 
+
+Graphgen can also be installed **locally**, along with your solidity contract files. You can then use npm's ``npx`` within you contract's folder the same way it's used just above.
+
 
 # Usage
 
