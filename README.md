@@ -115,6 +115,8 @@ Provided the annotations and interfaces are valid, GraphGen will generate a subg
 
 **IMPORTANT**: GraphGen does not include any functionality from the `graph-cli`. One must therefore run `npm run codegen` and `npm run build` after generating the source files with GraphGen.
 
+**CAVEAT**: GraphGen is still in active development and should only be used in production with caution. Moreover, the generated subgraphs might not always be optimal from an indexing point of vue. 
+
 # Annotations
 GraphGen supports three kinds of annotations, each with their specific parameters:
 - `@gg:source`: Defines a `dataSource` or `template` (depending on parameters). Must precede an interface definition.
