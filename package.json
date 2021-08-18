@@ -10,12 +10,12 @@
     "release": {
       "rewritePrefix": true,
       "releasedBinaries": [
-        "graphgen.exe"
+        "graphgen"
       ]
     }
   },
   "scripts": {
-    "graphgen": "esy x graphgen.exe",
+    "graphgen": "esy x graphgen",
     "test": "esy x test.exe",
     "semantic-release": "semantic-release"
   },

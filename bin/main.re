@@ -23,8 +23,16 @@ let get_templates_dir = () => {
     List.mapi((i, s) => i == List.length(path_list) - 1 ? "templates" : s, path_list) |> (path_list') => 
     String.concat("/", path_list');
 
+  let bin_location2 = 
+    Sys.executable_name                       |> (bin_location) =>
+    String.split_on_char('/', bin_location)   |> (path_list) =>
+    Util.remove_last_n(path_list, 5)          |> (path_list) =>
+    List.concat([path_list, ["bin", "templates"]]) |> (path_list) =>
+    String.concat("/", path_list);
+
   let paths = [
     bin_location,
+    bin_location2,
     "node_modules/@protean-labs/graphgen/bin/templates",
     "templates"
   ];

@@ -1,5 +1,5 @@
 (executable
  (name main)
- (public_name graphgen.exe)
+ (public_name graphgen)
  (libraries libgraphgen cmdliner)
  (preprocess (pps ppx_deriving_yaml ppx_compare ppx_string)))
