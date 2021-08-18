@@ -40,8 +40,8 @@
     <a href="https://discord.gg/protean-labs">
     <img src="https://img.shields.io/discord/789917050922336357.svg?logo=discord&logoColor=fff&label=Discord&color=7389d8" alt="Discord conversation"/>
   </a>
-  <a href="https://twitter.com/intent/follow?screen_name=proteancrypto">
-    <img src="https://img.shields.io/twitter/follow/protean_labs?style=social" alt="Follow @proteancrypto"/>
+  <a href="https://twitter.com/intent/follow?screen_name=protean_labs">
+    <img src="https://img.shields.io/twitter/follow/protean_labs?style=social" alt="Follow @protean_labs"/>
   </a>
 </p>
 
@@ -49,7 +49,7 @@
   <strong> Supported by The Graph Foundation through a wave two <a href="https://thegraph.com/blog/wave-two-funding"> ecosystem grant </a>  <strong>
 </p>
 
-# Getting started
+# 🚀 Getting started
 
 Graphgen is released on the npm.js registry and Github package registry. 
 
@@ -105,7 +105,7 @@ OPTIONS
            Verbose output
 ```
 
-# Getting started
+# ❓ How it works
 GraphGen takes as inputs solidity files containing annotated interfaces and outputs a working subgraph. The annotations indicate to GraphGen which contracts should be indexed (as `dataSources` or `templates`), which events and calls to listen to and what to do when one happens, etc.
 
 Given a solidity file containing annotated interfaces, or a directory containing multiple such files, the following command is used to generate the subgraph:
@@ -228,13 +228,13 @@ interface MyContract {
 }
 ```
 
-## Example
-See `example/README.md`
+## Examples
+You can find multiple examples & use cases under the `example/` folder. See <a href="https://github.com/Protean-Labs/graphgen/tree/main/example">`example/README.md`<a> for more details.
 
-# Technologies
+# 🤖 Technologies
 
 Graphgen uses parser generator technologies in order to leverage the information that resides in solidity interface files. It is written with the OCaml/ReasonML toolchain and compiled to native OCaml code.
 
-# About us
+# 🧔 About us
 
 We at Protean Labs focus on building various pieces of infrastructure and developer tooling around the Web3 ecosystem. You can reach out to us through our multiple social accounts.
