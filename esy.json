@@ -7,13 +7,13 @@
       "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
     "release": {
       "rewritePrefix": true,
-      "releasedBinaries": [ "graphgen.exe" ]
+      "releasedBinaries": [ "graphgen" ]
     },
     "buildEnv": { "ODOC_SYNTAX": "re" }
   },
   "scripts": {
     "doc": "esy dune build @doc-private",
-    "graphgen": "esy x graphgen.exe",
+    "graphgen": "esy x graphgen",
     "test": "esy x test.exe"
   },
   "dependencies": {
