@@ -10,7 +10,7 @@
 
 <p align="center">
   <strong> Designed by Protean Labs </strong> <br>
-  <a href="https://www.protean.so/graphgen"><strong>www.protean.so</strong></a>
+  <!-- <a href="https://www.protean.so/graphgen"><strong>www.protean.so</strong></a> -->
   <br>
 </p>
 
@@ -26,7 +26,7 @@
 
 <p align="center">
   <a href="https://github.com/protean-labs/graphgen/blob/HEAD/LICENSE">
-    <img src="https://img.shields.io/badge/license-Apache 2.0-blue.svg" alt="GraphGen is released under the MIT license." />
+    <img src="https://img.shields.io/badge/license-Apache 2.0-blue.svg" alt="GraphGen is released under the Apache 2.0 license." />
   </a>
   <a href="https://github.com/protean-labs/graphgen/actions/workflows/build.yml">
     <img src="https://img.shields.io/github/workflow/status/protean-labs/graphgen/Build/main" alt="Current CircleCI build status." />
@@ -103,7 +103,7 @@ OPTIONS
 GraphGen takes as inputs solidity files containing annotated interfaces and outputs a working subgraph. The annotations indicate to GraphGen which contracts should be indexed (as `dataSources` or `templates`), which events and calls to listen to and what to do when one happens, etc.
 
 Given a solidity file containing annotated interfaces, or a directory containing multiple such files, the following command is used to generate the subgraph:
-`npx graphgen -o OUTPUT_DIR FILE_OR_DIR`.
+`npx graphgen -o OUTPUT_DIR FILE_OR_DIR`. **Important**: In its current state, GraphGen only works with solidity interface definition and not contract definitions. Support for annotations in contract definitions is in the works.
 
 Provided the annotations and interfaces are valid, GraphGen will generate a subgraph (located in in `OUTPUT_DIR/`) with the following files:
 - `subgraph.yaml`: Subgraph manifest
@@ -229,4 +229,4 @@ Graphgen uses parser generator technologies in order to leverage the information
 
 # About us
 
-We at Protean Labs focus on building various pieces of infrastructure and developer tooling around the Web3 ecosystem. You can reach out to us through our multiple social accounts and at <a href="https://www.protean.so/graphgen"><strong>www.protean.so</strong></a>.
+We at Protean Labs focus on building various pieces of infrastructure and developer tooling around the Web3 ecosystem. You can reach out to us through our multiple social accounts.
