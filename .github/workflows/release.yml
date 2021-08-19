@@ -40,7 +40,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: ${{ env.RELEASE_DIR }}
-          key: ${{ runner.OS }}-release-cache-${{ hashFiles('**/package.json') }}
+          key: ${{ runner.OS }}-release-cache-${{ hashFiles('esy.lock/index.json'') }}
 
 
   Publish-npm:
@@ -56,7 +56,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /home/runner/work/graphgen/graphgen/_release/
-          key: ${{ runner.OS }}-release-cache-${{ hashFiles('**/package.json') }}
+          key: ${{ runner.OS }}-release-cache-${{ hashFiles('esy.lock/index.json'') }}
            
       - run: cd /home/runner/work/graphgen/graphgen/_release/
       
@@ -84,7 +84,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /home/runner/work/graphgen/graphgen/_release/
-          key: ${{ runner.OS }}-release-cache-${{ hashFiles('**/package.json') }}
+          key: ${{ runner.OS }}-release-cache-${{ hashFiles('esy.lock/index.json'') }}
           
       - run: cd /home/runner/work/graphgen/graphgen/_release/
       
