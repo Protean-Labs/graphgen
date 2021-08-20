@@ -16,7 +16,7 @@
   "scripts": {
     "graphgen": "esy x graphgen",
     "test": "esy x test.exe",
-    "overrideChangelog": "gren changelog --override",
+    "overrideChangelog": "gren changelog --override"
   },
   "repository": {
     "type": "git",
