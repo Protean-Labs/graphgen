@@ -6,7 +6,6 @@
   "esy": {
     "build": "dune build -p graphgen",
     "buildDev": "refmterr dune build --promote-install-files --root . --only-package #{self.name}",
-    "overrideChangelog": "gren changelog --override",
     "release": {
       "rewritePrefix": true,
       "releasedBinaries": [
@@ -17,7 +16,7 @@
   "scripts": {
     "graphgen": "esy x graphgen",
     "test": "esy x test.exe",
-    "semantic-release": "semantic-release"
+    "overrideChangelog": "gren changelog --override"
   },
   "repository": {
     "type": "git",
