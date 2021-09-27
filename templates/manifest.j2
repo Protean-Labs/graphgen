@@ -13,7 +13,7 @@ dataSources:{% for dataSource in subgraph.dataSources %}{% set dataSource = data
       startBlock: {{ startBlock }}
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.3
+      apiVersion: 0.0.5
       language: wasm/assemblyscript
       file: ./src/mappings/{{ dataSource.contract.name }}.ts
       entities:
@@ -50,7 +50,7 @@ templates:{% for template in subgraph.templates %}
       abi: {{ template.contract.name }}
     mapping:
       kind: ethereum/events
-      apiVersion: 0.0.3
+      apiVersion: 0.0.5
       language: wasm/assemblyscript
       file: ./src/mappings/{{ template.contract.name }}.ts
       entities:

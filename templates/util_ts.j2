@@ -2,8 +2,7 @@ import {
   BigInt, 
   BigDecimal, 
   Address, 
-  EthereumTransaction, 
-  EthereumBlock 
+  ethereum 
 } from '@graphprotocol/graph-ts'
 
 import {
@@ -15,7 +14,7 @@ export const BigIntOne =  BigInt.fromI32(1)
 export const BigDecimalZero = BigDecimal.fromString('0')
 export const BigDecimalOne = BigDecimal.fromString('1')
 
-export function createTransaction(tx: EthereumTransaction, block: EthereumBlock): Transaction {
+export function createTransaction(tx: ethereum.Transaction, block: ethereum.Block): Transaction {
   let txEntity = new Transaction(tx.hash.toHexString().toString())
   txEntity.txIndex = tx.index
   txEntity.from = tx.from
@@ -26,7 +25,7 @@ export function createTransaction(tx: EthereumTransaction, block: EthereumBlock)
   return txEntity
 }
 
-export function getCreateTransaction(tx: EthereumTransaction, block: EthereumBlock): Transaction {
+export function getCreateTransaction(tx: ethereum.Transaction, block: ethereum.Block): Transaction {
   let txEntity = Transaction.load(tx.hash.toHexString().toString())
   if (txEntity == null) {
     txEntity = createTransaction(tx, block)

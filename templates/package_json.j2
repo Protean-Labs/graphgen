@@ -7,14 +7,15 @@
     "codegen": "graph codegen --output-dir src/types/",
     "create-local": "graph create {{ subgraph.github_user }}/{{ subgraph.name }} --node http://127.0.0.1:8020",
     "build": "graph build",
+    "test": "graph test",
     "deploy-local": "graph deploy {{ subgraph.github_user }}/{{ subgraph.name }} --debug --ipfs http://localhost:5001 --node http://127.0.0.1:8020",
     "deploy": "graph deploy {{ subgraph.github_user }}/{{ subgraph.name }} --ipfs https://api.thegraph.com/ipfs/ --node https://api.thegraph.com/deploy/ --debug",
     "deploy-staging": "graph deploy {{ subgraph.github_user }}/{{ subgraph.name }} --ipfs https://api.staging.thegraph.com/ipfs/ --node https://api.staging.thegraph.com/deploy/",
     "watch-local": "graph deploy {{ subgraph.github_user }}/{{ subgraph.name }} --watch --debug --node http://127.0.0.1:8020/ --ipfs http://localhost:5001"
   },
   "devDependencies": {
-    "@graphprotocol/graph-cli": "^0.16.0",
-    "@graphprotocol/graph-ts": "^0.16.0",
+    "@graphprotocol/graph-cli": "^0.22.0",
+    "@graphprotocol/graph-ts": "^0.22.0",
     "@typescript-eslint/eslint-plugin": "^2.0.0",
     "@typescript-eslint/parser": "^2.0.0",
     "eslint": "^6.2.2",
