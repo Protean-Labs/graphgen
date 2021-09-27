@@ -56,7 +56,7 @@ Graphgen is released on the npm.js registry and Github package registry.
 You can install Graphgen **globally** with:
 
 ```
-npm i -g @protean-lab/graphgen
+npm i -g @protean-labs/graphgen
 ```
 
 Basic usage is to call on an already annotated .sol contract file. If installed globally, use npx to call the executable if your $PATH is not already set. This will generate a ``subgraph/`` folder, containing the output files, where you called the command.
