@@ -1,0 +1,1596 @@
+State 0:
+## Known stack suffix:
+##
+## LR(1) items:
+document' -> . document [ # ]
+## Transitions:
+-- On TEMPLATE shift to state 1
+-- On INTERFACE shift to state 52
+-- On EVENT_HANDLER shift to state 75
+-- On EVENT shift to state 86
+-- On ENTITY shift to state 107
+-- On DATA_SOURCE shift to state 117
+-- On CALL_HANDLER shift to state 122
+-- On toplevel shift to state 129
+-- On list(toplevel) shift to state 132
+-- On entity shift to state 131
+-- On document shift to state 134
+## Reductions:
+-- On EOF
+--   reduce production list(toplevel) ->
+
+State 1:
+## Known stack suffix:
+## TEMPLATE
+## LR(1) items:
+toplevel -> TEMPLATE . IDENT RBRACE structure(EQUALS,expr) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 2
+## Reductions:
+
+State 2:
+## Known stack suffix:
+## TEMPLATE IDENT
+## LR(1) items:
+toplevel -> TEMPLATE IDENT . RBRACE structure(EQUALS,expr) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On RBRACE shift to state 3
+## Reductions:
+
+State 3:
+## Known stack suffix:
+## TEMPLATE IDENT RBRACE
+## LR(1) items:
+toplevel -> TEMPLATE IDENT RBRACE . structure(EQUALS,expr) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 4
+-- On structure(EQUALS,expr) shift to state 50
+-- On list(__anonymous_0(EQUALS,expr)) shift to state 16
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(EQUALS,expr)) ->
+
+State 4:
+## Known stack suffix:
+## IDENT
+## LR(1) items:
+list(__anonymous_0(EQUALS,expr)) -> IDENT . EQUALS expr list(__anonymous_0(EQUALS,expr)) [ RBRACE ]
+## Transitions:
+-- On EQUALS shift to state 5
+## Reductions:
+
+State 5:
+## Known stack suffix:
+## IDENT EQUALS
+## LR(1) items:
+list(__anonymous_0(EQUALS,expr)) -> IDENT EQUALS . expr list(__anonymous_0(EQUALS,expr)) [ RBRACE ]
+## Transitions:
+-- On UPDATE shift to state 6
+-- On SUB shift to state 9
+-- On STRING shift to state 10
+-- On NEW_TEMPLATE shift to state 11
+-- On NEW_ENTITY shift to state 17
+-- On INT shift to state 20
+-- On IDENT shift to state 21
+-- On FLOAT shift to state 25
+-- On BOOL shift to state 26
+-- On vpath shift to state 27
+-- On literal shift to state 28
+-- On expr shift to state 48
+## Reductions:
+
+State 6:
+## Known stack suffix:
+## UPDATE
+## LR(1) items:
+expr -> UPDATE . IDENT LPAREN expr RPAREN LBRACE structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On IDENT shift to state 7
+## Reductions:
+
+State 7:
+## Known stack suffix:
+## UPDATE IDENT
+## LR(1) items:
+expr -> UPDATE IDENT . LPAREN expr RPAREN LBRACE structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On LPAREN shift to state 8
+## Reductions:
+
+State 8:
+## Known stack suffix:
+## UPDATE IDENT LPAREN
+## LR(1) items:
+expr -> UPDATE IDENT LPAREN . expr RPAREN LBRACE structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On UPDATE shift to state 6
+-- On SUB shift to state 9
+-- On STRING shift to state 10
+-- On NEW_TEMPLATE shift to state 11
+-- On NEW_ENTITY shift to state 17
+-- On INT shift to state 20
+-- On IDENT shift to state 21
+-- On FLOAT shift to state 25
+-- On BOOL shift to state 26
+-- On vpath shift to state 27
+-- On literal shift to state 28
+-- On expr shift to state 43
+## Reductions:
+
+State 9:
+## Known stack suffix:
+## SUB
+## LR(1) items:
+expr -> SUB . expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On UPDATE shift to state 6
+-- On SUB shift to state 9
+-- On STRING shift to state 10
+-- On NEW_TEMPLATE shift to state 11
+-- On NEW_ENTITY shift to state 17
+-- On INT shift to state 20
+-- On IDENT shift to state 21
+-- On FLOAT shift to state 25
+-- On BOOL shift to state 26
+-- On vpath shift to state 27
+-- On literal shift to state 28
+-- On expr shift to state 42
+## Reductions:
+
+State 10:
+## Known stack suffix:
+## STRING
+## LR(1) items:
+literal -> STRING . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD
+--   reduce production literal -> STRING
+
+State 11:
+## Known stack suffix:
+## NEW_TEMPLATE
+## LR(1) items:
+expr -> NEW_TEMPLATE . IDENT LBRACE structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On IDENT shift to state 12
+## Reductions:
+
+State 12:
+## Known stack suffix:
+## NEW_TEMPLATE IDENT
+## LR(1) items:
+expr -> NEW_TEMPLATE IDENT . LBRACE structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On LBRACE shift to state 13
+## Reductions:
+
+State 13:
+## Known stack suffix:
+## NEW_TEMPLATE IDENT LBRACE
+## LR(1) items:
+expr -> NEW_TEMPLATE IDENT LBRACE . structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On IDENT shift to state 4
+-- On structure(EQUALS,expr) shift to state 14
+-- On list(__anonymous_0(EQUALS,expr)) shift to state 16
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(EQUALS,expr)) ->
+
+State 14:
+## Known stack suffix:
+## NEW_TEMPLATE IDENT LBRACE structure(EQUALS,expr)
+## LR(1) items:
+expr -> NEW_TEMPLATE IDENT LBRACE structure(EQUALS,expr) . RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On RBRACE shift to state 15
+## Reductions:
+
+State 15:
+## Known stack suffix:
+## NEW_TEMPLATE IDENT LBRACE structure(EQUALS,expr) RBRACE
+## LR(1) items:
+expr -> NEW_TEMPLATE IDENT LBRACE structure(EQUALS,expr) RBRACE . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD
+--   reduce production expr -> NEW_TEMPLATE IDENT LBRACE structure(EQUALS,expr) RBRACE
+
+State 16:
+## Known stack suffix:
+## list(__anonymous_0(EQUALS,expr))
+## LR(1) items:
+structure(EQUALS,expr) -> list(__anonymous_0(EQUALS,expr)) . [ RBRACE ]
+## Transitions:
+## Reductions:
+-- On RBRACE
+--   reduce production structure(EQUALS,expr) -> list(__anonymous_0(EQUALS,expr))
+
+State 17:
+## Known stack suffix:
+## NEW_ENTITY
+## LR(1) items:
+expr -> NEW_ENTITY . IDENT LPAREN expr RPAREN LBRACE structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On IDENT shift to state 18
+## Reductions:
+
+State 18:
+## Known stack suffix:
+## NEW_ENTITY IDENT
+## LR(1) items:
+expr -> NEW_ENTITY IDENT . LPAREN expr RPAREN LBRACE structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On LPAREN shift to state 19
+## Reductions:
+
+State 19:
+## Known stack suffix:
+## NEW_ENTITY IDENT LPAREN
+## LR(1) items:
+expr -> NEW_ENTITY IDENT LPAREN . expr RPAREN LBRACE structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On UPDATE shift to state 6
+-- On SUB shift to state 9
+-- On STRING shift to state 10
+-- On NEW_TEMPLATE shift to state 11
+-- On NEW_ENTITY shift to state 17
+-- On INT shift to state 20
+-- On IDENT shift to state 21
+-- On FLOAT shift to state 25
+-- On BOOL shift to state 26
+-- On vpath shift to state 27
+-- On literal shift to state 28
+-- On expr shift to state 29
+## Reductions:
+
+State 20:
+## Known stack suffix:
+## INT
+## LR(1) items:
+literal -> INT . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD
+--   reduce production literal -> INT
+
+State 21:
+## Known stack suffix:
+## IDENT
+## LR(1) items:
+vpath -> IDENT . DOT IDENT [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+vpath -> IDENT . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+vpath -> IDENT . vpath [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On IDENT shift to state 21
+-- On DOT shift to state 22
+-- On vpath shift to state 24
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD
+--   reduce production vpath -> IDENT
+** Conflict on IDENT
+
+State 22:
+## Known stack suffix:
+## IDENT DOT
+## LR(1) items:
+vpath -> IDENT DOT . IDENT [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On IDENT shift to state 23
+## Reductions:
+
+State 23:
+## Known stack suffix:
+## IDENT DOT IDENT
+## LR(1) items:
+vpath -> IDENT DOT IDENT . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD
+--   reduce production vpath -> IDENT DOT IDENT
+
+State 24:
+## Known stack suffix:
+## IDENT vpath
+## LR(1) items:
+vpath -> IDENT vpath . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD
+--   reduce production vpath -> IDENT vpath
+
+State 25:
+## Known stack suffix:
+## FLOAT
+## LR(1) items:
+literal -> FLOAT . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD
+--   reduce production literal -> FLOAT
+
+State 26:
+## Known stack suffix:
+## BOOL
+## LR(1) items:
+literal -> BOOL . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD
+--   reduce production literal -> BOOL
+
+State 27:
+## Known stack suffix:
+## vpath
+## LR(1) items:
+expr -> vpath . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD
+--   reduce production expr -> vpath
+
+State 28:
+## Known stack suffix:
+## literal
+## LR(1) items:
+expr -> literal . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD
+--   reduce production expr -> literal
+
+State 29:
+## Known stack suffix:
+## NEW_ENTITY IDENT LPAREN expr
+## LR(1) items:
+expr -> expr . ADD expr [ SUB RPAREN MUL DIV ADD ]
+expr -> expr . SUB expr [ SUB RPAREN MUL DIV ADD ]
+expr -> expr . MUL expr [ SUB RPAREN MUL DIV ADD ]
+expr -> expr . DIV expr [ SUB RPAREN MUL DIV ADD ]
+expr -> NEW_ENTITY IDENT LPAREN expr . RPAREN LBRACE structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On SUB shift to state 30
+-- On RPAREN shift to state 36
+-- On MUL shift to state 32
+-- On DIV shift to state 34
+-- On ADD shift to state 40
+## Reductions:
+
+State 30:
+## Known stack suffix:
+## expr SUB
+## LR(1) items:
+expr -> expr SUB . expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On UPDATE shift to state 6
+-- On SUB shift to state 9
+-- On STRING shift to state 10
+-- On NEW_TEMPLATE shift to state 11
+-- On NEW_ENTITY shift to state 17
+-- On INT shift to state 20
+-- On IDENT shift to state 21
+-- On FLOAT shift to state 25
+-- On BOOL shift to state 26
+-- On vpath shift to state 27
+-- On literal shift to state 28
+-- On expr shift to state 31
+## Reductions:
+
+State 31:
+## Known stack suffix:
+## expr SUB expr
+## LR(1) items:
+expr -> expr . ADD expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . SUB expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr SUB expr . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . MUL expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . DIV expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On MUL shift to state 32
+-- On DIV shift to state 34
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY LBRACE INT IDENT FLOAT BOOL ADD
+--   reduce production expr -> expr SUB expr
+
+State 32:
+## Known stack suffix:
+## expr MUL
+## LR(1) items:
+expr -> expr MUL . expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On UPDATE shift to state 6
+-- On SUB shift to state 9
+-- On STRING shift to state 10
+-- On NEW_TEMPLATE shift to state 11
+-- On NEW_ENTITY shift to state 17
+-- On INT shift to state 20
+-- On IDENT shift to state 21
+-- On FLOAT shift to state 25
+-- On BOOL shift to state 26
+-- On vpath shift to state 27
+-- On literal shift to state 28
+-- On expr shift to state 33
+## Reductions:
+
+State 33:
+## Known stack suffix:
+## expr MUL expr
+## LR(1) items:
+expr -> expr . ADD expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . SUB expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . MUL expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr MUL expr . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . DIV expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD
+--   reduce production expr -> expr MUL expr
+
+State 34:
+## Known stack suffix:
+## expr DIV
+## LR(1) items:
+expr -> expr DIV . expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On UPDATE shift to state 6
+-- On SUB shift to state 9
+-- On STRING shift to state 10
+-- On NEW_TEMPLATE shift to state 11
+-- On NEW_ENTITY shift to state 17
+-- On INT shift to state 20
+-- On IDENT shift to state 21
+-- On FLOAT shift to state 25
+-- On BOOL shift to state 26
+-- On vpath shift to state 27
+-- On literal shift to state 28
+-- On expr shift to state 35
+## Reductions:
+
+State 35:
+## Known stack suffix:
+## expr DIV expr
+## LR(1) items:
+expr -> expr . ADD expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . SUB expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . MUL expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . DIV expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr DIV expr . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD
+--   reduce production expr -> expr DIV expr
+
+State 36:
+## Known stack suffix:
+## NEW_ENTITY IDENT LPAREN expr RPAREN
+## LR(1) items:
+expr -> NEW_ENTITY IDENT LPAREN expr RPAREN . LBRACE structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On LBRACE shift to state 37
+## Reductions:
+
+State 37:
+## Known stack suffix:
+## NEW_ENTITY IDENT LPAREN expr RPAREN LBRACE
+## LR(1) items:
+expr -> NEW_ENTITY IDENT LPAREN expr RPAREN LBRACE . structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On IDENT shift to state 4
+-- On structure(EQUALS,expr) shift to state 38
+-- On list(__anonymous_0(EQUALS,expr)) shift to state 16
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(EQUALS,expr)) ->
+
+State 38:
+## Known stack suffix:
+## NEW_ENTITY IDENT LPAREN expr RPAREN LBRACE structure(EQUALS,expr)
+## LR(1) items:
+expr -> NEW_ENTITY IDENT LPAREN expr RPAREN LBRACE structure(EQUALS,expr) . RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On RBRACE shift to state 39
+## Reductions:
+
+State 39:
+## Known stack suffix:
+## NEW_ENTITY IDENT LPAREN expr RPAREN LBRACE structure(EQUALS,expr) RBRACE
+## LR(1) items:
+expr -> NEW_ENTITY IDENT LPAREN expr RPAREN LBRACE structure(EQUALS,expr) RBRACE . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD
+--   reduce production expr -> NEW_ENTITY IDENT LPAREN expr RPAREN LBRACE structure(EQUALS,expr) RBRACE
+
+State 40:
+## Known stack suffix:
+## expr ADD
+## LR(1) items:
+expr -> expr ADD . expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On UPDATE shift to state 6
+-- On SUB shift to state 9
+-- On STRING shift to state 10
+-- On NEW_TEMPLATE shift to state 11
+-- On NEW_ENTITY shift to state 17
+-- On INT shift to state 20
+-- On IDENT shift to state 21
+-- On FLOAT shift to state 25
+-- On BOOL shift to state 26
+-- On vpath shift to state 27
+-- On literal shift to state 28
+-- On expr shift to state 41
+## Reductions:
+
+State 41:
+## Known stack suffix:
+## expr ADD expr
+## LR(1) items:
+expr -> expr . ADD expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr ADD expr . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . SUB expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . MUL expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . DIV expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On MUL shift to state 32
+-- On DIV shift to state 34
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY LBRACE INT IDENT FLOAT BOOL ADD
+--   reduce production expr -> expr ADD expr
+
+State 42:
+## Known stack suffix:
+## SUB expr
+## LR(1) items:
+expr -> SUB expr . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . ADD expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . SUB expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . MUL expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . DIV expr [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On MUL shift to state 32
+-- On DIV shift to state 34
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY LBRACE INT IDENT FLOAT BOOL ADD
+--   reduce production expr -> SUB expr
+
+State 43:
+## Known stack suffix:
+## UPDATE IDENT LPAREN expr
+## LR(1) items:
+expr -> expr . ADD expr [ SUB RPAREN MUL DIV ADD ]
+expr -> expr . SUB expr [ SUB RPAREN MUL DIV ADD ]
+expr -> expr . MUL expr [ SUB RPAREN MUL DIV ADD ]
+expr -> expr . DIV expr [ SUB RPAREN MUL DIV ADD ]
+expr -> UPDATE IDENT LPAREN expr . RPAREN LBRACE structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On SUB shift to state 30
+-- On RPAREN shift to state 44
+-- On MUL shift to state 32
+-- On DIV shift to state 34
+-- On ADD shift to state 40
+## Reductions:
+
+State 44:
+## Known stack suffix:
+## UPDATE IDENT LPAREN expr RPAREN
+## LR(1) items:
+expr -> UPDATE IDENT LPAREN expr RPAREN . LBRACE structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On LBRACE shift to state 45
+## Reductions:
+
+State 45:
+## Known stack suffix:
+## UPDATE IDENT LPAREN expr RPAREN LBRACE
+## LR(1) items:
+expr -> UPDATE IDENT LPAREN expr RPAREN LBRACE . structure(EQUALS,expr) RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On IDENT shift to state 4
+-- On structure(EQUALS,expr) shift to state 46
+-- On list(__anonymous_0(EQUALS,expr)) shift to state 16
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(EQUALS,expr)) ->
+
+State 46:
+## Known stack suffix:
+## UPDATE IDENT LPAREN expr RPAREN LBRACE structure(EQUALS,expr)
+## LR(1) items:
+expr -> UPDATE IDENT LPAREN expr RPAREN LBRACE structure(EQUALS,expr) . RBRACE [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On RBRACE shift to state 47
+## Reductions:
+
+State 47:
+## Known stack suffix:
+## UPDATE IDENT LPAREN expr RPAREN LBRACE structure(EQUALS,expr) RBRACE
+## LR(1) items:
+expr -> UPDATE IDENT LPAREN expr RPAREN LBRACE structure(EQUALS,expr) RBRACE . [ UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+## Reductions:
+-- On UPDATE SUB STRING RPAREN RBRACE NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD
+--   reduce production expr -> UPDATE IDENT LPAREN expr RPAREN LBRACE structure(EQUALS,expr) RBRACE
+
+State 48:
+## Known stack suffix:
+## IDENT EQUALS expr
+## LR(1) items:
+expr -> expr . ADD expr [ SUB RBRACE MUL IDENT DIV ADD ]
+expr -> expr . SUB expr [ SUB RBRACE MUL IDENT DIV ADD ]
+expr -> expr . MUL expr [ SUB RBRACE MUL IDENT DIV ADD ]
+expr -> expr . DIV expr [ SUB RBRACE MUL IDENT DIV ADD ]
+list(__anonymous_0(EQUALS,expr)) -> IDENT EQUALS expr . list(__anonymous_0(EQUALS,expr)) [ RBRACE ]
+## Transitions:
+-- On SUB shift to state 30
+-- On MUL shift to state 32
+-- On IDENT shift to state 4
+-- On DIV shift to state 34
+-- On ADD shift to state 40
+-- On list(__anonymous_0(EQUALS,expr)) shift to state 49
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(EQUALS,expr)) ->
+
+State 49:
+## Known stack suffix:
+## IDENT EQUALS expr list(__anonymous_0(EQUALS,expr))
+## LR(1) items:
+list(__anonymous_0(EQUALS,expr)) -> IDENT EQUALS expr list(__anonymous_0(EQUALS,expr)) . [ RBRACE ]
+## Transitions:
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(EQUALS,expr)) -> IDENT EQUALS expr list(__anonymous_0(EQUALS,expr))
+
+State 50:
+## Known stack suffix:
+## TEMPLATE IDENT RBRACE structure(EQUALS,expr)
+## LR(1) items:
+toplevel -> TEMPLATE IDENT RBRACE structure(EQUALS,expr) . RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On RBRACE shift to state 51
+## Reductions:
+
+State 51:
+## Known stack suffix:
+## TEMPLATE IDENT RBRACE structure(EQUALS,expr) RBRACE
+## LR(1) items:
+toplevel -> TEMPLATE IDENT RBRACE structure(EQUALS,expr) RBRACE . [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+## Reductions:
+-- On TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER
+--   reduce production toplevel -> TEMPLATE IDENT RBRACE structure(EQUALS,expr) RBRACE
+
+State 52:
+## Known stack suffix:
+## INTERFACE
+## LR(1) items:
+toplevel -> INTERFACE . IDENT LBRACE structure(COLON,gql_type) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 53
+## Reductions:
+
+State 53:
+## Known stack suffix:
+## INTERFACE IDENT
+## LR(1) items:
+toplevel -> INTERFACE IDENT . LBRACE structure(COLON,gql_type) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On LBRACE shift to state 54
+## Reductions:
+
+State 54:
+## Known stack suffix:
+## INTERFACE IDENT LBRACE
+## LR(1) items:
+toplevel -> INTERFACE IDENT LBRACE . structure(COLON,gql_type) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 55
+-- On structure(COLON,gql_type) shift to state 72
+-- On list(__anonymous_0(COLON,gql_type)) shift to state 74
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(COLON,gql_type)) ->
+
+State 55:
+## Known stack suffix:
+## IDENT
+## LR(1) items:
+list(__anonymous_0(COLON,gql_type)) -> IDENT . COLON gql_type list(__anonymous_0(COLON,gql_type)) [ RBRACE ]
+## Transitions:
+-- On COLON shift to state 56
+## Reductions:
+
+State 56:
+## Known stack suffix:
+## IDENT COLON
+## LR(1) items:
+list(__anonymous_0(COLON,gql_type)) -> IDENT COLON . gql_type list(__anonymous_0(COLON,gql_type)) [ RBRACE ]
+## Transitions:
+-- On LBRACK shift to state 57
+-- On IDENT shift to state 58
+-- On GQL_STRING shift to state 59
+-- On GQL_INT shift to state 60
+-- On GQL_ID shift to state 61
+-- On GQL_FLOAT shift to state 62
+-- On GQL_BYTES shift to state 63
+-- On GQL_BOOL shift to state 64
+-- On GQL_BIGINT shift to state 65
+-- On GQL_BIGDECIMAL shift to state 66
+-- On gql_type shift to state 70
+## Reductions:
+
+State 57:
+## Known stack suffix:
+## LBRACK
+## LR(1) items:
+gql_type -> LBRACK . gql_type RBRACK [ RBRACK RBRACE IDENT BANG ]
+## Transitions:
+-- On LBRACK shift to state 57
+-- On IDENT shift to state 58
+-- On GQL_STRING shift to state 59
+-- On GQL_INT shift to state 60
+-- On GQL_ID shift to state 61
+-- On GQL_FLOAT shift to state 62
+-- On GQL_BYTES shift to state 63
+-- On GQL_BOOL shift to state 64
+-- On GQL_BIGINT shift to state 65
+-- On GQL_BIGDECIMAL shift to state 66
+-- On gql_type shift to state 67
+## Reductions:
+
+State 58:
+## Known stack suffix:
+## IDENT
+## LR(1) items:
+gql_type -> IDENT . [ RBRACK RBRACE IDENT BANG ]
+## Transitions:
+## Reductions:
+-- On RBRACK RBRACE IDENT BANG
+--   reduce production gql_type -> IDENT
+
+State 59:
+## Known stack suffix:
+## GQL_STRING
+## LR(1) items:
+gql_type -> GQL_STRING . [ RBRACK RBRACE IDENT BANG ]
+## Transitions:
+## Reductions:
+-- On RBRACK RBRACE IDENT BANG
+--   reduce production gql_type -> GQL_STRING
+
+State 60:
+## Known stack suffix:
+## GQL_INT
+## LR(1) items:
+gql_type -> GQL_INT . [ RBRACK RBRACE IDENT BANG ]
+## Transitions:
+## Reductions:
+-- On RBRACK RBRACE IDENT BANG
+--   reduce production gql_type -> GQL_INT
+
+State 61:
+## Known stack suffix:
+## GQL_ID
+## LR(1) items:
+gql_type -> GQL_ID . [ RBRACK RBRACE IDENT BANG ]
+## Transitions:
+## Reductions:
+-- On RBRACK RBRACE IDENT BANG
+--   reduce production gql_type -> GQL_ID
+
+State 62:
+## Known stack suffix:
+## GQL_FLOAT
+## LR(1) items:
+gql_type -> GQL_FLOAT . [ RBRACK RBRACE IDENT BANG ]
+## Transitions:
+## Reductions:
+-- On RBRACK RBRACE IDENT BANG
+--   reduce production gql_type -> GQL_FLOAT
+
+State 63:
+## Known stack suffix:
+## GQL_BYTES
+## LR(1) items:
+gql_type -> GQL_BYTES . [ RBRACK RBRACE IDENT BANG ]
+## Transitions:
+## Reductions:
+-- On RBRACK RBRACE IDENT BANG
+--   reduce production gql_type -> GQL_BYTES
+
+State 64:
+## Known stack suffix:
+## GQL_BOOL
+## LR(1) items:
+gql_type -> GQL_BOOL . [ RBRACK RBRACE IDENT BANG ]
+## Transitions:
+## Reductions:
+-- On RBRACK RBRACE IDENT BANG
+--   reduce production gql_type -> GQL_BOOL
+
+State 65:
+## Known stack suffix:
+## GQL_BIGINT
+## LR(1) items:
+gql_type -> GQL_BIGINT . [ RBRACK RBRACE IDENT BANG ]
+## Transitions:
+## Reductions:
+-- On RBRACK RBRACE IDENT BANG
+--   reduce production gql_type -> GQL_BIGINT
+
+State 66:
+## Known stack suffix:
+## GQL_BIGDECIMAL
+## LR(1) items:
+gql_type -> GQL_BIGDECIMAL . [ RBRACK RBRACE IDENT BANG ]
+## Transitions:
+## Reductions:
+-- On RBRACK RBRACE IDENT BANG
+--   reduce production gql_type -> GQL_BIGDECIMAL
+
+State 67:
+## Known stack suffix:
+## LBRACK gql_type
+## LR(1) items:
+gql_type -> LBRACK gql_type . RBRACK [ RBRACK RBRACE IDENT BANG ]
+gql_type -> gql_type . BANG [ RBRACK BANG ]
+## Transitions:
+-- On RBRACK shift to state 68
+-- On BANG shift to state 69
+## Reductions:
+
+State 68:
+## Known stack suffix:
+## LBRACK gql_type RBRACK
+## LR(1) items:
+gql_type -> LBRACK gql_type RBRACK . [ RBRACK RBRACE IDENT BANG ]
+## Transitions:
+## Reductions:
+-- On RBRACK RBRACE IDENT BANG
+--   reduce production gql_type -> LBRACK gql_type RBRACK
+
+State 69:
+## Known stack suffix:
+## gql_type BANG
+## LR(1) items:
+gql_type -> gql_type BANG . [ RBRACK RBRACE IDENT BANG ]
+## Transitions:
+## Reductions:
+-- On RBRACK RBRACE IDENT BANG
+--   reduce production gql_type -> gql_type BANG
+
+State 70:
+## Known stack suffix:
+## IDENT COLON gql_type
+## LR(1) items:
+gql_type -> gql_type . BANG [ RBRACE IDENT BANG ]
+list(__anonymous_0(COLON,gql_type)) -> IDENT COLON gql_type . list(__anonymous_0(COLON,gql_type)) [ RBRACE ]
+## Transitions:
+-- On IDENT shift to state 55
+-- On BANG shift to state 69
+-- On list(__anonymous_0(COLON,gql_type)) shift to state 71
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(COLON,gql_type)) ->
+
+State 71:
+## Known stack suffix:
+## IDENT COLON gql_type list(__anonymous_0(COLON,gql_type))
+## LR(1) items:
+list(__anonymous_0(COLON,gql_type)) -> IDENT COLON gql_type list(__anonymous_0(COLON,gql_type)) . [ RBRACE ]
+## Transitions:
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(COLON,gql_type)) -> IDENT COLON gql_type list(__anonymous_0(COLON,gql_type))
+
+State 72:
+## Known stack suffix:
+## INTERFACE IDENT LBRACE structure(COLON,gql_type)
+## LR(1) items:
+toplevel -> INTERFACE IDENT LBRACE structure(COLON,gql_type) . RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On RBRACE shift to state 73
+## Reductions:
+
+State 73:
+## Known stack suffix:
+## INTERFACE IDENT LBRACE structure(COLON,gql_type) RBRACE
+## LR(1) items:
+toplevel -> INTERFACE IDENT LBRACE structure(COLON,gql_type) RBRACE . [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+## Reductions:
+-- On TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER
+--   reduce production toplevel -> INTERFACE IDENT LBRACE structure(COLON,gql_type) RBRACE
+
+State 74:
+## Known stack suffix:
+## list(__anonymous_0(COLON,gql_type))
+## LR(1) items:
+structure(COLON,gql_type) -> list(__anonymous_0(COLON,gql_type)) . [ RBRACE ]
+## Transitions:
+## Reductions:
+-- On RBRACE
+--   reduce production structure(COLON,gql_type) -> list(__anonymous_0(COLON,gql_type))
+
+State 75:
+## Known stack suffix:
+## EVENT_HANDLER
+## LR(1) items:
+toplevel -> EVENT_HANDLER . IDENT FROM IDENT RBRACE list(expr) LBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 76
+## Reductions:
+
+State 76:
+## Known stack suffix:
+## EVENT_HANDLER IDENT
+## LR(1) items:
+toplevel -> EVENT_HANDLER IDENT . FROM IDENT RBRACE list(expr) LBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On FROM shift to state 77
+## Reductions:
+
+State 77:
+## Known stack suffix:
+## EVENT_HANDLER IDENT FROM
+## LR(1) items:
+toplevel -> EVENT_HANDLER IDENT FROM . IDENT RBRACE list(expr) LBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 78
+## Reductions:
+
+State 78:
+## Known stack suffix:
+## EVENT_HANDLER IDENT FROM IDENT
+## LR(1) items:
+toplevel -> EVENT_HANDLER IDENT FROM IDENT . RBRACE list(expr) LBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On RBRACE shift to state 79
+## Reductions:
+
+State 79:
+## Known stack suffix:
+## EVENT_HANDLER IDENT FROM IDENT RBRACE
+## LR(1) items:
+toplevel -> EVENT_HANDLER IDENT FROM IDENT RBRACE . list(expr) LBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On UPDATE shift to state 6
+-- On SUB shift to state 9
+-- On STRING shift to state 10
+-- On NEW_TEMPLATE shift to state 11
+-- On NEW_ENTITY shift to state 17
+-- On INT shift to state 20
+-- On IDENT shift to state 21
+-- On FLOAT shift to state 25
+-- On BOOL shift to state 26
+-- On vpath shift to state 27
+-- On literal shift to state 28
+-- On list(expr) shift to state 80
+-- On expr shift to state 82
+## Reductions:
+-- On LBRACE
+--   reduce production list(expr) ->
+
+State 80:
+## Known stack suffix:
+## EVENT_HANDLER IDENT FROM IDENT RBRACE list(expr)
+## LR(1) items:
+toplevel -> EVENT_HANDLER IDENT FROM IDENT RBRACE list(expr) . LBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On LBRACE shift to state 81
+## Reductions:
+
+State 81:
+## Known stack suffix:
+## EVENT_HANDLER IDENT FROM IDENT RBRACE list(expr) LBRACE
+## LR(1) items:
+toplevel -> EVENT_HANDLER IDENT FROM IDENT RBRACE list(expr) LBRACE . [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+## Reductions:
+-- On TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER
+--   reduce production toplevel -> EVENT_HANDLER IDENT FROM IDENT RBRACE list(expr) LBRACE
+
+State 82:
+## Known stack suffix:
+## expr
+## LR(1) items:
+expr -> expr . ADD expr [ UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . SUB expr [ UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . MUL expr [ UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . DIV expr [ UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+list(expr) -> expr . list(expr) [ LBRACE ]
+## Transitions:
+-- On UPDATE shift to state 6
+-- On SUB shift to state 83
+-- On STRING shift to state 10
+-- On NEW_TEMPLATE shift to state 11
+-- On NEW_ENTITY shift to state 17
+-- On MUL shift to state 32
+-- On INT shift to state 20
+-- On IDENT shift to state 21
+-- On FLOAT shift to state 25
+-- On DIV shift to state 34
+-- On BOOL shift to state 26
+-- On ADD shift to state 40
+-- On vpath shift to state 27
+-- On literal shift to state 28
+-- On list(expr) shift to state 85
+-- On expr shift to state 82
+## Reductions:
+-- On LBRACE
+--   reduce production list(expr) ->
+
+State 83:
+## Known stack suffix:
+## expr SUB
+## LR(1) items:
+expr -> SUB . expr [ UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr SUB . expr [ UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On UPDATE shift to state 6
+-- On SUB shift to state 9
+-- On STRING shift to state 10
+-- On NEW_TEMPLATE shift to state 11
+-- On NEW_ENTITY shift to state 17
+-- On INT shift to state 20
+-- On IDENT shift to state 21
+-- On FLOAT shift to state 25
+-- On BOOL shift to state 26
+-- On vpath shift to state 27
+-- On literal shift to state 28
+-- On expr shift to state 84
+## Reductions:
+
+State 84:
+## Known stack suffix:
+## expr SUB expr
+## LR(1) items:
+expr -> SUB expr . [ UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . ADD expr [ UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . SUB expr [ UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr SUB expr . [ UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . MUL expr [ UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+expr -> expr . DIV expr [ UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY MUL LBRACE INT IDENT FLOAT DIV BOOL ADD ]
+## Transitions:
+-- On SUB shift to state 30
+-- On MUL shift to state 32
+-- On DIV shift to state 34
+-- On ADD shift to state 40
+## Reductions:
+-- On UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY LBRACE INT IDENT FLOAT BOOL ADD
+--   reduce production expr -> SUB expr
+-- On UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY LBRACE INT IDENT FLOAT BOOL ADD
+--   reduce production expr -> expr SUB expr
+** Conflict on UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY LBRACE INT IDENT FLOAT BOOL ADD
+
+State 85:
+## Known stack suffix:
+## expr list(expr)
+## LR(1) items:
+list(expr) -> expr list(expr) . [ LBRACE ]
+## Transitions:
+## Reductions:
+-- On LBRACE
+--   reduce production list(expr) -> expr list(expr)
+
+State 86:
+## Known stack suffix:
+## EVENT
+## LR(1) items:
+toplevel -> EVENT . IDENT LBRACE structure(COLON,sol_type) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 87
+## Reductions:
+
+State 87:
+## Known stack suffix:
+## EVENT IDENT
+## LR(1) items:
+toplevel -> EVENT IDENT . LBRACE structure(COLON,sol_type) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On LBRACE shift to state 88
+## Reductions:
+
+State 88:
+## Known stack suffix:
+## EVENT IDENT LBRACE
+## LR(1) items:
+toplevel -> EVENT IDENT LBRACE . structure(COLON,sol_type) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 89
+-- On structure(COLON,sol_type) shift to state 104
+-- On list(__anonymous_0(COLON,sol_type)) shift to state 106
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(COLON,sol_type)) ->
+
+State 89:
+## Known stack suffix:
+## IDENT
+## LR(1) items:
+list(__anonymous_0(COLON,sol_type)) -> IDENT . COLON sol_type list(__anonymous_0(COLON,sol_type)) [ RBRACE ]
+## Transitions:
+-- On COLON shift to state 90
+## Reductions:
+
+State 90:
+## Known stack suffix:
+## IDENT COLON
+## LR(1) items:
+list(__anonymous_0(COLON,sol_type)) -> IDENT COLON . sol_type list(__anonymous_0(COLON,sol_type)) [ RBRACE ]
+## Transitions:
+-- On SOL_UINT shift to state 91
+-- On SOL_UFIXED shift to state 92
+-- On SOL_STRING shift to state 93
+-- On SOL_INT shift to state 94
+-- On SOL_FIXED shift to state 95
+-- On SOL_FBYTES shift to state 96
+-- On SOL_BYTES shift to state 97
+-- On SOL_BOOL shift to state 98
+-- On SOL_ADDRESS shift to state 99
+-- On sol_type shift to state 100
+## Reductions:
+
+State 91:
+## Known stack suffix:
+## SOL_UINT
+## LR(1) items:
+sol_type -> SOL_UINT . [ RBRACE LBRACE IDENT ]
+## Transitions:
+## Reductions:
+-- On RBRACE LBRACE IDENT
+--   reduce production sol_type -> SOL_UINT
+
+State 92:
+## Known stack suffix:
+## SOL_UFIXED
+## LR(1) items:
+sol_type -> SOL_UFIXED . [ RBRACE LBRACE IDENT ]
+## Transitions:
+## Reductions:
+-- On RBRACE LBRACE IDENT
+--   reduce production sol_type -> SOL_UFIXED
+
+State 93:
+## Known stack suffix:
+## SOL_STRING
+## LR(1) items:
+sol_type -> SOL_STRING . [ RBRACE LBRACE IDENT ]
+## Transitions:
+## Reductions:
+-- On RBRACE LBRACE IDENT
+--   reduce production sol_type -> SOL_STRING
+
+State 94:
+## Known stack suffix:
+## SOL_INT
+## LR(1) items:
+sol_type -> SOL_INT . [ RBRACE LBRACE IDENT ]
+## Transitions:
+## Reductions:
+-- On RBRACE LBRACE IDENT
+--   reduce production sol_type -> SOL_INT
+
+State 95:
+## Known stack suffix:
+## SOL_FIXED
+## LR(1) items:
+sol_type -> SOL_FIXED . [ RBRACE LBRACE IDENT ]
+## Transitions:
+## Reductions:
+-- On RBRACE LBRACE IDENT
+--   reduce production sol_type -> SOL_FIXED
+
+State 96:
+## Known stack suffix:
+## SOL_FBYTES
+## LR(1) items:
+sol_type -> SOL_FBYTES . [ RBRACE LBRACE IDENT ]
+## Transitions:
+## Reductions:
+-- On RBRACE LBRACE IDENT
+--   reduce production sol_type -> SOL_FBYTES
+
+State 97:
+## Known stack suffix:
+## SOL_BYTES
+## LR(1) items:
+sol_type -> SOL_BYTES . [ RBRACE LBRACE IDENT ]
+## Transitions:
+## Reductions:
+-- On RBRACE LBRACE IDENT
+--   reduce production sol_type -> SOL_BYTES
+
+State 98:
+## Known stack suffix:
+## SOL_BOOL
+## LR(1) items:
+sol_type -> SOL_BOOL . [ RBRACE LBRACE IDENT ]
+## Transitions:
+## Reductions:
+-- On RBRACE LBRACE IDENT
+--   reduce production sol_type -> SOL_BOOL
+
+State 99:
+## Known stack suffix:
+## SOL_ADDRESS
+## LR(1) items:
+sol_type -> SOL_ADDRESS . [ RBRACE LBRACE IDENT ]
+## Transitions:
+## Reductions:
+-- On RBRACE LBRACE IDENT
+--   reduce production sol_type -> SOL_ADDRESS
+
+State 100:
+## Known stack suffix:
+## IDENT COLON sol_type
+## LR(1) items:
+list(__anonymous_0(COLON,sol_type)) -> IDENT COLON sol_type . list(__anonymous_0(COLON,sol_type)) [ RBRACE ]
+sol_type -> sol_type . LBRACE RBRACK [ RBRACE LBRACE IDENT ]
+## Transitions:
+-- On LBRACE shift to state 101
+-- On IDENT shift to state 89
+-- On list(__anonymous_0(COLON,sol_type)) shift to state 103
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(COLON,sol_type)) ->
+
+State 101:
+## Known stack suffix:
+## sol_type LBRACE
+## LR(1) items:
+sol_type -> sol_type LBRACE . RBRACK [ RBRACE LBRACE IDENT ]
+## Transitions:
+-- On RBRACK shift to state 102
+## Reductions:
+
+State 102:
+## Known stack suffix:
+## sol_type LBRACE RBRACK
+## LR(1) items:
+sol_type -> sol_type LBRACE RBRACK . [ RBRACE LBRACE IDENT ]
+## Transitions:
+## Reductions:
+-- On RBRACE LBRACE IDENT
+--   reduce production sol_type -> sol_type LBRACE RBRACK
+
+State 103:
+## Known stack suffix:
+## IDENT COLON sol_type list(__anonymous_0(COLON,sol_type))
+## LR(1) items:
+list(__anonymous_0(COLON,sol_type)) -> IDENT COLON sol_type list(__anonymous_0(COLON,sol_type)) . [ RBRACE ]
+## Transitions:
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(COLON,sol_type)) -> IDENT COLON sol_type list(__anonymous_0(COLON,sol_type))
+
+State 104:
+## Known stack suffix:
+## EVENT IDENT LBRACE structure(COLON,sol_type)
+## LR(1) items:
+toplevel -> EVENT IDENT LBRACE structure(COLON,sol_type) . RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On RBRACE shift to state 105
+## Reductions:
+
+State 105:
+## Known stack suffix:
+## EVENT IDENT LBRACE structure(COLON,sol_type) RBRACE
+## LR(1) items:
+toplevel -> EVENT IDENT LBRACE structure(COLON,sol_type) RBRACE . [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+## Reductions:
+-- On TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER
+--   reduce production toplevel -> EVENT IDENT LBRACE structure(COLON,sol_type) RBRACE
+
+State 106:
+## Known stack suffix:
+## list(__anonymous_0(COLON,sol_type))
+## LR(1) items:
+structure(COLON,sol_type) -> list(__anonymous_0(COLON,sol_type)) . [ RBRACE ]
+## Transitions:
+## Reductions:
+-- On RBRACE
+--   reduce production structure(COLON,sol_type) -> list(__anonymous_0(COLON,sol_type))
+
+State 107:
+## Known stack suffix:
+## ENTITY
+## LR(1) items:
+entity -> ENTITY . IDENT LBRACE structure(COLON,gql_type) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+entity -> ENTITY . IDENT AS IDENT LBRACE structure(COLON,gql_type) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 108
+## Reductions:
+
+State 108:
+## Known stack suffix:
+## ENTITY IDENT
+## LR(1) items:
+entity -> ENTITY IDENT . LBRACE structure(COLON,gql_type) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+entity -> ENTITY IDENT . AS IDENT LBRACE structure(COLON,gql_type) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On LBRACE shift to state 109
+-- On AS shift to state 112
+## Reductions:
+
+State 109:
+## Known stack suffix:
+## ENTITY IDENT LBRACE
+## LR(1) items:
+entity -> ENTITY IDENT LBRACE . structure(COLON,gql_type) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 55
+-- On structure(COLON,gql_type) shift to state 110
+-- On list(__anonymous_0(COLON,gql_type)) shift to state 74
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(COLON,gql_type)) ->
+
+State 110:
+## Known stack suffix:
+## ENTITY IDENT LBRACE structure(COLON,gql_type)
+## LR(1) items:
+entity -> ENTITY IDENT LBRACE structure(COLON,gql_type) . RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On RBRACE shift to state 111
+## Reductions:
+
+State 111:
+## Known stack suffix:
+## ENTITY IDENT LBRACE structure(COLON,gql_type) RBRACE
+## LR(1) items:
+entity -> ENTITY IDENT LBRACE structure(COLON,gql_type) RBRACE . [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+## Reductions:
+-- On TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER
+--   reduce production entity -> ENTITY IDENT LBRACE structure(COLON,gql_type) RBRACE
+
+State 112:
+## Known stack suffix:
+## ENTITY IDENT AS
+## LR(1) items:
+entity -> ENTITY IDENT AS . IDENT LBRACE structure(COLON,gql_type) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 113
+## Reductions:
+
+State 113:
+## Known stack suffix:
+## ENTITY IDENT AS IDENT
+## LR(1) items:
+entity -> ENTITY IDENT AS IDENT . LBRACE structure(COLON,gql_type) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On LBRACE shift to state 114
+## Reductions:
+
+State 114:
+## Known stack suffix:
+## ENTITY IDENT AS IDENT LBRACE
+## LR(1) items:
+entity -> ENTITY IDENT AS IDENT LBRACE . structure(COLON,gql_type) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 55
+-- On structure(COLON,gql_type) shift to state 115
+-- On list(__anonymous_0(COLON,gql_type)) shift to state 74
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(COLON,gql_type)) ->
+
+State 115:
+## Known stack suffix:
+## ENTITY IDENT AS IDENT LBRACE structure(COLON,gql_type)
+## LR(1) items:
+entity -> ENTITY IDENT AS IDENT LBRACE structure(COLON,gql_type) . RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On RBRACE shift to state 116
+## Reductions:
+
+State 116:
+## Known stack suffix:
+## ENTITY IDENT AS IDENT LBRACE structure(COLON,gql_type) RBRACE
+## LR(1) items:
+entity -> ENTITY IDENT AS IDENT LBRACE structure(COLON,gql_type) RBRACE . [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+## Reductions:
+-- On TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER
+--   reduce production entity -> ENTITY IDENT AS IDENT LBRACE structure(COLON,gql_type) RBRACE
+
+State 117:
+## Known stack suffix:
+## DATA_SOURCE
+## LR(1) items:
+toplevel -> DATA_SOURCE . IDENT RBRACE structure(EQUALS,expr) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 118
+## Reductions:
+
+State 118:
+## Known stack suffix:
+## DATA_SOURCE IDENT
+## LR(1) items:
+toplevel -> DATA_SOURCE IDENT . RBRACE structure(EQUALS,expr) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On RBRACE shift to state 119
+## Reductions:
+
+State 119:
+## Known stack suffix:
+## DATA_SOURCE IDENT RBRACE
+## LR(1) items:
+toplevel -> DATA_SOURCE IDENT RBRACE . structure(EQUALS,expr) RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 4
+-- On structure(EQUALS,expr) shift to state 120
+-- On list(__anonymous_0(EQUALS,expr)) shift to state 16
+## Reductions:
+-- On RBRACE
+--   reduce production list(__anonymous_0(EQUALS,expr)) ->
+
+State 120:
+## Known stack suffix:
+## DATA_SOURCE IDENT RBRACE structure(EQUALS,expr)
+## LR(1) items:
+toplevel -> DATA_SOURCE IDENT RBRACE structure(EQUALS,expr) . RBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On RBRACE shift to state 121
+## Reductions:
+
+State 121:
+## Known stack suffix:
+## DATA_SOURCE IDENT RBRACE structure(EQUALS,expr) RBRACE
+## LR(1) items:
+toplevel -> DATA_SOURCE IDENT RBRACE structure(EQUALS,expr) RBRACE . [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+## Reductions:
+-- On TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER
+--   reduce production toplevel -> DATA_SOURCE IDENT RBRACE structure(EQUALS,expr) RBRACE
+
+State 122:
+## Known stack suffix:
+## CALL_HANDLER
+## LR(1) items:
+toplevel -> CALL_HANDLER . IDENT FROM IDENT RBRACE list(expr) LBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 123
+## Reductions:
+
+State 123:
+## Known stack suffix:
+## CALL_HANDLER IDENT
+## LR(1) items:
+toplevel -> CALL_HANDLER IDENT . FROM IDENT RBRACE list(expr) LBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On FROM shift to state 124
+## Reductions:
+
+State 124:
+## Known stack suffix:
+## CALL_HANDLER IDENT FROM
+## LR(1) items:
+toplevel -> CALL_HANDLER IDENT FROM . IDENT RBRACE list(expr) LBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On IDENT shift to state 125
+## Reductions:
+
+State 125:
+## Known stack suffix:
+## CALL_HANDLER IDENT FROM IDENT
+## LR(1) items:
+toplevel -> CALL_HANDLER IDENT FROM IDENT . RBRACE list(expr) LBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On RBRACE shift to state 126
+## Reductions:
+
+State 126:
+## Known stack suffix:
+## CALL_HANDLER IDENT FROM IDENT RBRACE
+## LR(1) items:
+toplevel -> CALL_HANDLER IDENT FROM IDENT RBRACE . list(expr) LBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On UPDATE shift to state 6
+-- On SUB shift to state 9
+-- On STRING shift to state 10
+-- On NEW_TEMPLATE shift to state 11
+-- On NEW_ENTITY shift to state 17
+-- On INT shift to state 20
+-- On IDENT shift to state 21
+-- On FLOAT shift to state 25
+-- On BOOL shift to state 26
+-- On vpath shift to state 27
+-- On literal shift to state 28
+-- On list(expr) shift to state 127
+-- On expr shift to state 82
+## Reductions:
+-- On LBRACE
+--   reduce production list(expr) ->
+
+State 127:
+## Known stack suffix:
+## CALL_HANDLER IDENT FROM IDENT RBRACE list(expr)
+## LR(1) items:
+toplevel -> CALL_HANDLER IDENT FROM IDENT RBRACE list(expr) . LBRACE [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+-- On LBRACE shift to state 128
+## Reductions:
+
+State 128:
+## Known stack suffix:
+## CALL_HANDLER IDENT FROM IDENT RBRACE list(expr) LBRACE
+## LR(1) items:
+toplevel -> CALL_HANDLER IDENT FROM IDENT RBRACE list(expr) LBRACE . [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+## Reductions:
+-- On TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER
+--   reduce production toplevel -> CALL_HANDLER IDENT FROM IDENT RBRACE list(expr) LBRACE
+
+State 129:
+## Known stack suffix:
+## toplevel
+## LR(1) items:
+list(toplevel) -> toplevel . list(toplevel) [ EOF ]
+## Transitions:
+-- On TEMPLATE shift to state 1
+-- On INTERFACE shift to state 52
+-- On EVENT_HANDLER shift to state 75
+-- On EVENT shift to state 86
+-- On ENTITY shift to state 107
+-- On DATA_SOURCE shift to state 117
+-- On CALL_HANDLER shift to state 122
+-- On toplevel shift to state 129
+-- On list(toplevel) shift to state 130
+-- On entity shift to state 131
+## Reductions:
+-- On EOF
+--   reduce production list(toplevel) ->
+
+State 130:
+## Known stack suffix:
+## toplevel list(toplevel)
+## LR(1) items:
+list(toplevel) -> toplevel list(toplevel) . [ EOF ]
+## Transitions:
+## Reductions:
+-- On EOF
+--   reduce production list(toplevel) -> toplevel list(toplevel)
+
+State 131:
+## Known stack suffix:
+## entity
+## LR(1) items:
+toplevel -> entity . [ TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER ]
+## Transitions:
+## Reductions:
+-- On TEMPLATE INTERFACE EVENT_HANDLER EVENT EOF ENTITY DATA_SOURCE CALL_HANDLER
+--   reduce production toplevel -> entity
+
+State 132:
+## Known stack suffix:
+## list(toplevel)
+## LR(1) items:
+document -> list(toplevel) . EOF [ # ]
+## Transitions:
+-- On EOF shift to state 133
+## Reductions:
+
+State 133:
+## Known stack suffix:
+## list(toplevel) EOF
+## LR(1) items:
+document -> list(toplevel) EOF . [ # ]
+## Transitions:
+## Reductions:
+-- On #
+--   reduce production document -> list(toplevel) EOF
+
+State 134:
+## Known stack suffix:
+## document
+## LR(1) items:
+document' -> document . [ # ]
+## Transitions:
+## Reductions:
+-- On #
+--   accept document
+

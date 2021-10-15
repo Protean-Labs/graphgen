@@ -1,0 +1,70 @@
+
+** Conflict (shift/reduce/reduce) in state 84.
+** Tokens involved: UPDATE SUB STRING NEW_TEMPLATE NEW_ENTITY LBRACE INT IDENT FLOAT BOOL ADD
+** The following explanations concentrate on token SUB.
+** This state is reached from document after reading:
+
+EVENT_HANDLER IDENT FROM IDENT RBRACE expr SUB expr
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+document 
+list(toplevel) EOF 
+toplevel list(toplevel) 
+EVENT_HANDLER IDENT FROM IDENT RBRACE list(expr) LBRACE 
+                                      (?)
+
+** In state 84, looking ahead at SUB, reducing production
+** expr -> SUB expr
+** is permitted because of the following sub-derivation:
+
+expr list(expr) 
+     expr list(expr) // lookahead token appears because list(expr) can begin with SUB
+     SUB expr . 
+
+** In state 84, looking ahead at SUB, shifting is permitted
+** because of the following sub-derivation:
+
+expr list(expr) 
+expr SUB expr 
+         expr . SUB expr 
+
+** In state 84, looking ahead at SUB, reducing production
+** expr -> expr SUB expr
+** is permitted because of the following sub-derivation:
+
+expr list(expr) // lookahead token appears because list(expr) can begin with SUB
+expr SUB expr . 
+
+** Conflict (shift/reduce) in state 21.
+** Token involved: IDENT
+** This state is reached from document after reading:
+
+TEMPLATE IDENT RBRACE IDENT EQUALS IDENT
+
+** The derivations that appear below have the following common factor:
+** (The question mark symbol (?) represents the spot where the derivations begin to differ.)
+
+document 
+list(toplevel) EOF 
+toplevel list(toplevel) 
+TEMPLATE IDENT RBRACE structure(EQUALS,expr) RBRACE 
+                      list(__anonymous_0(EQUALS,expr)) 
+                      (?)
+
+** In state 21, looking ahead at IDENT, shifting is permitted
+** because of the following sub-derivation:
+
+IDENT EQUALS expr list(__anonymous_0(EQUALS,expr)) 
+             vpath 
+             IDENT vpath 
+                   . IDENT DOT IDENT 
+
+** In state 21, looking ahead at IDENT, reducing production
+** vpath -> IDENT
+** is permitted because of the following sub-derivation:
+
+IDENT EQUALS expr list(__anonymous_0(EQUALS,expr)) // lookahead token appears because list(__anonymous_0(EQUALS,expr)) can begin with IDENT
+             vpath // lookahead token is inherited
+             IDENT . 

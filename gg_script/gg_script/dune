@@ -1,0 +1,7 @@
+(library
+ (name gg_script)
+ (libraries easy_logging rresult bos)
+ (preprocess (pps ppx_string)))
+
+(menhir (modules parser) (infer false))
+(ocamllex (modules lexer))
