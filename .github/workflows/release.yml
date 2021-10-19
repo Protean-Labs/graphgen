@@ -34,7 +34,9 @@ jobs:
             
             cd _release/
             npm pkg set name=@protean-labs/graphgen
-            npm version ${{ github.event.release.tag_name }}.
+            
+            if ${{ github.event.release.tag_name }}:
+              npm version ${{ github.event.release.tag_name }}
             
       - name: Cache release
         uses: actions/cache@v2
