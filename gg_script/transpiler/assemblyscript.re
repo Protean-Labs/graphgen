@@ -330,14 +330,21 @@ let transpile = ((document, db, env)) => {
     | NewEntity({name, id, values}) => 
       let model = model_of_new_entity(
         name, 
-        transpile_expr(db, env, id),
+        switch (Validate.tcheck_expr(db, env, id)) {
+        | TString => transpile_expr(db, env, id)
+        | _ => [%string "%{transpile_expr db env id}.toString()"]
+        },
         List.map(((name, expr)) => (name, transpile_expr(db, env, expr)), values)
       );
 
       Jg_template.from_string(new_entity_template, ~models=[("new_entity", model)])
 
     | UpdateEntity({name, id, values}) =>
-      let id_expr = transpile_expr(db, env, id);
+      let id_expr = 
+        switch (Validate.tcheck_expr(db, env, id)) {
+        | TString => transpile_expr(db, env, id)
+        | _ => [%string "%{transpile_expr db env id}.toString()"]
+        };
 
       let values = List.map((field_mod) =>
         switch (field_mod, Option.get @@ Option.map(Validate.typ_of_gql_type(db)) @@ List.assoc_opt(field_of_field_mod(field_mod), Database.entity(db, name).fields)) {

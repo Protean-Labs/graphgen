@@ -72,6 +72,18 @@ type action =
   //   value: expr
   });
 
+type event_handler_t = {
+  event: string,
+  source: string,
+  actions: list(action)
+};
+
+type call_handler_t = {
+  call: string,
+  source: string,
+  actions: list(action)
+};
+
 type toplevel =
   // Graphql 
   | Interface({
@@ -105,15 +117,8 @@ type toplevel =
     outputs: list((string, sol_type))
   })
   // Assemblyscript
-  | EventHandler({
-    event: string,
-    source: string,
-    actions: list(action)
-  })
-  | CallHandler({
-    call: string,
-    source: string,
-    actions: list(action)
+  | EventHandler(event_handler_t)
+  | CallHandler(call_handler_t);
   // })
   // // Actions to run on subgraph startup
   // | Init({
@@ -122,6 +127,6 @@ type toplevel =
   // | GlobalDef({
   //   name: string,
   //   value: expr
-  });
+  
 
 type document = list(toplevel);

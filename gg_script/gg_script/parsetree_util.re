@@ -204,9 +204,16 @@ let rec identifiers_of_expr = (expr) =>
   };
 
 let identifiers_of_action = (action) =>
-  List.flatten @@ List.map(
-    identifiers_of_expr,
-    exprs_of_action(action)
+  List.cons(
+    switch (action) {
+    | NewEntity({name, _})
+    | UpdateEntity({name, _})
+    | NewTemplate({name, _}) => name
+    },
+    List.flatten @@ List.map(
+      identifiers_of_expr,
+      exprs_of_action(action)
+    )
   );
 
 let identifiers_of_handler = (toplevel) =>
@@ -216,6 +223,34 @@ let identifiers_of_handler = (toplevel) =>
     List.flatten @@ List.map(identifiers_of_action, actions)
   | _ => []
   };
+
+let identifiers_of_source = (document, source_name) =>
+  List.sort_uniq(String.compare) @@ List.flatten @@ List.map((toplevel) =>
+    switch (toplevel) {
+    | EventHandler({source, _}) as handler
+    | CallHandler({source, _}) as handler when source == source_name => identifiers_of_handler(handler)
+    | _ => []
+    },
+    document
+  );
+
+let event_handlers_of_source = (document, source_name) => 
+  List.filter_map((toplevel) =>
+    switch (toplevel) {
+    | EventHandler({source, _} as handler_data) when source == source_name => Some(handler_data)
+    | _ => None
+    },
+    document
+  );
+
+let call_handlers_of_source = (document, source_name) => 
+  List.filter_map((toplevel) =>
+    switch (toplevel) {
+    | CallHandler({source, _} as handler_data) when source == source_name => Some(handler_data)
+    | _ => None
+    },
+    document
+  );
 
 // ================================================================
 // Filter Constructors

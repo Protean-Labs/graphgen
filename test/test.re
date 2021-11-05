@@ -5,7 +5,8 @@ Printexc.record_backtrace(true);
 let suite = test_list([
   Test_parser.suite,
   Test_schema.suite,
-  Test_assemblyscript.suite
+  Test_assemblyscript.suite,
+  Test_manifest.suite
 ]);
 
 let () = 

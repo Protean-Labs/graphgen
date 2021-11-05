@@ -25,6 +25,8 @@ type function_t = {
 };
 
 type contract_t = {
+  name: string,
+  abi_path: string,
   events: list((string, event_t)),
   calls: list((string, function_t)),
   functions: list((string, function_t))
@@ -48,7 +50,9 @@ type t = {
   templates: list((string, template_t))
 };
 
-let empty_contract = {
+let empty_contract = (name, abi_path) => {
+  name,
+  abi_path,
   events: [],
   calls: [],
   functions: []
@@ -62,7 +66,7 @@ let empty = {
   templates: []
 };
 
-let load_abi = (path) => {
+let load_abi = (name, path) => {
   // Parse ABI types
   let parse_sol_type = (source) => {
     let split_postfix = (base, s) => 
@@ -164,7 +168,7 @@ let load_abi = (path) => {
   
   Yojson.Basic.from_file(path)
   |> Yojson.Basic.Util.to_list
-  |> List.fold_left((acc, ele) => add_abi_element(acc, ele), empty_contract)
+  |> List.fold_left((acc, ele) => add_abi_element(acc, ele), empty_contract(name, path))
 };
 
 let make = (document) => {
@@ -178,7 +182,7 @@ let make = (document) => {
     | DataSource({name, abi, address, start_block}) => 
       switch (address, start_block, abi) {
       | (Literal(String(address) | Address(address)), Literal(Int(start_block)), Literal(String(path))) => 
-        let contract = load_abi(path);
+        let contract = load_abi(name, path);
         {
           ...db, 
           contracts: [(name, contract), ...db.contracts],
@@ -190,7 +194,7 @@ let make = (document) => {
     | Template({name, abi}) =>
       switch (abi) {
       | Literal(String(path)) => 
-        let contract = load_abi(path);
+        let contract = load_abi(name, path);
         {
           ...db,
           contracts: [(name, contract), ...db.contracts],
@@ -270,5 +274,5 @@ let type_of = (db, name) =>
   | (None, None, Some(_), _, _)       => `DataSource
   | (None, None, None, Some(_), _)    => `Template
   | (None, None, None, None, Some(_)) => `Contract
-  | (None, None, None, None, None)    => raise(Database_error([%string "database: %{name} not found"]))
+  | (None, None, None, None, None)    => `Unknown
   };

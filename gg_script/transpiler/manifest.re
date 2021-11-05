@@ -1,55 +1,112 @@
-// open Jingoo;
+open Jingoo;
 
-// open Gg_script.Parsetree;
+open Gg_script;
+open Database;
+open Parsetree;
+open Parsetree_util;
+
+let logger = Easy_logging.Logging.make_logger("Transpiler.Manifest", Debug, [Cli(Debug)]);
+
+let event_signature = (name, {params}) => 
+  String.concat(",") @@ List.map(((_, typ)) => 
+    string_of_sol_type(typ),
+    params
+  )
+  |> (params) => [%string "%{name}(%{params})"];
+
+let call_signature = (name, {inputs, _}) => 
+  String.concat(",") @@ List.map(((_, typ)) => 
+    string_of_sol_type(typ),
+    inputs
+  )
+  |> (inputs) => [%string "%{name}(%{inputs})"];
 
 let event_handlers_template = {|
       eventHandlers:
       {%- for event_handler in event_handlers %}
-        - event: {{ event_handler.event.signature }}
-          handler: handle{{ event_handler.event.name }}
+        - event: {{ event_handler.event_signature }}
+          handler: handle{{ event_handler.event_name }}
       {%- endfor -%}
-      {%- endif %}
 |};
+
+let model_of_event_handlers = (events) =>
+  Jg_types.(Tlist(
+    List.map(((name, event)) => 
+      Tobj([
+        ("event_name", Tstr(name)),
+        ("event_signature", Tstr(event_signature(name, event)))
+      ]),
+      events
+    )
+  ));
 
 let call_handlers_template = {|
       callHandlers:
       {%- for call_handler in call_handlers %}
-        - call: {{ call_handler.call_.signature }}
-          handler: handle{{ call_handler.call_.name }}
+        - call: {{ call_handler.call_signature }}
+          handler: handle{{ call_handler.call_name }}
       {%- endfor -%}
-      {%- endif %}
 |};
+
+let model_of_call_handlers = (calls) =>
+  Jg_types.(Tlist(
+    List.map(((name, call)) => 
+      Tobj([
+        ("call_name", Tstr(name)),
+        ("call_signature", Tstr(call_signature(name, call)))
+      ]),
+      calls
+    )
+  ));
 
 let mapping_template = {|
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.5
       language: wasm/assemblyscript
-      file: ./src/mappings/{{ mapping.contract.name }}.ts
+      file: ./src/mappings/{{ mapping.contract_name }}.ts
       entities:
-        - {{ mapping.contract.name }}
-        {%- for entity in mapping.relatedEntities %}
-        - {{ entity.name }}
+        {%- for entity_name in mapping.entities %}
+        - {{ entity_name }}
         {%- endfor %}
       abis:
-        - name: {{ mapping.contract.name }}
-          file: ./abis/{{ mapping.contract.name }}.json{% for contract in mapping.relatedContracts %}
-        - name: {{ contract.name }}
-          file: ./abis/{{ contract.name }}.json{% endfor %}
-      {{ mapping.event_handlers_block }}
-      {{ mapping.call_handlers_block }}
+        - name: {{ mapping.contract_name }}
+          file: ./abis/{{ mapping.contract_name }}.json{% for contract_name in mapping.contracts %}
+        - name: {{ contract_name }}
+          file: ./abis/{{ contract_name }}.json{% endfor -%}
 |};
+
+let model_of_mapping = (source, entities, contracts) =>
+  Jg_types.(Tobj([
+    ("contract_name", Tstr(source)),
+    ("entities", Tlist(
+      List.map((entity) => Tstr(entity), entities)
+    )),
+    ("contracts", Tlist(
+      List.map((contract) => Tstr(contract), contracts)
+    ))
+  ]));
 
 let data_source_template = {|
   - kind: ethereum/contract
     name: {{ data_source.name }}
     network: {{ data_source.network }}
     source:
-      address: {{ data_source.address }}
+      address: '{{ data_source.address }}'
       abi: {{ data_source.contract.abi }}
-      startBlock: {{ data_source.start_block }}
-    {{ data_source.mapping_block }}
+      startBlock: {{ data_source.start_block }}{% -%}
 |};
+
+let model_of_data_source = (name, network, address, abi, start_block) =>
+  Jg_types.(Tobj([
+    ("name", Tstr(name)),
+    ("network", Tstr(network)),
+    ("address", Tstr(address)),
+    ("contract", Tobj([
+      ("abi", Tstr(abi)),
+    ])),
+    ("start_block", Tstr(start_block))
+  ]));
 
 let template_template = {|
   - kind: ethereum/contract
@@ -57,5 +114,91 @@ let template_template = {|
     network: {{ template.network }}
     source:
       abi: {{ template.contract.name }}
-    {{ template.mapping_block }}
 |};
+
+let model_of_template = (name, network, abi) =>
+  Jg_types.(Tobj([
+    ("name", Tstr(name)),
+    ("network", Tstr(network)),
+    ("abi", Tstr(abi)),
+  ]));
+
+// data_source or template
+// mapping
+// event_handlers
+// call_handlers
+
+let transpile = ((document, db, _)) => {
+  // DataSources
+  let data_sources = 
+    List.map(
+      ((name, data_source: data_source_t)) => 
+        [
+          // DataSource
+          Option.some @@ {
+            model_of_data_source(name, "mainnet", data_source.address, data_source.contract.name, data_source.start_block)
+            |> (model) => Jg_template.from_string(data_source_template, ~models=[("data_source", model)])
+          },
+
+          // Mapping
+          Option.some @@ {
+            identifiers_of_source(document, name) |> (idents) => {
+              let entities = 
+                List.filter((ident) => switch (Database.type_of(db, ident)) { | `Entity => true | _ => false }, idents)
+
+              // logger#debug("DataSource %s entities: %s", name, String.concat(", ", entities));
+
+              let contracts = 
+                List.filter((ident) => switch (Database.type_of(db, ident)) { | `Contract | `DataSource | `Template => true | _ => false }, idents)
+
+              // logger#debug("DataSource %s contracts: %s", name, String.concat(", ", contracts));
+
+              model_of_mapping(name, entities, contracts)
+              |> (model) => Jg_template.from_string(mapping_template, ~models=[("mapping", model)])
+            }
+          },
+
+          // Event handlers
+          switch (event_handlers_of_source(document, name)) {
+          | [] => None
+          | events => 
+            List.map(({event, _}) =>
+              (event, List.assoc(event, data_source.contract.events)),
+              events
+            )
+            |> model_of_event_handlers
+            |> (model) => Jg_template.from_string(event_handlers_template, ~models=[("event_handlers", model)])
+            |> Option.some
+          },
+
+          // Call handlers
+          switch (call_handlers_of_source(document, name)) {
+          | [] => None
+          | calls => 
+            List.map(({call, _}) =>
+              (call, List.assoc(call, data_source.contract.calls)),
+              calls
+            )
+            |> model_of_call_handlers
+            |> (model) => Jg_template.from_string(call_handlers_template, ~models=[("call_handlers", model)])
+            |> Option.some
+          },
+        ]
+        |> List.filter_map(s => s)
+        |> String.concat(""),
+      db.data_sources
+    );
+
+  [%string {|dataSources:%{String.concat "\n" data_sources}|}];
+};
+
+let test = () => {
+  open Rresult;
+
+  R.get_ok @@ {
+    File.read(Fpath.v("test/gravatar.gg")) >>= (gg_src) =>
+    Gg_script.parse(gg_src) >>| (ast) =>
+    Validate.tcheck(ast)    |> (document) =>
+    print_endline @@ transpile(document)
+  }
+};

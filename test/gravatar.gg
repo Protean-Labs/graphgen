@@ -1,0 +1,29 @@
+entity Gravatar {
+  id: ID!
+  owner: Bytes!
+  displayName: String!
+  imageUrl: String!
+}
+
+data_source GravatarRegistry {
+  name = "GravatarRegistry"
+  addr = 0x2E645469f354BB4F5c8a05B3b30A929361cf77eC
+  start_block = 1000923
+  abi = "test/Gravity.json"
+}
+
+event_handler GravatarRegistry.NewGravatar {
+  new_entity Gravatar[event_.params.id] {
+    owner = event_.params.owner
+    displayName = event_.params.displayName
+    imageUrl = event_.params.imageUrl
+  }
+}
+
+event_handler GravatarRegistry.UpdatedGravatar {
+  update Gravatar[event_.params.id] {
+    owner = event_.params.owner
+    displayName = event_.params.displayName 
+    imageUrl = event_.params.imageUrl
+  }
+}

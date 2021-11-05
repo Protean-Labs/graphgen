@@ -33,7 +33,7 @@ import * as Templates from '../types/templates'
 import * as Source from '../types/GravatarRegistry/GravatarRegistry'
 
 export function handleNewGravatar(event: Source.NewGravatar): void {
-  let entity = new Gravatar(event.params.id)
+  let entity = new Gravatar(event.params.id.toString())
   entity.owner = event.params.owner
   entity.displayName = event.params.displayName
   entity.imageUrl = event.params.imageUrl
@@ -69,7 +69,7 @@ import * as Templates from '../types/templates'
 import * as Source from '../types/GravatarRegistry/GravatarRegistry'
 
 export function handleUpdatedGravatar(event: Source.UpdatedGravatar): void {
-  let entity = Gravatar.load(event.params.id)
+  let entity = Gravatar.load(event.params.id.toString())
   entity.owner = event.params.owner
   entity.displayName = event.params.displayName
   entity.imageUrl = event.params.imageUrl
@@ -107,7 +107,7 @@ import * as Templates from '../types/templates'
 import * as Source from '../types/GravatarRegistry/GravatarRegistry'
 
 export function handleUpdatedGravatar(event: Source.UpdatedGravatar): void {
-  let entity = Gravatar.load(event.params.id)
+  let entity = Gravatar.load(event.params.id.toString())
   entity.owner = event.params.owner
   entity.displayName = event.params.displayName
   entity.imageUrl = event.params.imageUrl

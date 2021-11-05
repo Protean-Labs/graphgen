@@ -1,6 +1,6 @@
 open Jingoo;
 
-open Gg_script.Parsetree;
+open Gg_script.Parsetree_util;
 
 let interface_template = {|
 interface {{ interface.name }} {
@@ -9,27 +9,6 @@ interface {{ interface.name }} {
   {%- endfor %}
 }
 |};
-
-let entity_template = {|
-type {{ entity.name }}{% if entity.interface != None %} implements {{ entity.interface }}{% endif %} @entity {
-  {%- for field in entity.fields %}
-  {{ field.name }}: {{ field.type }}
-  {%- endfor %}
-}
-|};
-
-let rec string_of_gql_type = fun
-  | GQLId                 => "ID"
-  | GQLBytes              => "Bytes"
-  | GQLString             => "String"
-  | GQLInt                => "Int"
-  | GQLBigInt             => "BigInt"
-  | GQLFloat              => "Float"
-  | GQLBigDecimal         => "BigDecimal"
-  | GQLBoolean            => "Boolean"
-  | GQLList(gql_type)     => [%string "[%{string_of_gql_type gql_type}]"]
-  | GQLNonNull(gql_type)  => [%string "%{string_of_gql_type gql_type}!"]
-  | GQLObject(name)       => name;
 
 let model_of_interface = (name, fields) =>
   Jg_types.Tobj([
@@ -42,6 +21,14 @@ let model_of_interface = (name, fields) =>
       fields
     )))
   ]);
+
+let entity_template = {|
+type {{ entity.name }}{% if entity.interface != None %} implements {{ entity.interface }}{% endif %} @entity {
+  {%- for field in entity.fields %}
+  {{ field.name }}: {{ field.type }}
+  {%- endfor %}
+}
+|};
 
 let model_of_entity = (name, fields, interface) =>
   Jg_types.Tobj([
