@@ -1,4 +1,4 @@
 (library
  (name transpiler)
- (libraries gg_script easy_logging rresult bos)
+ (libraries gg_script easy_logging rresult bos jingoo)
  (preprocess (pps ppx_string)))

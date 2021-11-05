@@ -50,9 +50,15 @@
 %token LPAREN
 %token RPAREN
 %token DOT
+%token COMMA
 %token COLON
 %token EQUALS
 %token BANG
+
+%token PLUSPLUS
+%token MINUSMINUS
+%token PLUSEQ
+%token MINUSEQ
 
 %token ADD SUB
 %token MUL DIV
@@ -66,6 +72,7 @@
 %token CALL_HANDLER
 %token FROM
 %token EVENT
+%token INDEXED
 %token CALL
 
 %token NEW_ENTITY
@@ -99,7 +106,10 @@
 %left MUL DIV
 
 %start <Parsetree.toplevel list> document
+%start <Parsetree.sol_type> solidity_type
 %%
+
+solidity_type: sol_type EOF { $1 }
 
 document: list(toplevel) EOF { $1 }
 
@@ -114,13 +124,13 @@ toplevel:
   | TEMPLATE id = IDENT LBRACE params = structure(EQUALS, expr) RBRACE
     { fmt_template id params }
 
-  | EVENT_HANDLER eid = IDENT FROM sid = IDENT LBRACE actions = list(action) RBRACE
+  | EVENT_HANDLER sid = IDENT DOT eid = IDENT LBRACE actions = list(action) RBRACE
     { EventHandler {event=eid; source=sid; actions} }
-  | CALL_HANDLER cid = IDENT FROM sid = IDENT LBRACE actions = list(action) RBRACE
+  | CALL_HANDLER sid = IDENT DOT cid = IDENT LBRACE actions = list(action) RBRACE
     { CallHandler {call=cid; source=sid; actions} }
 
-  | EVENT id = IDENT LBRACE fields = structure(COLON, sol_type) RBRACE 
-    { Event {name=id; fields } }
+  | EVENT id = IDENT LBRACE params = structure(COLON, sol_type) RBRACE 
+    { Event {name=id; params } }
   // | CALL id = IDENT LBRACE fields = structure(COLON, sol_type) RBRACE 
   //   { Event {name=id; fields } }
 
@@ -131,24 +141,27 @@ entity:
     { Entity {name=id; interface=Some(intf); fields } }
 
 action:
-  | NEW_ENTITY name = IDENT LPAREN id = expr RPAREN 
+  | NEW_ENTITY name = IDENT LBRACK id = expr RBRACK 
     LBRACE values = structure(EQUALS, expr) RBRACE
     { NewEntity {name; id; values} }
-  | UPDATE name = IDENT LPAREN id = expr RPAREN 
-    LBRACE values = structure(EQUALS, expr) RBRACE
+  | UPDATE name = IDENT LBRACK id = expr RBRACK 
+    LBRACE values = list(field_mod) RBRACE
     { UpdateEntity {name; id; values} }
   | NEW_TEMPLATE name = IDENT 
     LBRACE params = structure(EQUALS, expr) RBRACE
     { fmt_new_template name params }
 
 expr:
-  | SUB e = expr                  { Neg e }
-  | e1 = expr ADD e2 = expr       { Add (e1, e2) }
-  | e1 = expr SUB e2 = expr       { Sub (e1, e2) }
-  | e1 = expr MUL e2 = expr       { Mul (e1, e2) }
-  | e1 = expr DIV e2 = expr       { Div (e1, e2) }
-  | id = vpath                    { id }
-  | lit = literal                 { Literal lit }
+  | SUB e = expr                      { Neg e }
+  | e1 = expr ADD e2 = expr           { Add (e1, e2) }
+  | e1 = expr SUB e2 = expr           { Sub (e1, e2) }
+  | e1 = expr MUL e2 = expr           { Mul (e1, e2) }
+  | e1 = expr DIV e2 = expr           { Div (e1, e2) }
+  | id = vpath                        { id }
+  | lit = literal                     { Literal lit }
+  | e1 = expr LBRACK e2 = expr RBRACK { Index (e1, e2) }
+  | e1 = expr LPAREN args = separated_list(COMMA, expr) RPAREN
+    { Apply (e1, args) }
 
 literal:
   | v = ADDRESS  { Address v }
@@ -161,7 +174,7 @@ vpath:
   | path = separated_nonempty_list(DOT, IDENT)
     {
       match List.rev path with
-      | ident::rest -> Variable (rest, ident)
+      | ident::rest -> Variable (List.rev rest, ident)
       | _ -> raise(Parsing_error("empty vpath"))
     }
   // | id1 = IDENT DOT id2 = IDENT       { Variable ([id1], id2) }
@@ -172,8 +185,19 @@ structure(separator, rhs):
   | elements = list(name = IDENT separator rhs = rhs { (name, rhs) }) 
     { elements }
 
+field_mod:
+  | name = IDENT PLUSPLUS   { Increment name }
+  | name = IDENT MINUSMINUS { Decrement name }
+  | name = IDENT PLUSEQ e = expr
+    { PlusEq (name, e) }
+  | name = IDENT MINUSEQ e = expr
+    { MinusEq (name, e) }
+  | name = IDENT EQUALS e = expr
+    { Assign (name, e) }
+
 sol_type:
-  | typ = sol_type LBRACE RBRACK  { SOLArray typ}
+  | typ = sol_type LBRACK RBRACK  { SOLArray typ}
+  | INDEXED typ = sol_type        { SOLIndexed typ }
   | SOL_ADDRESS                   { SOLAddress }
   | SOL_BOOL                      { SOLBool }
   | SOL_STRING                    { SOLString }

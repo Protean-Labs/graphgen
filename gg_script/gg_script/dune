@@ -1,6 +1,6 @@
 (library
  (name gg_script)
- (libraries easy_logging rresult bos)
+ (libraries easy_logging yojson rresult bos)
  (preprocess (pps ppx_string)))
 
 (menhir (modules parser) (infer false))

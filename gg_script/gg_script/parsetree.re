@@ -21,14 +21,18 @@ type sol_type =
   | SOLFbytes(int)
   | SOLInt(int)
   | SOLUint(int)
-  | SOLArray(sol_type);
+  | SOLArray(sol_type)
+  | SOLIndexed(sol_type);
 
 type literal = 
-  | Int(int)
-  | Float(float)
-  | Address(string)
   | String(string)
-  | Bool(bool);
+  | Bytes(string)
+  | Int(int)
+  | BigInt(string)
+  | Float(float)
+  | BigDecimal(string)
+  | Bool(bool)
+  | Address(string);
 
 type expr = 
   | Neg(expr)
@@ -38,6 +42,17 @@ type expr =
   | Div(expr, expr)
   | Variable(list(string), string)
   | Literal(literal)
+  | Index(expr, expr)         // e1[e2]
+  | Apply(expr, list(expr));
+
+type field_mod = 
+  | Increment(string)
+  | Decrement(string)
+  | PlusEq(string, expr)
+  | MinusEq(string, expr)
+  | Assign(string, expr);
+
+type action = 
   | NewEntity({
     name: string,
     id: expr,
@@ -46,11 +61,15 @@ type expr =
   | UpdateEntity({
     name: string,
     id: expr,
-    values: list((string, expr))
+    values: list(field_mod)
   })
   | NewTemplate({
     name: string,
     address: expr
+  // })
+  // | Def({
+  //   name: string,
+  //   value: expr
   });
 
 type toplevel =
@@ -78,7 +97,7 @@ type toplevel =
   // Solidity
   | Event({
     name: string,
-    fields: list((string, sol_type))
+    params: list((string, sol_type))
   })
   | Call({
     name: string,
@@ -89,10 +108,20 @@ type toplevel =
   | EventHandler({
     event: string,
     source: string,
-    actions: list(expr)
+    actions: list(action)
   })
   | CallHandler({
     call: string,
     source: string,
-    actions: list(expr)
+    actions: list(action)
+  // })
+  // // Actions to run on subgraph startup
+  // | Init({
+  //   actions: list(action)
+  // })
+  // | GlobalDef({
+  //   name: string,
+  //   value: expr
   });
+
+type document = list(toplevel);

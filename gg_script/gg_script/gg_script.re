@@ -4,6 +4,10 @@ module File = Bos.OS.File;
 module Dir = Bos.OS.Dir;
 
 module Parsetree = Parsetree;
+module Parsetree_util = Parsetree_util
+module Typetree = Typetree;
+module Validate = Validate;
+module Database = Database;
 
 exception Runtime_error(string);
 

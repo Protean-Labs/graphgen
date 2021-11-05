@@ -1,0 +1,4 @@
+(test
+ (name test)
+ (libraries gg_script transpiler easy_logging rresult ounit2)
+ (preprocess (pps ppx_string)))

@@ -45,9 +45,15 @@ rule token = parse
 | "("               { LPAREN }
 | ")"               { RPAREN }
 | "."               { DOT }
+| ","               { COMMA }
 | ":"               { COLON }
 | "="               { EQUALS }
 | "!"               { BANG }
+
+| "++"              { PLUSPLUS }
+| "--"              { MINUSMINUS }
+| "+="              { PLUSEQ }
+| "-="              { MINUSEQ }
 
 | "+"               { ADD }
 | "-"               { SUB }
@@ -66,10 +72,11 @@ rule token = parse
 (* Typescript *)
 | "event_handler"   { EVENT_HANDLER }
 | "call_handler"    { CALL_HANDLER }
-| "from"            { FROM }
+(* | "from"            { FROM } *)
 
 (* Solidity *)
 | "event"           { EVENT }
+| "indexed"         { INDEXED }
 | "call"            { CALL }
 
 (* Actions *)
