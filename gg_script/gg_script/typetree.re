@@ -20,7 +20,7 @@ type typ =
     fields: list((string, typ))
   })
   | TIndexable({
-    typ: [`Contract | `Entity],
+    typ: [`ABI | `Entity],
     fields: list((string, typ))
   })
   | TFun({

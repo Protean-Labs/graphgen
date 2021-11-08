@@ -288,16 +288,15 @@ let transpile = ((document, db, env)) => {
     switch (toplevel) {
     | Interface(_)
     | Entity(_)
+    | ABI(_)
     | DataSource(_)
-    | Template(_)
-    | Event(_)
-    | Call(_) => None
+    | Template(_) => None
 
     | EventHandler({event, source, actions}) =>
       switch Database.(data_source_opt(db, source), template_opt(db, source)) {
-      | (Some({contract, _}), _)
-      | (None, Some({contract})) =>
-        let {params} = List.assoc(event, contract.events);
+      | (Some({abi, _}), _)
+      | (None, Some({abi})) =>
+        let {params} = List.assoc(event, Database.abi(db, abi).events);
 
         let model = model_of_event_handler(
           event,
@@ -311,9 +310,9 @@ let transpile = ((document, db, env)) => {
 
     | CallHandler({call, source, actions}) => 
       switch Database.(data_source_opt(db, source), template_opt(db, source)) {
-      | (Some({contract, _}), _)
-      | (None, Some({contract})) =>
-        let {inputs, outputs} = List.assoc(call, contract.calls);
+      | (Some({abi, _}), _)
+      | (None, Some({abi})) =>
+        let {inputs, outputs} = List.assoc(call, Database.abi(db, abi).calls);
 
         let model = model_of_event_handler(
           call,
@@ -442,7 +441,7 @@ let transpile = ((document, db, env)) => {
 
       switch (Validate.tcheck_expr(db, env, e1)) {
       | TIndexable({typ: `Entity, _}) => [%string "%{e1_str}.load(%{e2_str})"]
-      | TIndexable({typ: `Contract, _}) => [%string "%{e1_str}.bind(%{e2_str})"]
+      | TIndexable({typ: `ABI, _}) => [%string "%{e1_str}.bind(%{e2_str})"]
       | _ => raise(Runtime_error("transpile_expr: index expression not indexable"))
       }
       

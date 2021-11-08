@@ -95,27 +95,25 @@ type toplevel =
     interface: option(string),
     fields: list((string, gql_type))
   })
+  
   // Manifest
   | DataSource({
     name: string,
+    abi: string,
     address: expr,
     start_block: expr,
-    abi: expr
   })
   | Template({
     name: string,
-    abi: expr
+    abi: string
   })
+
   // Solidity
-  | Event({
-    name: string,
-    params: list((string, sol_type))
+  | ABI({
+    name: string, 
+    file: expr
   })
-  | Call({
-    name: string,
-    inputs: list((string, sol_type)),
-    outputs: list((string, sol_type))
-  })
+
   // Assemblyscript
   | EventHandler(event_handler_t)
   | CallHandler(call_handler_t);

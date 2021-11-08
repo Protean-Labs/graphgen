@@ -1,4 +1,5 @@
 open Parsetree;
+open Parsetree_util;
 open Typetree;
 
 let logger = Easy_logging.Logging.make_logger("Database", Debug, [Cli(Debug)]);
@@ -24,7 +25,7 @@ type function_t = {
   outputs: list((string, sol_type))
 };
 
-type contract_t = {
+type abi_t = {
   name: string,
   abi_path: string,
   events: list((string, event_t)),
@@ -35,17 +36,17 @@ type contract_t = {
 type data_source_t = {
   address: string,
   start_block: string,
-  contract: contract_t
+  abi: string
 };
 
 type template_t = {
-  contract: contract_t
+  abi: string
 };
 
 type t = {
   interfaces: list((string, interface_t)),
   entities: list((string, entity_t)),
-  contracts: list((string, contract_t)),
+  abis: list((string, abi_t)),
   data_sources: list((string, data_source_t)),
   templates: list((string, template_t))
 };
@@ -61,7 +62,7 @@ let empty_contract = (name, abi_path) => {
 let empty = {
   interfaces: [],
   entities: [],
-  contracts: [],
+  abis: [],
   data_sources: [],
   templates: []
 };
@@ -165,7 +166,7 @@ let load_abi = (name, path) => {
     | _ => raise(ABI_error("abi element"))
     };
   
-  
+
   Yojson.Basic.from_file(path)
   |> Yojson.Basic.Util.to_list
   |> List.fold_left((acc, ele) => add_abi_element(acc, ele), empty_contract(name, path))
@@ -180,27 +181,24 @@ let make = (document) => {
       {...db, entities: [(name, {interface, fields: List.map(((name, typ)) => (name, typ), fields)}), ...db.entities]}
 
     | DataSource({name, abi, address, start_block}) => 
-      switch (address, start_block, abi) {
-      | (Literal(String(address) | Address(address)), Literal(Int(start_block)), Literal(String(path))) => 
-        let contract = load_abi(name, path);
-        {
-          ...db, 
-          contracts: [(name, contract), ...db.contracts],
-          data_sources: [(name, {address, start_block: string_of_int(start_block), contract}), ...db.data_sources],
+      try (
+        {...db, data_sources: [(name, 
+          {
+            address: lit_to_string(address), start_block: string_of_int(lit_to_int(start_block)), abi
+          }), ...db.data_sources],
         }
-      | _ => raise(Database_error("data_source: abi path is not a string literal"))
+      ) {
+      | _ => raise(Database_error("data_source: address is not a string or address literal"))
       }
 
     | Template({name, abi}) =>
-      switch (abi) {
-      | Literal(String(path)) => 
-        let contract = load_abi(name, path);
-        {
-          ...db,
-          contracts: [(name, contract), ...db.contracts],
-          templates: [(name, {contract: contract}), ...db.templates],
-        }
-      | _ => raise(Database_error("template: abi path is not a string"))
+      {...db, templates: [(name, {abi: abi}), ...db.templates]}
+
+    | ABI({name, file}) => 
+      try (
+        {...db, abis: [(name, load_abi(name, lit_to_string(file))), ...db.abis]}
+      ) {
+      | _ => raise(Database_error("contract: abi path is not a string literal"))
       }
 
     // | Event({name, params}) =>
@@ -210,7 +208,6 @@ let make = (document) => {
     // Skip handlers as we want to build the environment before type checking them
     | EventHandler(_)
     | CallHandler(_) => db
-    | _ => db
     };
 
   List.fold_left((acc, toplevel) => update_db(acc, toplevel), empty, document);
@@ -234,14 +231,14 @@ let entity = ({entities, _}, name) =>
 let entity_opt = ({entities, _}, name) => 
   List.assoc_opt(name, entities);
 
-let contract = ({contracts, _}, name) =>
-  switch (List.assoc_opt(name, contracts)) {
-  | Some(contract) => contract
-  | None => raise(Database_error([%string "contract %{name} not found"]))
+let abi = ({abis, _}, name) =>
+  switch (List.assoc_opt(name, abis)) {
+  | Some(abi) => abi
+  | None => raise(Database_error([%string "abi %{name} not found"]))
   };
 
-let contract_opt = ({contracts, _}, name) => 
-  List.assoc_opt(name, contracts);
+let abi_opt = ({abis, _}, name) => 
+  List.assoc_opt(name, abis);
 
 let data_source = ({data_sources, _}, name) =>
   switch (List.assoc_opt(name, data_sources)) {
@@ -267,12 +264,12 @@ let type_of = (db, name) =>
     entity_opt(db, name),
     data_source_opt(db, name),
     template_opt(db, name),
-    contract_opt(db, name)
+    abi_opt(db, name)
   ) {
   | (Some(_), _, _, _, _)             => `Interface
   | (None, Some(_), _, _, _)          => `Entity
   | (None, None, Some(_), _, _)       => `DataSource
   | (None, None, None, Some(_), _)    => `Template
-  | (None, None, None, None, Some(_)) => `Contract
+  | (None, None, None, None, Some(_)) => `ABI
   | (None, None, None, None, None)    => `Unknown
   };

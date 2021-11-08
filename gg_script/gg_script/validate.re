@@ -184,37 +184,37 @@ let env_of_db = (db) =>
       [], 
       db.entities
     )
-    |> List.fold_left((acc, (name, {contract: {functions, _}, _}: Database.data_source_t)) => 
+    |> List.fold_left((acc, (name, {abi, _}: Database.data_source_t)) => 
       [(name, TStruct({
         fields: List.map(((name, {inputs, outputs})) => (name, TFun({
           inputs: List.map(((_, typ)) => typ_of_sol_type(typ), inputs), 
           outputs: List.map(((_, typ)) => typ_of_sol_type(typ), outputs)
-        })), functions)
+        })), Database.abi(db, abi).functions)
       })), ...acc], 
       _, 
       db.data_sources
     )
-    |> List.fold_left((acc, (name, {contract: {functions, _}}: Database.template_t)) => 
+    |> List.fold_left((acc, (name, {abi}: Database.template_t)) => 
       [(name, TIndexable({
-        typ: `Contract, 
+        typ: `ABI, 
         fields: List.map(((name, {inputs, outputs})) => (name, TFun({
           inputs: List.map(((_, typ)) => typ_of_sol_type(typ), inputs), 
           outputs: List.map(((_, typ)) => typ_of_sol_type(typ), outputs)
-        })), functions)
+        })), Database.abi(db, abi).functions)
       })), ...acc], 
       _, 
       db.templates
     )
     |> List.fold_left((acc, (name, {functions, _})) => 
       [(name, TIndexable({
-        typ: `Contract,
+        typ: `ABI,
         fields: List.map(((name, {inputs, outputs})) => (name, TFun({
           inputs: List.map(((_, typ)) => typ_of_sol_type(typ), inputs), 
           outputs: List.map(((_, typ)) => typ_of_sol_type(typ), outputs)
         })), functions)
       })), ...acc], 
       _, 
-      db.contracts
+      db.abis
     )
   );
 
@@ -261,16 +261,25 @@ let tcheck = (document) => {
     switch (toplevel) {
     | Interface(_)
     | Entity(_)
-    | DataSource(_)
-    | Template(_)
-    | Event(_)
-    | Call(_) => ()
+    | ABI(_) => ()
+
+    | DataSource({name, abi, _}) =>
+      switch (Database.abi_opt(db, abi)) {
+      | Some(_) => ()
+      | None => raise(Type_error([%string "data_source %{name}: abi %{abi} not found!"]))
+      }
+
+    | Template({name, abi, _}) => 
+      switch (Database.abi_opt(db, abi)) {
+      | Some(_) => ()
+      | None => raise(Type_error([%string "template %{name}: abi %{abi} not found!"]))
+      }
 
     | EventHandler({event, source, actions}) =>
       switch Database.(data_source_opt(db, source), template_opt(db, source)) {
-      | (Some({contract, _}), _)
-      | (None, Some({contract})) =>
-        switch (List.assoc_opt(event, contract.events)) {
+      | (Some({abi, _}), _)
+      | (None, Some({abi})) =>
+        switch (List.assoc_opt(event, Database.abi(db, abi).events)) {
         | Some({params}) => 
           List.iter(tcheck_action(db, [("event_", struct_of_abi_event(params)), ...env]), actions)
         | None => raise(Type_error([%string "event_handler: event %{event} missing in %{source} ABI"]))
@@ -280,9 +289,9 @@ let tcheck = (document) => {
 
     | CallHandler({call, source, actions}) => 
       switch Database.(data_source_opt(db, source), template_opt(db, source)) {
-      | (Some({contract, _}), _)
-      | (None, Some({contract})) =>
-        switch (List.assoc_opt(call, contract.calls)) {
+      | (Some({abi, _}), _)
+      | (None, Some({abi})) =>
+        switch (List.assoc_opt(call, Database.abi(db, abi).calls)) {
         | Some({inputs, outputs}) => 
           List.iter(tcheck_action(db, [("call_", struct_of_abi_call(inputs, outputs)), ...env]), actions)
         | None => raise(Type_error([%string "call_handler: function %{call} missing in %{source} ABI"]))

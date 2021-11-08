@@ -12,25 +12,29 @@ let test_cases =
       ("displayName", GQLNonNull(GQLString)),
       ("imageUrl", GQLNonNull(GQLString)),
     ]),
-    mk_data_source(
-      "GravatarRegistry", 
-      "0x2E645469f354BB4F5c8a05B3b30A929361cf77eC", 
-      1000923, 
-      [%string {|%{Sys.getenv "TEST_DIR"}/Gravity.json|}]
+    mk_abi(
+      "GravatarRegistry",
+      [%string {|%{Sys.getenv "TEST_DIR"}/GravatarRegistry.json|}]
     ),
-    mk_event_handler("NewGravatar", "GravatarRegistry", [
+    mk_data_source(
+      "Gravity", 
+      "GravatarRegistry",
+      "0x2E645469f354BB4F5c8a05B3b30A929361cf77eC", 
+      1000923
+    ),
+    mk_event_handler("NewGravatar", "Gravity", [
       mk_new_entity("Gravatar", mk_var(~path=["event_", "params"], "id"), [
         ("owner", mk_var(~path=["event_", "params"], "owner")),
         ("displayName", mk_var(~path=["event_", "params"], "displayName")),
         ("imageUrl", mk_var(~path=["event_", "params"], "imageUrl")),
       ])
     ])
-  ], [("GravatarRegistry", {|
+  ], [("Gravity", {|
 import { Bytes, BigInt, Address } from '@graphprotocol/graph-ts'
 import { BigIntZero, BigIntOne, BigDecimalZero, BigDecimalOne } from '../util'
 import * as Schema from '../types/schema'
 import * as Templates from '../types/templates'
-import * as Source from '../types/GravatarRegistry/GravatarRegistry'
+import * as Source from '../types/Gravity/Gravity'
 
 export function handleNewGravatar(event: Source.NewGravatar): void {
   let entity = new Gravatar(event.params.id.toString())
@@ -48,25 +52,29 @@ export function handleNewGravatar(event: Source.NewGravatar): void {
       ("displayName", GQLNonNull(GQLString)),
       ("imageUrl", GQLNonNull(GQLString)),
     ]),
-    mk_data_source(
-      "GravatarRegistry", 
-      "0x2E645469f354BB4F5c8a05B3b30A929361cf77eC", 
-      1000923, 
-      [%string {|%{Sys.getenv "TEST_DIR"}/Gravity.json|}]
+    mk_abi(
+      "GravatarRegistry",
+      [%string {|%{Sys.getenv "TEST_DIR"}/GravatarRegistry.json|}]
     ),
-    mk_event_handler("UpdatedGravatar", "GravatarRegistry", [
+    mk_data_source(
+      "Gravity", 
+      "GravatarRegistry",
+      "0x2E645469f354BB4F5c8a05B3b30A929361cf77eC", 
+      1000923
+    ),
+    mk_event_handler("UpdatedGravatar", "Gravity", [
       mk_update_entity("Gravatar", mk_var(~path=["event_", "params"], "id"), [
         Assign("owner", mk_var(~path=["event_", "params"], "owner")),
         Assign("displayName", mk_var(~path=["event_", "params"], "displayName")),
         Assign("imageUrl", mk_var(~path=["event_", "params"], "imageUrl")),
       ])
     ])
-  ], [("GravatarRegistry", {|
+  ], [("Gravity", {|
 import { Bytes, BigInt, Address } from '@graphprotocol/graph-ts'
 import { BigIntZero, BigIntOne, BigDecimalZero, BigDecimalOne } from '../util'
 import * as Schema from '../types/schema'
 import * as Templates from '../types/templates'
-import * as Source from '../types/GravatarRegistry/GravatarRegistry'
+import * as Source from '../types/Gravity/Gravity'
 
 export function handleUpdatedGravatar(event: Source.UpdatedGravatar): void {
   let entity = Gravatar.load(event.params.id.toString())
@@ -85,13 +93,17 @@ export function handleUpdatedGravatar(event: Source.UpdatedGravatar): void {
       ("imageUrl", GQLNonNull(GQLString)),
       ("numUpdates", GQLNonNull(GQLBigInt))
     ]),
-    mk_data_source(
-      "GravatarRegistry", 
-      "0x2E645469f354BB4F5c8a05B3b30A929361cf77eC", 
-      1000923, 
-      [%string {|%{Sys.getenv "TEST_DIR"}/Gravity.json|}]
+    mk_abi(
+      "GravatarRegistry",
+      [%string {|%{Sys.getenv "TEST_DIR"}/GravatarRegistry.json|}]
     ),
-    mk_event_handler("UpdatedGravatar", "GravatarRegistry", [
+    mk_data_source(
+      "Gravity", 
+      "GravatarRegistry",
+      "0x2E645469f354BB4F5c8a05B3b30A929361cf77eC", 
+      1000923
+    ),
+    mk_event_handler("UpdatedGravatar", "Gravity", [
       mk_update_entity("Gravatar", mk_var(~path=["event_", "params"], "id"), [
         Assign("owner", mk_var(~path=["event_", "params"], "owner")),
         Assign("displayName", mk_var(~path=["event_", "params"], "displayName")),
@@ -99,12 +111,12 @@ export function handleUpdatedGravatar(event: Source.UpdatedGravatar): void {
         Increment("numUpdates")
       ])
     ])
-  ], [("GravatarRegistry", {|
+  ], [("Gravity", {|
 import { Bytes, BigInt, Address } from '@graphprotocol/graph-ts'
 import { BigIntZero, BigIntOne, BigDecimalZero, BigDecimalOne } from '../util'
 import * as Schema from '../types/schema'
 import * as Templates from '../types/templates'
-import * as Source from '../types/GravatarRegistry/GravatarRegistry'
+import * as Source from '../types/Gravity/Gravity'
 
 export function handleUpdatedGravatar(event: Source.UpdatedGravatar): void {
   let entity = Gravatar.load(event.params.id.toString())

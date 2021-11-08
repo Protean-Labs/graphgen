@@ -70,20 +70,20 @@ let mapping_template = {|
         - {{ entity_name }}
         {%- endfor %}
       abis:
-        - name: {{ mapping.contract_name }}
-          file: ./abis/{{ mapping.contract_name }}.json{% for contract_name in mapping.contracts %}
-        - name: {{ contract_name }}
-          file: ./abis/{{ contract_name }}.json{% endfor -%}
+        {%- for abi in mapping.abis %}
+        - name: {{ abi }}
+          file: ./abis/{{ abi }}.json
+        {%- endfor -%}
 |};
 
-let model_of_mapping = (source, entities, contracts) =>
+let model_of_mapping = (source, entities, abis) =>
   Jg_types.(Tobj([
     ("contract_name", Tstr(source)),
     ("entities", Tlist(
       List.map((entity) => Tstr(entity), entities)
     )),
-    ("contracts", Tlist(
-      List.map((contract) => Tstr(contract), contracts)
+    ("abis", Tlist(
+      List.map((abi) => Tstr(abi), abis)
     ))
   ]));
 
@@ -136,7 +136,7 @@ let transpile = ((document, db, _)) => {
         [
           // DataSource
           Option.some @@ {
-            model_of_data_source(name, "mainnet", data_source.address, data_source.contract.name, data_source.start_block)
+            model_of_data_source(name, "mainnet", data_source.address, Database.abi(db, data_source.abi).name, data_source.start_block)
             |> (model) => Jg_template.from_string(data_source_template, ~models=[("data_source", model)])
           },
 
@@ -148,12 +148,20 @@ let transpile = ((document, db, _)) => {
 
               // logger#debug("DataSource %s entities: %s", name, String.concat(", ", entities));
 
-              let contracts = 
-                List.filter((ident) => switch (Database.type_of(db, ident)) { | `Contract | `DataSource | `Template => true | _ => false }, idents)
+              let abis = 
+                List.filter_map((ident) => 
+                  switch (Database.type_of(db, ident)) { 
+                  | `ABI  => Some(name)
+                  | `DataSource => Some(Database.data_source(db, ident).abi)
+                  | `Template => Some(Database.template(db, ident).abi)
+                  | _ => None
+                  }, 
+                  idents
+                )
 
-              // logger#debug("DataSource %s contracts: %s", name, String.concat(", ", contracts));
+              // logger#debug("DataSource %s abis: %s", name, String.concat(", ", abis));
 
-              model_of_mapping(name, entities, contracts)
+              model_of_mapping(name, entities, [Database.data_source(db, name).abi, ...abis])
               |> (model) => Jg_template.from_string(mapping_template, ~models=[("mapping", model)])
             }
           },
@@ -163,7 +171,7 @@ let transpile = ((document, db, _)) => {
           | [] => None
           | events => 
             List.map(({event, _}) =>
-              (event, List.assoc(event, data_source.contract.events)),
+              (event, List.assoc(event, Database.abi(db, data_source.abi).events)),
               events
             )
             |> model_of_event_handlers
@@ -176,7 +184,7 @@ let transpile = ((document, db, _)) => {
           | [] => None
           | calls => 
             List.map(({call, _}) =>
-              (call, List.assoc(call, data_source.contract.calls)),
+              (call, List.assoc(call, Database.abi(db, data_source.abi).calls)),
               calls
             )
             |> model_of_call_handlers

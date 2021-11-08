@@ -31,18 +31,16 @@ entity Transaction {
   ]),
 
   ({|
-data_source GravatarRegistry {
-  name = "GravatarRegistry"
+data_source Gravity is GravatarRegistry {
   addr = 0x2E645469f354BB4F5c8a05B3b30A929361cf77eC
   start_block = 1000923
-  abi = "abis/Gravity.json"
 }
   |}, [
     DataSource({
-      name: "GravatarRegistry",
+      name: "Gravity",
+      abi: "GravatarRegistry",
       address: Literal(Address("0x2E645469f354BB4F5c8a05B3b30A929361cf77eC")),
       start_block: Literal(Int(1000923)),
-      abi: Literal(String("abis/Gravity.json"))
     })
   ]),
 

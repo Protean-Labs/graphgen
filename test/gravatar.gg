@@ -5,14 +5,16 @@ entity Gravatar {
   imageUrl: String!
 }
 
-data_source GravatarRegistry {
-  name = "GravatarRegistry"
-  addr = 0x2E645469f354BB4F5c8a05B3b30A929361cf77eC
-  start_block = 1000923
-  abi = "test/Gravity.json"
+abi GravatarRegistry {
+  file = "test/GravatarRegistry.json"
 }
 
-event_handler GravatarRegistry.NewGravatar {
+data_source Gravity is GravatarRegistry {
+  addr = 0x2E645469f354BB4F5c8a05B3b30A929361cf77eC
+  start_block = 1000923
+}
+
+event_handler Gravity.NewGravatar {
   new_entity Gravatar[event_.params.id] {
     owner = event_.params.owner
     displayName = event_.params.displayName
@@ -20,7 +22,7 @@ event_handler GravatarRegistry.NewGravatar {
   }
 }
 
-event_handler GravatarRegistry.UpdatedGravatar {
+event_handler Gravity.UpdatedGravatar {
   update Gravatar[event_.params.id] {
     owner = event_.params.owner
     displayName = event_.params.displayName 

@@ -100,11 +100,11 @@ let string_of_toplevel = (toplevel) =>
     let fields_str = String.concat("\n") @@ List.map(((name, typ)) => [%string "%{name}: %{string_of_gql_type typ}"], fields);
     [%string "Entity %{name} %{interface_str}{\n%{fields_str}\n}"]
 
-  | DataSource({name, address, start_block, abi}) =>
-    [%string "DataSource %{name} address: %{string_of_expr address}, start_block: %{string_of_expr start_block}, abi: %{string_of_expr abi}"]
+  | DataSource({name, abi, address, start_block}) =>
+    [%string "DataSource %{name} abi: %{abi} address: %{string_of_expr address}, start_block: %{string_of_expr start_block}"]
 
   | Template({name, abi}) =>
-    [%string "Template %{name} abi: %{string_of_expr abi}"]
+    [%string "Template %{name} abi: %{abi}"]
 
   | EventHandler({event, source, actions}) =>
     let actions_str = String.concat("\n") @@ List.map(string_of_action, actions);
@@ -131,11 +131,14 @@ let mk_interface = (name, fields) =>
 let mk_entity = (~interface=?, name, fields) =>
   Entity({name, interface, fields});
 
-let mk_data_source = (name, address, start_block, abi) =>
-  DataSource({name, address: Literal(Address(address)), start_block: Literal(Int(start_block)), abi: Literal(String(abi))});
+let mk_abi = (name, file) => 
+  ABI({name, file: Literal(String(file))});
+
+let mk_data_source = (name, abi, address, start_block) =>
+  DataSource({name, abi, address: Literal(Address(address)), start_block: Literal(Int(start_block))});
 
 let mk_template = (name, abi) =>
-  Template({name, abi: Literal(String(abi))});
+  Template({name, abi});
 
 let mk_event_handler = (event, source, actions) =>
   EventHandler({event, source, actions});
@@ -160,6 +163,16 @@ let mk_var = (~path=[], name) =>
 // ================================================================
 // Unwrappers
 // ================================================================ 
+exception Invalid_type(string);
+
+let lit_to_string = fun 
+  | Literal(String(s) | Address(s)) => s 
+  | _ => raise(Invalid_type("lit_to_string"));
+  
+let lit_to_int = fun 
+  | Literal(Int(n)) => n 
+  | _ => raise(Invalid_type("lit_to_int"));
+
 let expr_of_field_mod = 
   fun
   | Increment(_)
@@ -290,71 +303,71 @@ let rec expr_filter = (filter, expr) =>
 // ================================================================
 // Entities filters
 // ================================================================ 
-let entities_of_expr = (db) =>
-  expr_filter((name) => Database.entity_opt(db, name) != None);
+// let entities_of_expr = (db) =>
+//   expr_filter((name) => Database.entity_opt(db, name) != None);
 
-let entities_of_handler = (db, actions) => 
-  List.filter_map(
-    fun
-    | NewEntity({name, _}) as action => 
-      List.cons(
-        name, 
-        List.flatten @@ List.map(entities_of_expr(db), exprs_of_action(action))
-      )
-      |> Option.some
-    | UpdateEntity({name, values, _}) => 
-      List.cons(
-        name, 
-        List.flatten @@ List.map((expr) => entities_of_expr(db, expr), List.filter_map(expr_of_field_mod, values))
-      )
-      |> Option.some
-    | NewTemplate(_) => None,
-    actions
-  )
-  |> List.flatten
-  |> List.sort_uniq(String.compare);
+// let entities_of_handler = (db, actions) => 
+//   List.filter_map(
+//     fun
+//     | NewEntity({name, _}) as action => 
+//       List.cons(
+//         name, 
+//         List.flatten @@ List.map(entities_of_expr(db), exprs_of_action(action))
+//       )
+//       |> Option.some
+//     | UpdateEntity({name, values, _}) => 
+//       List.cons(
+//         name, 
+//         List.flatten @@ List.map((expr) => entities_of_expr(db, expr), List.filter_map(expr_of_field_mod, values))
+//       )
+//       |> Option.some
+//     | NewTemplate(_) => None,
+//     actions
+//   )
+//   |> List.flatten
+//   |> List.sort_uniq(String.compare);
 
-let entities_of_mapping = (db) => mapping_filter(entities_of_handler(db));
+// let entities_of_mapping = (db) => mapping_filter(entities_of_handler(db));
 
 // ================================================================
 // Contract filters
 // ================================================================ 
 
-let contracts_of_expr = (db) =>
-  expr_filter((name) => Database.contract_opt(db, name) != None);
+// let contracts_of_expr = (db) =>
+//   expr_filter((name) => Database.contract_opt(db, name) != None);
 
-let contracts_of_handler = (db, actions) => 
-  List.filter_map(
-    fun
-    | NewEntity({name, values, _}) => 
-      List.cons(
-        name, 
-        List.flatten @@ List.map(((_, expr)) => entities_of_expr(db, expr), values)
-      )
-      |> Option.some
-    | UpdateEntity({name, values, _}) => 
-      List.cons(
-        name, 
-        List.flatten @@ List.map((expr) => entities_of_expr(db, expr), List.filter_map(expr_of_field_mod, values))
-      )
-      |> Option.some
-    | NewTemplate(_) => None,
-    actions
-  )
-  |> List.flatten
-  |> List.sort_uniq(String.compare);
+// let contracts_of_handler = (db, actions) => 
+//   List.filter_map(
+//     fun
+//     | NewEntity({name, values, _}) => 
+//       List.cons(
+//         name, 
+//         List.flatten @@ List.map(((_, expr)) => entities_of_expr(db, expr), values)
+//       )
+//       |> Option.some
+//     | UpdateEntity({name, values, _}) => 
+//       List.cons(
+//         name, 
+//         List.flatten @@ List.map((expr) => entities_of_expr(db, expr), List.filter_map(expr_of_field_mod, values))
+//       )
+//       |> Option.some
+//     | NewTemplate(_) => None,
+//     actions
+//   )
+//   |> List.flatten
+//   |> List.sort_uniq(String.compare);
 
 // ================================================================
 // Template filters
 // ================================================================ 
-let templates_of_handler = (actions) =>
-  List.filter_map(
-    fun
-    | NewEntity(_)
-    | UpdateEntity(_) => None
-    | NewTemplate({name, _}) => Some(name),
-    actions
-  )
-  |> List.sort_uniq(String.compare);
+// let templates_of_handler = (actions) =>
+//   List.filter_map(
+//     fun
+//     | NewEntity(_)
+//     | UpdateEntity(_) => None
+//     | NewTemplate({name, _}) => Some(name),
+//     actions
+//   )
+//   |> List.sort_uniq(String.compare);
 
-let templates_of_mapping = mapping_filter(templates_of_handler);
+// let templates_of_mapping = mapping_filter(templates_of_handler);

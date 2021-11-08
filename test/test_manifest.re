@@ -12,11 +12,15 @@ let test_cases =
       ("displayName", GQLNonNull(GQLString)),
       ("imageUrl", GQLNonNull(GQLString)),
     ]),
+    mk_abi(
+      "GravatarRegistry",
+      [%string {|%{Sys.getenv "TEST_DIR"}/GravatarRegistry.json|}]
+    ),
     mk_data_source(
       "Gravity", 
+      "GravatarRegistry",
       "0x2E645469f354BB4F5c8a05B3b30A929361cf77eC", 
-      1000923, 
-      [%string {|%{Sys.getenv "TEST_DIR"}/Gravity.json|}]
+      1000923
     ),
     mk_event_handler("NewGravatar", "Gravity", [
       mk_new_entity("Gravatar", mk_var(~path=["event_", "params"], "id"), [
@@ -39,7 +43,7 @@ dataSources:
     network: mainnet
     source:
       address: '0x2E645469f354BB4F5c8a05B3b30A929361cf77eC'
-      abi: Gravity
+      abi: GravatarRegistry
       startBlock: 1000923
     mapping:
       kind: ethereum/events
@@ -49,8 +53,8 @@ dataSources:
       entities:
         - Gravatar
       abis:
-        - name: Gravity
-          file: ./abis/Gravity.json
+        - name: GravatarRegistry
+          file: ./abis/GravatarRegistry.json
       eventHandlers:
         - event: NewGravatar(uint256,address,string,string)
           handler: handleNewGravatar

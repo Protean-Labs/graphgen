@@ -63,7 +63,7 @@ rule token = parse
 (* GraphQL *)
 | "interface"       { INTERFACE }
 | "entity"          { ENTITY }
-| "as"              { AS }
+| "is"              { IS }
 
 (* Manifest *)
 | "data_source"     { DATA_SOURCE }
@@ -75,9 +75,10 @@ rule token = parse
 (* | "from"            { FROM } *)
 
 (* Solidity *)
-| "event"           { EVENT }
+(* | "event"           { EVENT }
 | "indexed"         { INDEXED }
-| "call"            { CALL }
+| "call"            { CALL } *)
+| "abi"             { ABI }
 
 (* Actions *)
 | "new_entity"      { NEW_ENTITY }
@@ -85,7 +86,7 @@ rule token = parse
 | "new_template"    { NEW_TEMPLATE }
 
 (* Solidity types *)
-| "address"         { SOL_ADDRESS }
+(* | "address"         { SOL_ADDRESS }
 | "bool"            { SOL_BOOL }
 | "string"          { SOL_STRING }
 | "fixed"           { SOL_FIXED }
@@ -93,7 +94,7 @@ rule token = parse
 | "bytes"           { SOL_BYTES }
 | bytes_t as v      { SOL_FBYTES v }
 | int_t as v        { SOL_INT v }
-| uint_t as v       { SOL_UINT v }
+| uint_t as v       { SOL_UINT v } *)
 
 (* GraphQL types *)
 | "ID"              { GQL_ID }
