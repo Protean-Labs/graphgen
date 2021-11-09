@@ -6,7 +6,7 @@ entity Gravatar {
 }
 
 abi GravatarRegistry {
-  file = "test/GravatarRegistry.json"
+  file = "GravatarRegistry.json"
 }
 
 data_source Gravity is GravatarRegistry {

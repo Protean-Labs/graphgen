@@ -473,6 +473,6 @@ let transpile = ((document, db, env)) => {
     },
     []
   )
-  |> List.map(((src, blocks)) => (src, String.concat("\n", blocks)))
+  |> List.map(((src, blocks)) => (src, String.concat("", blocks)))
   |> List.map(add_imports(db))
 };

@@ -1,4 +1,5 @@
 open OUnit2;
+open Rresult;
 
 open Gg_script.Parsetree;
 open Gg_script.Parsetree_util;
@@ -76,6 +77,19 @@ interface Event {
   tx: Transaction!
 }
   |}),
+
+  (
+    R.get_ok @@ Gg_script.parse_file([%string {|%{Sys.getenv "TEST_DIR"}/gravatar.gg|}])
+    |> Test_util.fix_abi_paths,
+    {|
+type Gravatar @entity {
+  id: ID!
+  owner: Bytes!
+  displayName: String!
+  imageUrl: String!
+}
+    |}
+  )
 ];
 
 let make_single_test = ((document, expected)) =>

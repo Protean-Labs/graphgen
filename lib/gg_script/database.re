@@ -188,7 +188,7 @@ let make = (document) => {
           }), ...db.data_sources],
         }
       ) {
-      | _ => raise(Database_error("data_source: address is not a string or address literal"))
+      | Invalid_type(_) => raise(Database_error("data_source: address is not a string or address literal"))
       }
 
     | Template({name, abi}) =>
@@ -198,7 +198,7 @@ let make = (document) => {
       try (
         {...db, abis: [(name, load_abi(name, lit_to_string(file))), ...db.abis]}
       ) {
-      | _ => raise(Database_error("contract: abi path is not a string literal"))
+      | Invalid_type(_) => raise(Database_error("contract: abi path is not a string literal"))
       }
 
     // | Event({name, params}) =>

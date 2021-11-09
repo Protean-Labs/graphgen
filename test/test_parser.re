@@ -4,6 +4,22 @@ open Rresult;
 open Gg_script.Parsetree;
 open Gg_script.Parsetree_util;
 
+let cmp = (doc, doc') => {
+  let cmp_toplevel = (toplevel, toplevel') =>
+    switch (toplevel, toplevel') {
+    | (ABI({name, _}), ABI({name: name', _})) => name == name'
+    | (toplevel, toplevel') => toplevel == toplevel'
+    };
+
+  List.fold_left2((acc, toplevel, toplevel') => acc && cmp_toplevel(toplevel, toplevel'), true, R.get_ok(doc), R.get_ok(doc'));
+};
+
+let pp_document = (doc) =>
+  switch (doc) {
+  | Ok(doc) => string_of_document(doc)
+  | Error(`Msg(msg)) => msg
+  };
+
 let test_cases = 
   List.map(((mesh_src, expected)) => (mesh_src, R.ok(expected))) @@ [
   ({|
@@ -96,17 +112,46 @@ event_handler GravatarRegistry.UpdatedGravatar {
         })
       ]
     })
-  ])
+  ]),
+  (
+    Test_util.read_file([%string {|%{Sys.getenv "TEST_DIR"}/gravatar.gg|}]),
+    [
+      mk_entity("Gravatar", [
+        ("id", GQLNonNull(GQLId)),
+        ("owner", GQLNonNull(GQLBytes)),
+        ("displayName", GQLNonNull(GQLString)),
+        ("imageUrl", GQLNonNull(GQLString))
+      ]),
+      mk_abi(
+        "GravatarRegistry",
+        [%string {|%{Sys.getenv "TEST_DIR"}/GravatarRegistry.json|}]
+      ),
+      mk_data_source(
+        "Gravity", 
+        "GravatarRegistry",
+        "0x2E645469f354BB4F5c8a05B3b30A929361cf77eC", 
+        1000923
+      ),
+      mk_event_handler("NewGravatar", "Gravity", [
+        mk_new_entity("Gravatar", mk_var(~path=["event_", "params"], "id"), [
+          ("owner", mk_var(~path=["event_", "params"], "owner")),
+          ("displayName", mk_var(~path=["event_", "params"], "displayName")),
+          ("imageUrl", mk_var(~path=["event_", "params"], "imageUrl")),
+        ])
+      ]),
+      mk_event_handler("UpdatedGravatar", "Gravity", [
+        mk_update_entity("Gravatar", mk_var(~path=["event_", "params"], "id"), [
+          Assign("owner", mk_var(~path=["event_", "params"], "owner")),
+          Assign("displayName", mk_var(~path=["event_", "params"], "displayName")),
+          Assign("imageUrl", mk_var(~path=["event_", "params"], "imageUrl"))
+        ])
+      ])
+    ]
+  )
 ];
 
-let pp_document = (doc) =>
-  switch (doc) {
-  | Ok(doc) => string_of_document(doc)
-  | Error(`Msg(msg)) => msg
-  };
-
 let make_single_test = ((document, expected)) =>
-  String.escaped(document) >:: (_) => Gg_script.parse(document) |> (ast) => assert_equal(~printer=pp_document, expected, ast);
+  String.escaped(document) >:: (_) => Gg_script.parse(document) |> (ast) => assert_equal(~printer=pp_document, ~cmp=cmp, expected, ast);
 
 let suite = 
   "test_parser" >::: List.map(make_single_test, test_cases);

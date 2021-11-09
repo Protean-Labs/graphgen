@@ -1,4 +1,5 @@
 open OUnit2;
+open Rresult;
 
 open Gg_script.Parsetree;
 open Gg_script.Parsetree_util;
@@ -126,7 +127,35 @@ export function handleUpdatedGravatar(event: Source.UpdatedGravatar): void {
   entity.numUpdates = entity.numUpdates + BigIntOne
   entity.save()
 }
-  |})])
+  |})]),
+
+  (
+    R.get_ok @@ Gg_script.parse_file([%string {|%{Sys.getenv "TEST_DIR"}/gravatar.gg|}])
+    |> Test_util.fix_abi_paths,
+    [("Gravity", {|
+import { Bytes, BigInt, Address } from '@graphprotocol/graph-ts'
+import { BigIntZero, BigIntOne, BigDecimalZero, BigDecimalOne } from '../util'
+import * as Schema from '../types/schema'
+import * as Templates from '../types/templates'
+import * as Source from '../types/Gravity/Gravity'
+
+export function handleUpdatedGravatar(event: Source.UpdatedGravatar): void {
+  let entity = Gravatar.load(event.params.id.toString())
+  entity.owner = event.params.owner
+  entity.displayName = event.params.displayName
+  entity.imageUrl = event.params.imageUrl
+  entity.save()
+}
+
+export function handleNewGravatar(event: Source.NewGravatar): void {
+  let entity = new Gravatar(event.params.id.toString())
+  entity.owner = event.params.owner
+  entity.displayName = event.params.displayName
+  entity.imageUrl = event.params.imageUrl
+  entity.save()
+}
+    |})]
+  )
 ];
 
 let pp = (mappings) =>
