@@ -1,5 +1,6 @@
 open Jingoo;
 
+open Gg_script.Parsetree;
 open Gg_script.Parsetree_util;
 
 let interface_template = {|
@@ -13,19 +14,29 @@ interface {{ interface.name }} {
 let model_of_interface = (name, fields) =>
   Jg_types.Tobj([
     ("name", Tstr(name)),
-    ("fields", Tlist(List.map(
-      ((name, typ)) => Jg_types.Tobj([
-        ("name", Tstr(name)),
-        ("type", Tstr(string_of_gql_type(typ)))
-      ]),
-      fields
-    )))
+    ("fields", Tlist(
+      List.map(((name, typ, maybe_directive)) => 
+        Jg_types.Tobj([
+          ("name", Tstr(name)),
+          ("type", Tstr(string_of_gql_type(typ))),
+          ("directive", 
+            switch (maybe_directive) {
+            | None => Tnull
+            | Some({name, args}) => 
+              let args_str = String.concat(", ") @@ List.map(((name, value)) => [%string "%{name}: %{string_of_literal value}"], args)
+              Tstr([%string "@%{name}(%{args_str})"])
+            }
+          )
+        ]),
+        fields
+      )
+    ))
   ]);
 
 let entity_template = {|
 type {{ entity.name }}{% if entity.interface != None %} implements {{ entity.interface }}{% endif %} @entity {
   {%- for field in entity.fields %}
-  {{ field.name }}: {{ field.type }}
+  {{ field.name }}: {{ field.type }}{% if field.directive != None %} {{ field.directive }}{% endif %}
   {%- endfor %}
 }
 |};
@@ -34,15 +45,27 @@ let model_of_entity = (name, fields, interface) =>
   Jg_types.Tobj([
     ("name", Tstr(name)),
     ("fields", Tlist(
-      List.map(((name, typ)) => Jg_types.Tobj([
-        ("name", Tstr(name)),
-        ("type", Tstr(string_of_gql_type(typ)))
+      List.map(((name, typ, maybe_directive)) => 
+        Jg_types.Tobj([
+          ("name", Tstr(name)),
+          ("type", Tstr(string_of_gql_type(typ))),
+          ("directive", 
+            switch (maybe_directive) {
+            | None => Tnull
+            | Some({name, args}) => 
+              let args_str = String.concat(", ") @@ List.map(((name, value)) => [%string "%{name}: %{string_of_literal value}"], args)
+              Tstr([%string "@%{name}(%{args_str})"])
+            }
+          )
         ]),
         fields
       )
     )),
     ("interface", switch (interface) { | None => Tnull | Some(intf) => Tstr(intf)})
   ]);
+
+let replace = (input, output) =>
+  Str.global_replace(Str.regexp_string(input), output);
 
 let transpile = ((_, db, _)) =>
   Gg_script.Database.(
@@ -63,4 +86,5 @@ let transpile = ((_, db, _)) =>
     )
   )
   // Concat everything
-  |> String.concat("");
+  |> String.concat("")
+  |> replace("&quot;", "\"");

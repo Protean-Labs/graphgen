@@ -346,7 +346,13 @@ let transpile = ((document, db, env)) => {
         };
 
       let values = List.map((field_mod) =>
-        switch (field_mod, Option.get @@ Option.map(Validate.typ_of_gql_type(db)) @@ List.assoc_opt(field_of_field_mod(field_mod), Database.entity(db, name).fields)) {
+        switch (
+          field_mod, 
+          Option.get @@ Option.map(Validate.typ_of_gql_type(db)) @@ List.find_map(
+            ((name, typ, _)) => name == field_of_field_mod(field_mod) ? Some(typ) : None, 
+            Database.entity(db, name).fields
+          )
+        ) {
         | (Increment(fname), TInt | TNonNull(TInt))       => (fname, [%string "entity.%{fname} + 1"])
         | (Increment(fname), TBigInt | TNonNull(TBigInt)) => (fname, [%string "entity.%{fname} + BigIntOne"])
         | (Decrement(fname), TInt | TNonNull(TInt))       => (fname, [%string "entity.%{fname} - 1"])

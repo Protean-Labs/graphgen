@@ -8,10 +8,10 @@ let test_cases =
   List.map(((document, mappings)) => (document, List.map(((source, mapping)) => (source, String.trim(mapping)), mappings))) @@ [
   ([
     mk_entity("Gravatar", [
-      ("id", GQLNonNull(GQLId)),
-      ("owner", GQLNonNull(GQLBytes)),
-      ("displayName", GQLNonNull(GQLString)),
-      ("imageUrl", GQLNonNull(GQLString)),
+      ("id", GQLNonNull(GQLId), None),
+      ("owner", GQLNonNull(GQLBytes), None),
+      ("displayName", GQLNonNull(GQLString), None),
+      ("imageUrl", GQLNonNull(GQLString), None),
     ]),
     mk_abi(
       "GravatarRegistry",
@@ -48,10 +48,10 @@ export function handleNewGravatar(event: Source.NewGravatar): void {
 
   ([
     mk_entity("Gravatar", [
-      ("id", GQLNonNull(GQLId)),
-      ("owner", GQLNonNull(GQLBytes)),
-      ("displayName", GQLNonNull(GQLString)),
-      ("imageUrl", GQLNonNull(GQLString)),
+      ("id", GQLNonNull(GQLId), None),
+      ("owner", GQLNonNull(GQLBytes), None),
+      ("displayName", GQLNonNull(GQLString), None),
+      ("imageUrl", GQLNonNull(GQLString), None),
     ]),
     mk_abi(
       "GravatarRegistry",
@@ -88,11 +88,11 @@ export function handleUpdatedGravatar(event: Source.UpdatedGravatar): void {
 
   ([
     mk_entity("Gravatar", [
-      ("id", GQLNonNull(GQLId)),
-      ("owner", GQLNonNull(GQLBytes)),
-      ("displayName", GQLNonNull(GQLString)),
-      ("imageUrl", GQLNonNull(GQLString)),
-      ("numUpdates", GQLNonNull(GQLBigInt))
+      ("id", GQLNonNull(GQLId), None),
+      ("owner", GQLNonNull(GQLBytes), None),
+      ("displayName", GQLNonNull(GQLString), None),
+      ("imageUrl", GQLNonNull(GQLString), None),
+      ("numUpdates", GQLNonNull(GQLBigInt), None)
     ]),
     mk_abi(
       "GravatarRegistry",

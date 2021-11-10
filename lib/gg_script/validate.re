@@ -44,7 +44,7 @@ let rec typ_of_gql_type = (~level=0, db, gql_typ) =>
       switch (Database.(entity_opt(db, name), interface_opt(db, name))) {
       | (Some({fields, _}), _)
       | (None, Some({fields, _})) =>
-        TStruct({fields: List.map(((name, field)) => (name, typ_of_gql_type(~level=level+1, db, field)), fields)})
+        TStruct({fields: List.map(((name, field, _)) => (name, typ_of_gql_type(~level=level+1, db, field)), fields)})
       | (None, None) =>
         raise(Type_error([%string "typ_of_gql_type: entity or interface %{name} not found"]))
       }
@@ -180,7 +180,7 @@ let struct_of_entity = (fields) =>
 let env_of_db = (db) =>
   Database.(
     List.fold_left((acc, (name, {fields, _})) => 
-      [(name, TIndexable({typ: `Entity, fields: List.map(((name, typ)) => (name, typ_of_gql_type(db, typ)), fields)})), ...acc], 
+      [(name, TIndexable({typ: `Entity, fields: List.map(((name, typ, _)) => (name, typ_of_gql_type(db, typ)), fields)})), ...acc], 
       [], 
       db.entities
     )
@@ -312,19 +312,23 @@ let tcheck = (document) => {
         };
 
         // Check that all required entity fields are set
-        List.iter(((fname, typ)) => 
+        List.iter(((fname, typ, maybe_directive)) => 
           if (fname != "id") {
-            switch (typ) {
-            | GQLNonNull(_) =>
-              switch (List.assoc_opt(fname, values)) {
-              | None => raise(Type_error([%string "new_entity: required field %{fname} of entity %{name} not assigned!"]))
-              | Some(expr) => 
-                let typ' = tcheck_expr(db, env, expr);
-                if (!type_compatible(typ_of_gql_type(db, typ), typ')) {
-                  raise(Type_error([%string "new_entity: invalid type for field %{fname}. expected %{string_of_typ (typ_of_gql_type db typ)}, got %{string_of_typ typ'}"]))
+            switch (maybe_directive) {
+            | Some({name: "derivedFrom", _}) => ()
+            | _ => 
+              switch (typ) {
+              | GQLNonNull(_) =>
+                switch (List.assoc_opt(fname, values)) {
+                | None => raise(Type_error([%string "new_entity: required field %{fname} of entity %{name} not assigned!"]))
+                | Some(expr) => 
+                  let typ' = tcheck_expr(db, env, expr);
+                  if (!type_compatible(typ_of_gql_type(db, typ), typ')) {
+                    raise(Type_error([%string "new_entity: invalid type for field %{fname}. expected %{string_of_typ (typ_of_gql_type db typ)}, got %{string_of_typ typ'}"]))
+                  }
                 }
+              | _ => ()
               }
-            | _ => ()
             }
           }, 
           fields
@@ -332,7 +336,7 @@ let tcheck = (document) => {
 
         // Check that all fields assigned to a value belongs to the entity
         List.iter(((fname, _)) => 
-          switch (List.assoc_opt(fname, fields)) {
+          switch (List.find_opt(((name, _, _)) => name == fname, fields)) {
           | None => raise(Type_error([%string "new_entity: field %{fname} does not belong to entity %{name}"]))
           | Some(_) => ()
           }, 
@@ -357,7 +361,9 @@ let tcheck = (document) => {
           switch (fmod) {
           | Increment(fname)
           | Decrement(fname) =>
-            switch (Option.map(typ_of_gql_type(db)) @@ List.assoc_opt(fname, fields)) {
+            switch (
+              Option.map(typ_of_gql_type(db)) @@ List.find_map(((name, typ, _)) => name == fname ? Some(typ) : None, fields)
+            ) {
             | Some(TNonNull(TInt | TBigInt) | TInt | TBigInt) => ()
             | None      => raise(Type_error([%string "update: field %{fname} does not belong to entity %{name}"]))
             | Some(typ) => raise(Type_error([%string "update: invalid type for field %{fname} %{string_of_typ typ}"]))
@@ -365,7 +371,10 @@ let tcheck = (document) => {
 
           | PlusEq(fname, expr)
           | MinusEq(fname, expr) =>
-            switch (Option.map(typ_of_gql_type(db)) @@ List.assoc_opt(fname, fields), tcheck_expr(db, env, expr)) {
+            switch (
+              Option.map(typ_of_gql_type(db)) @@ List.find_map(((name, typ, _)) => name == fname ? Some(typ) : None, fields), 
+              tcheck_expr(db, env, expr)
+            ) {
             | (Some((TInt | TBigInt | TFloat | TBigDecimal) as typ), typ') when type_compatible(typ, typ') => ()
             | (Some((TInt | TBigInt | TFloat | TBigDecimal) as typ), typ') => 
               raise(Type_error([%string "update: invalid type for field %{fname}. expected %{string_of_typ typ}, got %{string_of_typ typ'}"]))
@@ -376,7 +385,10 @@ let tcheck = (document) => {
             }
 
           | Assign(fname, expr) =>
-            switch (Option.map(typ_of_gql_type(db)) @@ List.assoc_opt(fname, fields), tcheck_expr(db, env, expr)) {
+            switch (
+              Option.map(typ_of_gql_type(db)) @@ List.find_map(((name, typ, _)) => name == fname ? Some(typ) : None, fields), 
+              tcheck_expr(db, env, expr)
+            ) {
             | (Some(typ), typ') when type_compatible(typ, typ') => ()
             | (Some(typ), typ') => 
               raise(Type_error([%string "update: invalid type for field %{fname}. expected %{string_of_typ typ}, got %{string_of_typ typ'}"]))

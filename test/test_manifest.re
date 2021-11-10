@@ -7,10 +7,10 @@ let test_cases =
   List.map(((document, manifest)) => (document, String.trim(manifest))) @@ [
   ([
     mk_entity("Gravatar", [
-      ("id", GQLNonNull(GQLId)),
-      ("owner", GQLNonNull(GQLBytes)),
-      ("displayName", GQLNonNull(GQLString)),
-      ("imageUrl", GQLNonNull(GQLString)),
+      ("id", GQLNonNull(GQLId), None),
+      ("owner", GQLNonNull(GQLBytes), None),
+      ("displayName", GQLNonNull(GQLString), None),
+      ("imageUrl", GQLNonNull(GQLString), None),
     ]),
     mk_abi(
       "GravatarRegistry",

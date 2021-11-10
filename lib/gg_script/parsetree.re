@@ -1,3 +1,13 @@
+type literal = 
+  | String(string)
+  | Bytes(string)
+  | Int(int)
+  | BigInt(string)
+  | Float(float)
+  | BigDecimal(string)
+  | Bool(bool)
+  | Address(string);
+
 type gql_type = 
   | GQLId
   | GQLBytes
@@ -11,6 +21,11 @@ type gql_type =
   | GQLNonNull(gql_type)
   | GQLObject(string);
 
+type gql_directive = {
+  name: string,
+  args: list((string, literal))
+};
+
 type sol_type = 
   | SOLAddress
   | SOLBool
@@ -23,16 +38,6 @@ type sol_type =
   | SOLUint(int)
   | SOLArray(sol_type)
   | SOLIndexed(sol_type);
-
-type literal = 
-  | String(string)
-  | Bytes(string)
-  | Int(int)
-  | BigInt(string)
-  | Float(float)
-  | BigDecimal(string)
-  | Bool(bool)
-  | Address(string);
 
 type expr = 
   | Neg(expr)
@@ -88,12 +93,12 @@ type toplevel =
   // Graphql 
   | Interface({
     name: string,
-    fields: list((string, gql_type))
+    fields: list((string, gql_type, option(gql_directive)))
   })
   | Entity({
     name: string,
     interface: option(string),
-    fields: list((string, gql_type))
+    fields: list((string, gql_type, option(gql_directive)))
   })
   
   // Manifest

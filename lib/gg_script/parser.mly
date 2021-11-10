@@ -70,6 +70,7 @@
 
 %token ADD SUB
 %token MUL DIV
+%token AT
 
 %token INTERFACE
 %token ENTITY
@@ -125,7 +126,7 @@ actions: list(action) EOF     { $1 }
 document: list(toplevel) EOF  { $1 }
 
 toplevel:
-  | INTERFACE id = IDENT LBRACE fields = structure(COLON, gql_type) RBRACE 
+  | INTERFACE id = IDENT LBRACE fields = gql_structure RBRACE 
     { Interface {name=id; fields } }
   | entity = entity
     { entity }
@@ -147,9 +148,9 @@ toplevel:
     { mk_abi cid params}
 
 entity:
-  | ENTITY id = IDENT LBRACE fields = structure(COLON, gql_type) RBRACE 
+  | ENTITY id = IDENT LBRACE fields = gql_structure RBRACE 
     { Entity {name=id; interface=None; fields } }
-  | ENTITY id = IDENT IS intf = IDENT LBRACE fields = structure(COLON, gql_type) RBRACE 
+  | ENTITY id = IDENT IS intf = IDENT LBRACE fields = gql_structure RBRACE 
     { Entity {name=id; interface=Some(intf); fields } }
 
 action:
@@ -196,6 +197,19 @@ vpath:
 structure(separator, rhs):
   | elements = list(name = IDENT separator rhs = rhs { (name, rhs) }) 
     { elements }
+
+gql_structure:
+  | elements = list(gql_element) 
+    { elements }
+gql_element:
+  | name = IDENT COLON typ = gql_type directive = option(AT directive = gql_directive {directive})
+    { (name, typ, directive) }
+gql_directive:
+  | name = IDENT 
+    LPAREN args = separated_nonempty_list(COMMA, name = IDENT COLON value = literal { (name, value) }) RPAREN
+    { {name; args} }
+  | name = IDENT
+    { {name; args=[]} }
 
 field_mod:
   | name = IDENT PLUSPLUS   { Increment name }

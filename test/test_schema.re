@@ -8,10 +8,10 @@ let test_cases =
   List.map(((document, expected)) => (document, String.trim(expected))) @@ [
   ([
     mk_entity("Gravatar", [
-      ("id", GQLNonNull(GQLId)),
-      ("owner", GQLNonNull(GQLBytes)),
-      ("displayName", GQLNonNull(GQLString)),
-      ("imageUrl", GQLNonNull(GQLString)),
+      ("id", GQLNonNull(GQLId), None),
+      ("owner", GQLNonNull(GQLBytes), None),
+      ("displayName", GQLNonNull(GQLString), None),
+      ("imageUrl", GQLNonNull(GQLString), None),
     ])
   ], {|
 type Gravatar @entity {
@@ -24,29 +24,29 @@ type Gravatar @entity {
 
   ([
     mk_entity("Transaction", [
-      ("id", GQLNonNull(GQLId)),
-      ("txIndex", GQLNonNull(GQLBigInt)),
-      ("from", GQLNonNull(GQLBytes)),
-      ("to", GQLBytes),
-      ("blockNumber", GQLNonNull(GQLBigInt)),
-      ("blockTimestamp", GQLNonNull(GQLBigInt)),
-      ("events", GQLNonNull(GQLList(GQLNonNull(GQLObject("Event")))))
+      ("id", GQLNonNull(GQLId), None),
+      ("txIndex", GQLNonNull(GQLBigInt), None),
+      ("from", GQLNonNull(GQLBytes), None),
+      ("to", GQLBytes, None),
+      ("blockNumber", GQLNonNull(GQLBigInt), None),
+      ("blockTimestamp", GQLNonNull(GQLBigInt), None),
+      ("events", GQLNonNull(GQLList(GQLNonNull(GQLObject("Event")))), Some({name: "derivedFrom", args: [("field", String("transaction"))]}))
     ]),
     mk_interface("Event", [
-      ("id", GQLNonNull(GQLId)),
-      ("logIndex", GQLNonNull(GQLBigInt)),
-      ("tx", GQLNonNull(GQLObject("Transaction"))),
+      ("id", GQLNonNull(GQLId), None),
+      ("logIndex", GQLNonNull(GQLBigInt), None),
+      ("transaction", GQLNonNull(GQLObject("Transaction")), None),
     ]),
     mk_entity(~interface="Event", "Swap", [
-      ("id", GQLNonNull(GQLId)),
-      ("logIndex", GQLNonNull(GQLBigInt)),
-      ("tx", GQLNonNull(GQLObject("Transaction"))),
-      ("sender", GQLNonNull(GQLBytes)),
-      ("amount0In", GQLNonNull(GQLBigInt)),
-      ("amount1In", GQLNonNull(GQLBigInt)),
-      ("amount0Out", GQLNonNull(GQLBigInt)),
-      ("amount1Out", GQLNonNull(GQLBigInt)),
-      ("to", GQLNonNull(GQLBytes))
+      ("id", GQLNonNull(GQLId), None),
+      ("logIndex", GQLNonNull(GQLBigInt), None),
+      ("transaction", GQLNonNull(GQLObject("Transaction")), None),
+      ("sender", GQLNonNull(GQLBytes), None),
+      ("amount0In", GQLNonNull(GQLBigInt), None),
+      ("amount1In", GQLNonNull(GQLBigInt), None),
+      ("amount0Out", GQLNonNull(GQLBigInt), None),
+      ("amount1Out", GQLNonNull(GQLBigInt), None),
+      ("to", GQLNonNull(GQLBytes), None)
     ])
   ], {|
 type Transaction @entity {
@@ -56,13 +56,13 @@ type Transaction @entity {
   to: Bytes
   blockNumber: BigInt!
   blockTimestamp: BigInt!
-  events: [Event!]!
+  events: [Event!]! @derivedFrom(field: "transaction")
 }
 
 type Swap implements Event @entity {
   id: ID!
   logIndex: BigInt!
-  tx: Transaction!
+  transaction: Transaction!
   sender: Bytes!
   amount0In: BigInt!
   amount1In: BigInt!
@@ -74,7 +74,7 @@ type Swap implements Event @entity {
 interface Event {
   id: ID!
   logIndex: BigInt!
-  tx: Transaction!
+  transaction: Transaction!
 }
   |}),
 

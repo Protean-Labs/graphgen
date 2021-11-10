@@ -30,18 +30,20 @@ entity Transaction {
   to: Bytes
   blockNumber: BigInt!
   blockTimestamp: BigInt!
+  events: [Event!]! @derivedFrom(field: "transaction")
 }
   |}, [
     Entity({
       name: "Transaction",
       interface: None,
       fields: [
-        ("id", GQLNonNull(GQLId)),
-        ("index", GQLNonNull(GQLBigInt)),
-        ("from", GQLNonNull(GQLBytes)),
-        ("to", GQLBytes),
-        ("blockNumber", GQLNonNull(GQLBigInt)),
-        ("blockTimestamp", GQLNonNull(GQLBigInt)),
+        ("id", GQLNonNull(GQLId), None),
+        ("index", GQLNonNull(GQLBigInt), None),
+        ("from", GQLNonNull(GQLBytes), None),
+        ("to", GQLBytes, None),
+        ("blockNumber", GQLNonNull(GQLBigInt), None),
+        ("blockTimestamp", GQLNonNull(GQLBigInt), None),
+        ("events", GQLNonNull(GQLList(GQLNonNull(GQLObject("Event")))), Some({name: "derivedFrom", args: [("field", String("transaction"))]}))
       ]
     })
   ]),
@@ -117,10 +119,10 @@ event_handler GravatarRegistry.UpdatedGravatar {
     Test_util.read_file([%string {|%{Sys.getenv "TEST_DIR"}/gravatar.gg|}]),
     [
       mk_entity("Gravatar", [
-        ("id", GQLNonNull(GQLId)),
-        ("owner", GQLNonNull(GQLBytes)),
-        ("displayName", GQLNonNull(GQLString)),
-        ("imageUrl", GQLNonNull(GQLString))
+        ("id", GQLNonNull(GQLId), None),
+        ("owner", GQLNonNull(GQLBytes), None),
+        ("displayName", GQLNonNull(GQLString), None),
+        ("imageUrl", GQLNonNull(GQLString), None)
       ]),
       mk_abi(
         "GravatarRegistry",

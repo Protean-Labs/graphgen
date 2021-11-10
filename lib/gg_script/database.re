@@ -8,12 +8,12 @@ exception Database_error(string);
 exception ABI_error(string);
 
 type interface_t = {
-  fields: list((string, gql_type))
+  fields: list((string, gql_type, option(gql_directive)))
 };
 
 type entity_t = {
   interface: option(string),
-  fields: list((string, gql_type))
+  fields: list((string, gql_type, option(gql_directive)))
 };
 
 type event_t = {
@@ -176,9 +176,9 @@ let make = (document) => {
   let update_db = (db, toplevel) =>
     switch (toplevel) {
     | Interface({name, fields}) => 
-      {...db, interfaces: [(name, {fields: List.map(((name, typ)) => (name, typ), fields)}), ...db.interfaces]}
+      {...db, interfaces: [(name, {fields: fields}), ...db.interfaces]}
     | Entity({name, fields, interface}) => 
-      {...db, entities: [(name, {interface, fields: List.map(((name, typ)) => (name, typ), fields)}), ...db.entities]}
+      {...db, entities: [(name, {interface, fields}), ...db.entities]}
 
     | DataSource({name, abi, address, start_block}) => 
       try (

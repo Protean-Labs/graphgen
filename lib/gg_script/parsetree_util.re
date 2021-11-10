@@ -29,6 +29,18 @@ let rec string_of_sol_type = fun
   | SOLArray(typ)   => [%string "%{string_of_sol_type typ}[]"]
   | SOLIndexed(typ) => [%string "indexed %{string_of_sol_type typ}"];
 
+let string_of_literal = (lit) =>
+  switch (lit) {
+  | String(v)     => [%string {|"%{v}"|}]
+  | Bytes(v)      => v
+  | Int(v)        => string_of_int(v)
+  | BigInt(v)     => v
+  | Float(v)      => string_of_float(v)
+  | BigDecimal(v) => v
+  | Bool(v)       => string_of_bool(v)
+  | Address(v)    => v
+  };
+
 let rec string_of_expr = (expr) =>
   switch (expr) {
   | Neg(e)        => [%string "-%{string_of_expr e}"]
@@ -40,17 +52,7 @@ let rec string_of_expr = (expr) =>
   | Variable(path, name) =>
     let path_str = String.concat(".", path);
     [%string "%{path_str}.%{name}"]
-  | Literal(lit) => 
-    switch (lit) {
-    | String(v)     => v
-    | Bytes(v)      => v
-    | Int(v)        => string_of_int(v)
-    | BigInt(v)     => v
-    | Float(v)      => string_of_float(v)
-    | BigDecimal(v) => v
-    | Bool(v)       => string_of_bool(v)
-    | Address(v)    => v
-    };
+  | Literal(lit) => string_of_literal(lit)
   | Index(e1, e2) => [%string "%{string_of_expr e1}[%{string_of_expr e2}]"]
   | Apply(e, args) => 
     let args_str = String.concat(", ") @@ List.map(string_of_expr, args);
@@ -92,12 +94,12 @@ let string_of_action = (action) =>
 let string_of_toplevel = (toplevel) =>
   switch (toplevel) {
   | Interface({name, fields}) =>
-    let fields_str = String.concat("\n") @@ List.map(((name, typ)) => [%string "%{name}: %{string_of_gql_type typ}"], fields);
+    let fields_str = String.concat("\n") @@ List.map(((name, typ, _)) => [%string "%{name}: %{string_of_gql_type typ}"], fields);
     [%string "Interface %{name} {\n%{fields_str}\n}"]
 
   | Entity({name, fields, interface}) =>
     let interface_str = Option.value(~default="") @@ Option.map(intf_name => [%string "implements %{intf_name} "], interface);
-    let fields_str = String.concat("\n") @@ List.map(((name, typ)) => [%string "%{name}: %{string_of_gql_type typ}"], fields);
+    let fields_str = String.concat("\n") @@ List.map(((name, typ, _)) => [%string "%{name}: %{string_of_gql_type typ}"], fields);
     [%string "Entity %{name} %{interface_str}{\n%{fields_str}\n}"]
 
   | DataSource({name, abi, address, start_block}) =>
@@ -299,75 +301,3 @@ let rec expr_filter = (filter, expr) =>
       ...List.map(expr_filter(filter), args)
     ]
   };
-
-// ================================================================
-// Entities filters
-// ================================================================ 
-// let entities_of_expr = (db) =>
-//   expr_filter((name) => Database.entity_opt(db, name) != None);
-
-// let entities_of_handler = (db, actions) => 
-//   List.filter_map(
-//     fun
-//     | NewEntity({name, _}) as action => 
-//       List.cons(
-//         name, 
-//         List.flatten @@ List.map(entities_of_expr(db), exprs_of_action(action))
-//       )
-//       |> Option.some
-//     | UpdateEntity({name, values, _}) => 
-//       List.cons(
-//         name, 
-//         List.flatten @@ List.map((expr) => entities_of_expr(db, expr), List.filter_map(expr_of_field_mod, values))
-//       )
-//       |> Option.some
-//     | NewTemplate(_) => None,
-//     actions
-//   )
-//   |> List.flatten
-//   |> List.sort_uniq(String.compare);
-
-// let entities_of_mapping = (db) => mapping_filter(entities_of_handler(db));
-
-// ================================================================
-// Contract filters
-// ================================================================ 
-
-// let contracts_of_expr = (db) =>
-//   expr_filter((name) => Database.contract_opt(db, name) != None);
-
-// let contracts_of_handler = (db, actions) => 
-//   List.filter_map(
-//     fun
-//     | NewEntity({name, values, _}) => 
-//       List.cons(
-//         name, 
-//         List.flatten @@ List.map(((_, expr)) => entities_of_expr(db, expr), values)
-//       )
-//       |> Option.some
-//     | UpdateEntity({name, values, _}) => 
-//       List.cons(
-//         name, 
-//         List.flatten @@ List.map((expr) => entities_of_expr(db, expr), List.filter_map(expr_of_field_mod, values))
-//       )
-//       |> Option.some
-//     | NewTemplate(_) => None,
-//     actions
-//   )
-//   |> List.flatten
-//   |> List.sort_uniq(String.compare);
-
-// ================================================================
-// Template filters
-// ================================================================ 
-// let templates_of_handler = (actions) =>
-//   List.filter_map(
-//     fun
-//     | NewEntity(_)
-//     | UpdateEntity(_) => None
-//     | NewTemplate({name, _}) => Some(name),
-//     actions
-//   )
-//   |> List.sort_uniq(String.compare);
-
-// let templates_of_mapping = mapping_filter(templates_of_handler);
