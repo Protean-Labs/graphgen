@@ -3,6 +3,9 @@ open Rresult;
 module File = Bos.OS.File;
 module Dir = Bos.OS.Dir;
 
+module Parser = Parser;
+module Lexer = Lexer;
+
 module Parsetree = Parsetree;
 module Parsetree_util = Parsetree_util
 module Typetree = Typetree;
@@ -19,6 +22,16 @@ let read_file = (path) =>{
   | Ok(source) => source
   | Error(`Msg(msg)) => raise(Runtime_error(msg))
   };
+};
+
+let parse_document = (source) => {
+  // print_endline(source);
+  Parser.document(Lexer.token, Lexing.from_string(source))
+};
+
+let parse_actions = (source) => {
+  // print_endline(source);
+  Parser.actions(Lexer.token, Lexing.from_string(source))
 };
 
 let parse = (source) => 

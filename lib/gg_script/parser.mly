@@ -3,21 +3,6 @@
 
   exception Parsing_error of string
 
-  (*
-  let parse_int_postfix base s = 
-    if (base = s) then 256
-    else
-      String.sub s (String.length base) (String.length s - String.length base)
-      |> int_of_string
-  *)
-
-  (*
-  let fold_vpath id var =
-    match var with
-    | Variable (path, id') -> Variable (id::path, id')
-    | _ -> raise (Parsing_error "fold_vpath")
-  *)
-
   let mk_data_source name abi params = 
     DataSource {
       name;
@@ -190,9 +175,6 @@ vpath:
       | ident::rest -> Variable (List.rev rest, ident)
       | _ -> raise(Parsing_error("empty vpath"))
     }
-  // | id1 = IDENT DOT id2 = IDENT       { Variable ([id1], id2) }
-  // | id = IDENT                        { Variable ([], id) }
-  // | id = IDENT rest = vpath           { fold_vpath id rest }
 
 structure(separator, rhs):
   | elements = list(name = IDENT separator rhs = rhs { (name, rhs) }) 
