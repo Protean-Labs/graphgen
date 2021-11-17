@@ -46,7 +46,7 @@
 </p>
 
 <p align="center">
-  <strong> Supported by The Graph Foundation through a wave two <a href="https://thegraph.com/blog/wave-two-funding"> ecosystem grant </a>  <strong>
+  <strong> Supported by The Graph Foundation through a wave two <a href="https://thegraph.com/blog/wave-two-funding"> ecosystem grant </a>  </strong>
 </p>
 
 # 🚀 Getting started
