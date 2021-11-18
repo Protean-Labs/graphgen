@@ -9,12 +9,19 @@
       "rewritePrefix": true,
       "releasedBinaries": [ "graphgen" ]
     },
-    "buildEnv": { "ODOC_SYNTAX": "re" }
+    "buildEnv": { "ODOC_SYNTAX": "re" },
+    "exportedEnv": {
+      "TEST_DIR": {
+        "val": "#{self.root}/test",
+        "scope": "local"
+      }
+    }
   },
   "scripts": {
     "doc": "esy dune build @doc-private",
     "graphgen": "esy x graphgen",
-    "test": "esy x test.exe"
+    "gg": "esy x _esy/default/build/default/gg_test/gg_test.exe",
+    "test": "esy x dune runtest"
   },
   "dependencies": {
     "@esy-ocaml/reason": "^3.7.0",

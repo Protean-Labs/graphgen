@@ -1,6 +1,6 @@
 (library
- (name parsing)
- (libraries easy_logging yaml yaml.unix)
+ (name solidity_parsing)
+ (libraries gg_script easy_logging yaml yaml.unix)
  (preprocess (pps ppx_deriving.show ppx_deriving_yaml ppx_string ppx_deriving_yojson)))
 
 (menhir (modules parser) (infer false))

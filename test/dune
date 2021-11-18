@@ -1,0 +1,4 @@
+(test
+ (name test)
+ (libraries gg_script inline solidity_parsing transpiler easy_logging rresult bos ounit2)
+ (preprocess (pps ppx_string)))

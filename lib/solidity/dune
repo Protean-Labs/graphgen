@@ -1,0 +1,4 @@
+(library
+ (name inline)
+ (libraries solidity_parsing gg_script easy_logging yojson rresult bos)
+ (preprocess (pps ppx_string)))
